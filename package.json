@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NGnius/PowerTools.git"
+    "url": "git+https://git.ngni.us/NG-SD-Plugins/PowerTools.git"
   },
   "keywords": [
     "plugin",
@@ -21,9 +21,9 @@
   "author": "NGnius (Graham) <ngniusness@gmail.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/NGnius/PowerTools/issues"
+    "url": "https://git.ngni.us/NG-SD-Plugins/PowerTools/issues"
   },
-  "homepage": "https://github.com/NGnius/PowerTools#readme",
+  "homepage": "https://git.ngni.us/NG-SD-Plugins/PowerTools#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.1.0",
     "@rollup/plugin-json": "^4.1.0",

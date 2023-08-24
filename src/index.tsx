@@ -335,7 +335,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
   }
   return {
-    title: <div className={staticClasses.Title}>I'm a tool</div>,
+    title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,
     icon: ico,
     onDismount() {
