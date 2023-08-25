@@ -375,25 +375,29 @@ impl Cpu {
 
     // https://github.com/NGnius/PowerTools/issues/107
     fn clock_unset_workaround(&self) -> Result<(), Vec<SettingError>> {
-        let mut errors = Vec::new();
-        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
-        // always set clock speeds, since it doesn't reset correctly (kernel/hardware bug)
-        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
-        // disable manual clock limits
-        log::debug!("Setting CPU {} to default clockspeed", self.index);
-        // max clock
-        self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
-            .unwrap_or_else(|e| errors.push(e));
-        // min clock
-        self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
-            .unwrap_or_else(|e| errors.push(e));
+        if !self.state.is_resuming {
+            let mut errors = Vec::new();
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
+            // always set clock speeds, since it doesn't reset correctly (kernel/hardware bug)
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
+            // disable manual clock limits
+            log::debug!("Setting CPU {} to default clockspeed", self.index);
+            // max clock
+            self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
+                .unwrap_or_else(|e| errors.push(e));
+            // min clock
+            self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
+                .unwrap_or_else(|e| errors.push(e));
 
-        self.set_confirm().unwrap_or_else(|e| errors.push(e));
-        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
-        if errors.is_empty() {
-            Ok(())
+            self.set_confirm().unwrap_or_else(|e| errors.push(e));
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
+            if errors.is_empty() {
+                Ok(())
+            } else {
+                Err(errors)
+            }
         } else {
-            Err(errors)
+            Ok(())
         }
     }
 
