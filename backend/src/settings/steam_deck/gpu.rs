@@ -182,12 +182,22 @@ impl Gpu {
 
     fn set_slow_memory(&self, slow: bool) -> Result<(), SettingError> {
         let path = GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.path(&self.sysfs_card);
-        self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), slow as u8).map_err(|e| {
-            SettingError {
-                msg: format!("Failed to write to `{}`: {}", path.display(), e),
-                setting: crate::settings::SettingVariant::Gpu,
-            }
-        })
+        if slow {
+            self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), slow as u8).map_err(|e| {
+                SettingError {
+                    msg: format!("Failed to write to `{}`: {}", path.display(), e),
+                    setting: crate::settings::SettingVariant::Gpu,
+                }
+            })
+        } else {
+            // NOTE: there is a GPU driver/hardware bug that prevents this from working
+            self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), "0 1\n").map_err(|e| {
+                SettingError {
+                    msg: format!("Failed to write to `{}`: {}", path.display(), e),
+                    setting: crate::settings::SettingVariant::Gpu,
+                }
+            })
+        }
     }
 
     fn set_force_performance_related(&mut self) -> Result<(), Vec<SettingError>> {
