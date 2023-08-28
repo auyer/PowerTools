@@ -3,6 +3,7 @@ use std::convert::{AsMut, AsRef, Into};
 use limits_core::json::GenericCpuLimit;
 
 use super::FromGenericCpuInfo;
+use crate::api::RangeLimit;
 use crate::persist::CpuJson;
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
@@ -201,6 +202,7 @@ pub struct Cpu {
     limits: GenericCpuLimit,
     index: usize,
     state: crate::state::steam_deck::Cpu,
+    root: std::path::PathBuf,
 }
 
 /*impl Cpu {
@@ -234,6 +236,7 @@ impl FromGenericCpuInfo for Cpu {
             limits,
             index: cpu_index,
             state: crate::state::steam_deck::Cpu::default(),
+            root: "/".into(),
         }
     }
 
@@ -257,6 +260,7 @@ impl FromGenericCpuInfo for Cpu {
                 limits,
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
+                root: other.root.unwrap_or_else(|| "/".to_string()).into(),
             },
             _ => Self {
                 online: other.online,
@@ -265,6 +269,7 @@ impl FromGenericCpuInfo for Cpu {
                 limits,
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
+                root: other.root.unwrap_or_else(|| "/".to_string()).into(),
             },
         }
     }
@@ -330,8 +335,16 @@ impl Cpu {
 
     fn limits(&self) -> crate::api::CpuLimits {
         crate::api::CpuLimits {
-            clock_min_limits: self.limits.clock_min.clone().map(|x| x.into()),
-            clock_max_limits: self.limits.clock_max.clone().map(|x| x.into()),
+            clock_min_limits: self
+                .limits
+                .clock_min
+                .clone()
+                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(5_000))),
+            clock_max_limits: self
+                .limits
+                .clock_max
+                .clone()
+                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(5_000))),
             clock_step: self.limits.clock_step,
             governors: self.governors(),
         }
@@ -345,6 +358,7 @@ impl Into<CpuJson> for Cpu {
             online: self.online,
             clock_limits: self.clock_limits.map(|x| x.into()),
             governor: self.governor,
+            root: self.root.to_str().map(|s| s.to_owned()),
         }
     }
 }

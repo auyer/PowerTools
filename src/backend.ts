@@ -117,6 +117,10 @@ export async function getBatteryChargeDesign(): Promise<number> {
     return (await call_backend("BATTERY_charge_design", []))[0];
 }
 
+export async function getBatteryChargePower(): Promise<number> {
+    return (await call_backend("BATTERY_charge_power", []))[0];
+}
+
 export async function getBatteryChargeRate(): Promise<number | null> {
     return (await call_backend("BATTERY_get_charge_rate", []))[0];
 }
@@ -301,4 +305,42 @@ export async function onPluggedIn(): Promise<boolean> {
 
 export async function onUnplugged(): Promise<boolean> {
     return (await call_backend("GENERAL_on_unplugged", []))[0];
+}
+
+export type Message = {
+    /// Message identifier
+    id: number | null,
+    /// Message title
+    title: string,
+    /// Message content
+    body: string,
+    /// Link for further information
+    url: string | null,
+};
+
+export async function getMessages(since: number | null): Promise<Message[]> {
+    return (await call_backend("MESSAGE_get", [since]));
+}
+
+export async function dismissMessage(id: number): Promise<boolean> {
+    return (await call_backend("MESSAGE_dismiss", [id]))[0];
+}
+
+export type Periodicals = {
+    battery_current: number | null,
+    battery_charge_now: number | null,
+    battery_charge_full: number | null,
+    battery_charge_power: number | null,
+    settings_path: string | null,
+};
+
+export async function getPeriodicals(): Promise<Periodicals> {
+    const result: any[] = await call_backend("GENERAL_get_periodicals", []);
+    return {
+        battery_current: result[0],
+        battery_charge_now: result[1],
+        battery_charge_full: result[2],
+        battery_charge_power: result[3],
+        settings_path: result[4],
+    };
 }

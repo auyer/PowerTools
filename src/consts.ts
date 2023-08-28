@@ -10,6 +10,7 @@ export const CHARGE_LIMIT_BATT = "BATTERY_charge_limit";
 export const CHARGE_NOW_BATT = "BATTERY_charge_now";
 export const CHARGE_FULL_BATT = "BATTERY_charge_full";
 export const CHARGE_DESIGN_BATT = "BATTERY_charge_design";
+export const CHARGE_POWER_BATT = "BATTERY_charge_power";
 
 //export const TOTAL_CPUS = "CPUs_total";
 export const ONLINE_CPUS = "CPUs_online";
@@ -29,4 +30,9 @@ export const SLOW_MEMORY_GPU = "GPU_slow_memory";
 export const PERSISTENT_GEN = "GENERAL_persistent";
 export const NAME_GEN = "GENERAL_name";
 export const PATH_GEN = "GENERAL_path";
+
+export const MESSAGE_LIST = "MESSAGE_messages";
+
+export const PERIODICAL_BACKEND_PERIOD = 5000; // milliseconds
+export const AUTOMATIC_REAPPLY_WAIT = 2000; // milliseconds
 

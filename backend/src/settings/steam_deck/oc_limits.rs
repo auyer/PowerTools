@@ -1,4 +1,4 @@
-use crate::settings::MinMax;
+use crate::api::RangeLimit as MinMax;
 use serde::{Deserialize, Serialize};
 
 const OC_LIMITS_FILEPATH: &str = "pt_oc.json";
@@ -67,6 +67,7 @@ impl OverclockLimits {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(super) struct BatteryLimits {
     pub charge_rate: MinMax<u64>,
+    pub extra_readouts: bool,
 }
 
 impl Default for BatteryLimits {
@@ -76,6 +77,7 @@ impl Default for BatteryLimits {
                 min: 250,
                 max: 2500,
             },
+            extra_readouts: false,
         }
     }
 }
@@ -171,6 +173,7 @@ fn oc_limits_filepath() -> std::path::PathBuf {
 mod tests {
     use super::*;
 
+    #[cfg(not(feature = "dev_stuff"))] // this can fail due to reading from incompletely-written file otherwise
     #[test]
     fn load_pt_oc() {
         let mut file = std::fs::File::open("../pt_oc.json").unwrap();

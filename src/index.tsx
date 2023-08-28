@@ -39,6 +39,7 @@ import {
   CHARGE_NOW_BATT,
   CHARGE_FULL_BATT,
   CHARGE_DESIGN_BATT,
+  CHARGE_POWER_BATT,
 
   ONLINE_CPUS,
   ONLINE_STATUS_CPUS,
@@ -57,16 +58,23 @@ import {
   PERSISTENT_GEN,
   NAME_GEN,
   PATH_GEN,
+
+  MESSAGE_LIST,
+
+  PERIODICAL_BACKEND_PERIOD,
+  AUTOMATIC_REAPPLY_WAIT,
 } from "./consts";
 import { set_value, get_value } from "usdpl-front";
 import { Debug } from "./components/debug";
 import { Gpu } from "./components/gpu";
 import { Battery } from "./components/battery";
 import { Cpus } from "./components/cpus";
+import { DevMessages } from "./components/message";
 
 var periodicHook: NodeJS.Timer | null = null;
 var lifetimeHook: any = null;
 var startHook: any = null;
+var endHook: any = null;
 var usdplReady = false;
 
 type MinMax = {
@@ -113,6 +121,7 @@ const reload = function() {
   backend.resolve(backend.getBatteryChargeNow(), (rate: number) => { set_value(CHARGE_NOW_BATT, rate) });
   backend.resolve(backend.getBatteryChargeFull(), (rate: number) => { set_value(CHARGE_FULL_BATT, rate) });
   backend.resolve(backend.getBatteryChargeDesign(), (rate: number) => { set_value(CHARGE_DESIGN_BATT, rate) });
+  backend.resolve(backend.getBatteryChargePower(), (rate: number) => { set_value(CHARGE_POWER_BATT, rate) });
 
   //backend.resolve(backend.getCpuCount(), (count: number) => { set_value(TOTAL_CPUS, count)});
   backend.resolve(backend.getCpusOnline(), (statii: boolean[]) => {
@@ -150,6 +159,8 @@ const reload = function() {
 
   backend.resolve(backend.getInfo(), (info: string) => { set_value(BACKEND_INFO, info) });
   backend.resolve(backend.getDriverProviderName("gpu"), (driver: string) => { set_value(DRIVER_INFO, driver) });
+
+  backend.resolve(backend.getMessages(null), (messages: backend.Message[]) => { set_value(MESSAGE_LIST, messages) });
 };
 
 // init USDPL WASM and connection to back-end
@@ -185,22 +196,30 @@ const reload = function() {
       );
   });
 
+  //@ts-ignore
+  endHook = SteamClient.Apps.RegisterForGameActionEnd((actionType) => {
+      backend.log(backend.LogLevel.Info, "RegisterForGameActionEnd callback(" + actionType + ")");
+      setTimeout(() => backend.forceApplySettings(), AUTOMATIC_REAPPLY_WAIT);
+  });
+
   backend.log(backend.LogLevel.Debug, "Registered PowerTools callbacks, hello!");
 })();
 
 const periodicals = function() {
-  backend.resolve(backend.getBatteryCurrent(), (rate: number) => { set_value(CURRENT_BATT, rate) });
-  backend.resolve(backend.getBatteryChargeNow(), (rate: number) => { set_value(CHARGE_NOW_BATT, rate) });
-  backend.resolve(backend.getBatteryChargeFull(), (rate: number) => { set_value(CHARGE_FULL_BATT, rate) });
+  backend.resolve(backend.getPeriodicals(), (periodicals) => {
+    set_value(CURRENT_BATT, periodicals.battery_current);
+    set_value(CHARGE_NOW_BATT, periodicals.battery_charge_now);
+    set_value(CHARGE_FULL_BATT, periodicals.battery_charge_full);
+    set_value(CHARGE_POWER_BATT, periodicals.battery_charge_power);
 
-  backend.resolve(backend.getGeneralSettingsPath(), (path: string) => {
+    const path = periodicals.settings_path;
     const oldValue = get_value(PATH_GEN);
     set_value(PATH_GEN, path);
     if (path != oldValue) {
       backend.log(backend.LogLevel.Info, "Frontend values reload triggered by path change: " + oldValue + " -> " + path);
       reload();
     }
-  });
+  })
 };
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
@@ -215,7 +234,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
   periodicHook = setInterval(function() {
       periodicals();
       reloadGUI("periodic" + (new Date()).getTime().toString());
-  }, 1000);
+  }, PERIODICAL_BACKEND_PERIOD);
 
   if (!usdplReady || !get_value(LIMITS_INFO)) {
     // Not translated on purpose (to avoid USDPL issues)
@@ -237,6 +256,8 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
 
   return (
     <PanelSection>
+      <DevMessages idc={idc}/>
+
       <Cpus idc={idc}/>
 
       <Gpu idc={idc}/>
@@ -314,15 +335,16 @@ export default definePlugin((serverApi: ServerAPI) => {
     ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
   }
   return {
-    title: <div className={staticClasses.Title}>I'm a tool</div>,
+    title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,
     icon: ico,
     onDismount() {
       backend.log(backend.LogLevel.Debug, "PowerTools shutting down");
       clearInterval(periodicHook!);
       periodicHook = null;
-      lifetimeHook!.unregister();
-      startHook!.unregister();
+      lifetimeHook?.unregister();
+      startHook?.unregister();
+      endHook?.unregister();
       //serverApi.routerHook.removeRoute("/decky-plugin-test");
       backend.log(backend.LogLevel.Debug, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
     },

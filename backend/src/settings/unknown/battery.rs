@@ -14,6 +14,7 @@ impl Into<BatteryJson> for Battery {
             charge_rate: None,
             charge_mode: None,
             events: Vec::default(),
+            root: None,
         }
     }
 }
@@ -72,6 +73,10 @@ impl TBattery for Battery {
     }
 
     fn read_current_now(&self) -> Option<f64> {
+        None
+    }
+
+    fn read_charge_power(&self) -> Option<f64> {
         None
     }
 

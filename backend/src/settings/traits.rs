@@ -104,6 +104,8 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
     fn name(&mut self, name: String);
 
     fn provider(&self) -> crate::persist::DriverJson;
+
+    fn on_event(&self) -> &'_ crate::persist::OnEventJson;
 }
 
 pub trait TBattery: OnSet + OnResume + OnPowerEvent + Debug + Send {
@@ -126,6 +128,8 @@ pub trait TBattery: OnSet + OnResume + OnPowerEvent + Debug + Send {
     fn read_charge_design(&self) -> Option<f64>;
 
     fn read_current_now(&self) -> Option<f64>;
+
+    fn read_charge_power(&self) -> Option<f64>;
 
     fn charge_limit(&mut self, limit: Option<f64>);
 

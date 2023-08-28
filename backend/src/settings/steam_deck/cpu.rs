@@ -1,5 +1,7 @@
 use std::convert::Into;
 
+use sysfuss::{BasicEntityPath, SysEntity, SysEntityAttributesExt};
+
 use super::oc_limits::{CpuLimits, CpusLimits, OverclockLimits};
 use super::POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT;
 use crate::api::RangeLimit;
@@ -10,6 +12,10 @@ use crate::settings::{TCpu, TCpus};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
+
+const CARD_EXTENSIONS: &[&'static str] = &[
+    super::DPM_FORCE_LIMITS_ATTRIBUTE
+];
 
 #[derive(Debug, Clone)]
 pub struct Cpus {
@@ -230,9 +236,16 @@ pub struct Cpu {
     limits: CpuLimits,
     index: usize,
     state: crate::state::steam_deck::Cpu,
+    sysfs: BasicEntityPath,
 }
 
-const CPU_CLOCK_LIMITS_PATH: &str = "/sys/class/drm/card0/device/pp_od_clk_voltage";
+//const CPU_CLOCK_LIMITS_PATH: &str = "/sys/class/drm/card0/device/pp_od_clk_voltage";
+const CPU_CLOCK_LIMITS_ATTRIBUTE: &str = "device/pp_od_clk_voltage";
+
+enum ClockType {
+    Min = 0,
+    Max = 1,
+}
 
 impl Cpu {
     #[inline]
@@ -245,6 +258,7 @@ impl Cpu {
                 limits: oc_limits,
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
+                sysfs: Self::find_card_sysfs(other.root),
             },
             _ => Self {
                 online: other.online,
@@ -253,8 +267,147 @@ impl Cpu {
                 limits: oc_limits,
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
+                sysfs: Self::find_card_sysfs(other.root),
             },
         }
+    }
+
+    fn find_card_sysfs(root: Option<impl AsRef<std::path::Path>>) -> BasicEntityPath {
+        let root = crate::settings::util::root_or_default_sysfs(root);
+        match root.class("drm", sysfuss::capability::attributes(crate::settings::util::CARD_NEEDS.into_iter().map(|s| s.to_string()))) {
+            Ok(iter) => {
+                let card = iter
+                    .filter(|ent| if let Ok(name) = ent.name() { name.starts_with("card")} else { false })
+                    .filter(|ent| super::util::card_also_has(ent, CARD_EXTENSIONS))
+                    .next()
+                    .unwrap_or_else(|| {
+                        log::error!("Failed to find SteamDeck drm in sysfs (no results), using naive fallback");
+                        BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
+                    });
+                log::info!("Found SteamDeck drm in sysfs: {}", card.as_ref().display());
+                card
+            },
+            Err(e) => {
+                log::error!("Failed to find SteamDeck drm in sysfs ({}), using naive fallback", e);
+                BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
+            }
+        }
+    }
+
+    fn set_clock_limit(&self, index: usize, speed: u64, mode: ClockType) -> Result<(), SettingError> {
+        let payload = format!("p {} {} {}\n", index / 2, mode as u8, speed);
+        self.sysfs.set(CPU_CLOCK_LIMITS_ATTRIBUTE.to_owned(), &payload).map_err(|e| {
+            SettingError {
+                msg: format!(
+                    "Failed to write `{}` to `{}`: {}",
+                    &payload, CPU_CLOCK_LIMITS_ATTRIBUTE, e
+                ),
+                setting: crate::settings::SettingVariant::Cpu,
+            }
+        })
+    }
+
+    fn set_clock_limits(&mut self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+        if let Some(clock_limits) = &self.clock_limits {
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
+            log::debug!(
+                "Setting CPU {} (min, max) clockspeed to ({:?}, {:?})",
+                self.index,
+                clock_limits.min,
+                clock_limits.max
+            );
+            self.state.clock_limits_set = true;
+            // max clock
+            if let Some(max) = clock_limits.max {
+                self.set_clock_limit(self.index, max, ClockType::Max)
+                    .unwrap_or_else(|e| errors.push(e));
+            }
+            // min clock
+            if let Some(min) = clock_limits.min {
+                let valid_min = if min < self.limits.clock_min.min {
+                    self.limits.clock_min.min
+                } else {
+                    min
+                };
+                self.set_clock_limit(self.index, valid_min, ClockType::Min)
+                    .unwrap_or_else(|e| errors.push(e));
+            }
+
+            if errors.is_empty() {
+                Ok(())
+            } else {
+                Err(errors)
+            }
+        } else if self.state.clock_limits_set
+            || (self.state.is_resuming && !self.limits.skip_resume_reclock)
+            || POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual()
+        {
+            let mut errors = Vec::new();
+            self.state.clock_limits_set = false;
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
+                    .enforce_level(&self.sysfs)?;
+            if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
+                // always set clock speeds, since it doesn't reset correctly (kernel/hardware bug)
+                POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
+                // disable manual clock limits
+                log::debug!("Setting CPU {} to default clockspeed", self.index);
+                // max clock
+                self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
+                    .unwrap_or_else(|e| errors.push(e));
+                // min clock
+                self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
+                    .unwrap_or_else(|e| errors.push(e));
+            }
+            // TODO remove this when it's no longer needed
+            self.clock_unset_workaround().unwrap_or_else(|mut e| errors.append(&mut e));
+            if errors.is_empty() {
+                Ok(())
+            } else {
+                Err(errors)
+            }
+        } else {
+            Ok(())
+        }
+    }
+
+    // https://github.com/NGnius/PowerTools/issues/107
+    fn clock_unset_workaround(&self) -> Result<(), Vec<SettingError>> {
+        if !self.state.is_resuming {
+            let mut errors = Vec::new();
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
+            // always set clock speeds, since it doesn't reset correctly (kernel/hardware bug)
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
+            // disable manual clock limits
+            log::debug!("Setting CPU {} to default clockspeed", self.index);
+            // max clock
+            self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
+                .unwrap_or_else(|e| errors.push(e));
+            // min clock
+            self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
+                .unwrap_or_else(|e| errors.push(e));
+
+            self.set_confirm().unwrap_or_else(|e| errors.push(e));
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
+            if errors.is_empty() {
+                Ok(())
+            } else {
+                Err(errors)
+            }
+        } else {
+            Ok(())
+        }
+    }
+
+    fn set_confirm(&self) -> Result<(), SettingError> {
+        self.sysfs.set(CPU_CLOCK_LIMITS_ATTRIBUTE.to_owned(), "c\n").map_err(|e| {
+            SettingError {
+                msg: format!("Failed to write `c` to `{}`: {}", CPU_CLOCK_LIMITS_ATTRIBUTE, e),
+                setting: crate::settings::SettingVariant::Cpu,
+            }
+        })
     }
 
     fn set_force_performance_related(&mut self) -> Result<(), Vec<SettingError>> {
@@ -263,94 +416,34 @@ impl Cpu {
         // set clock limits
         //log::debug!("Setting {} to manual", CPU_FORCE_LIMITS_PATH);
         //let mode: String = usdpl_back::api::files::read_single(CPU_FORCE_LIMITS_PATH.to_owned()).unwrap();
-        if let Some(clock_limits) = &self.clock_limits {
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level()?;
-            log::debug!(
-                "Setting CPU {} (min, max) clockspeed to ({}, {})",
-                self.index,
-                clock_limits.min,
-                clock_limits.max
-            );
-            self.state.clock_limits_set = true;
-            // max clock
-            let payload_max = format!("p {} 1 {}\n", self.index / 2, clock_limits.max);
-            usdpl_back::api::files::write_single(CPU_CLOCK_LIMITS_PATH, &payload_max)
-                .map_err(|e| SettingError {
-                    msg: format!(
-                        "Failed to write `{}` to `{}`: {}",
-                        &payload_max, CPU_CLOCK_LIMITS_PATH, e
-                    ),
-                    setting: crate::settings::SettingVariant::Cpu,
-                })
-                .unwrap_or_else(|e| errors.push(e));
-            // min clock
-            let valid_min = if clock_limits.min < self.limits.clock_min.min {
-                self.limits.clock_min.min
-            } else {
-                clock_limits.min
-            };
-            let payload_min = format!("p {} 0 {}\n", self.index / 2, valid_min);
-            usdpl_back::api::files::write_single(CPU_CLOCK_LIMITS_PATH, &payload_min)
-                .map_err(|e| SettingError {
-                    msg: format!(
-                        "Failed to write `{}` to `{}`: {}",
-                        &payload_min, CPU_CLOCK_LIMITS_PATH, e
-                    ),
-                    setting: crate::settings::SettingVariant::Cpu,
-                })
-                .unwrap_or_else(|e| errors.push(e));
-        } else if self.state.clock_limits_set
-            || (self.state.is_resuming && !self.limits.skip_resume_reclock)
-            || POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual()
-        {
-            self.state.clock_limits_set = false;
-            if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
-                POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level()?;
-                // disable manual clock limits
-                log::debug!("Setting CPU {} to default clockspeed", self.index);
-                // max clock
-                let payload_max = format!("p {} 1 {}\n", self.index / 2, self.limits.clock_max.max);
-                usdpl_back::api::files::write_single(CPU_CLOCK_LIMITS_PATH, &payload_max)
-                    .map_err(|e| SettingError {
-                        msg: format!(
-                            "Failed to write `{}` to `{}`: {}",
-                            &payload_max, CPU_CLOCK_LIMITS_PATH, e
-                        ),
-                        setting: crate::settings::SettingVariant::Cpu,
-                    })
-                    .unwrap_or_else(|e| errors.push(e));
-                // min clock
-                let payload_min = format!("p {} 0 {}\n", self.index / 2, self.limits.clock_min.min);
-                usdpl_back::api::files::write_single(CPU_CLOCK_LIMITS_PATH, &payload_min)
-                    .map_err(|e| SettingError {
-                        msg: format!(
-                            "Failed to write `{}` to `{}`: {}",
-                            &payload_min, CPU_CLOCK_LIMITS_PATH, e
-                        ),
-                        setting: crate::settings::SettingVariant::Cpu,
-                    })
-                    .unwrap_or_else(|e| errors.push(e));
-            }
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
-                .enforce_level()
-                .unwrap_or_else(|mut e| errors.append(&mut e));
-        }
+        self.set_clock_limits()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
         // commit changes (if no errors have already occured)
         if errors.is_empty() {
             if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
-                usdpl_back::api::files::write_single(CPU_CLOCK_LIMITS_PATH, "c\n").map_err(|e| {
-                    vec![SettingError {
-                        msg: format!("Failed to write `c` to `{}`: {}", CPU_CLOCK_LIMITS_PATH, e),
-                        setting: crate::settings::SettingVariant::Cpu,
-                    }]
-                })
+                self.set_confirm().map_err(|e| vec![e])
             } else {
                 Ok(())
             }
         } else {
             Err(errors)
+        }
+    }
+
+    fn set_governor(&self) -> Result<(), SettingError> {
+        if self.index == 0 || self.online {
+            let governor_path = cpu_governor_path(self.index);
+            usdpl_back::api::files::write_single(&governor_path, &self.governor).map_err(|e| {
+                SettingError {
+                    msg: format!(
+                        "Failed to write `{}` to `{}`: {}",
+                        &self.governor, &governor_path, e
+                    ),
+                    setting: crate::settings::SettingVariant::Cpu,
+                }
+            })
+        } else {
+            Ok(())
         }
     }
 
@@ -371,19 +464,8 @@ impl Cpu {
         self.set_force_performance_related()
             .unwrap_or_else(|mut e| errors.append(&mut e));
 
-        // set governor
-        if self.index == 0 || self.online {
-            let governor_path = cpu_governor_path(self.index);
-            usdpl_back::api::files::write_single(&governor_path, &self.governor)
-                .map_err(|e| SettingError {
-                    msg: format!(
-                        "Failed to write `{}` to `{}`: {}",
-                        &self.governor, &governor_path, e
-                    ),
-                    setting: crate::settings::SettingVariant::Cpu,
-                })
-                .unwrap_or_else(|e| errors.push(e));
-        }
+        self.set_governor().unwrap_or_else(|e| errors.push(e));
+
         if errors.is_empty() {
             Ok(())
         } else {
@@ -393,12 +475,14 @@ impl Cpu {
 
     fn clamp_all(&mut self) {
         if let Some(clock_limits) = &mut self.clock_limits {
-            clock_limits.min = clock_limits
-                .min
-                .clamp(self.limits.clock_min.min, self.limits.clock_min.max);
-            clock_limits.max = clock_limits
-                .max
-                .clamp(self.limits.clock_max.min, self.limits.clock_max.max);
+            if let Some(min) = clock_limits.min {
+                clock_limits.min =
+                    Some(min.clamp(self.limits.clock_min.min, self.limits.clock_min.max));
+            }
+            if let Some(max) = clock_limits.max {
+                clock_limits.max =
+                    Some(max.clamp(self.limits.clock_max.min, self.limits.clock_max.max));
+            }
         }
     }
 
@@ -422,6 +506,7 @@ impl Cpu {
             limits: oc_limits,
             index: cpu_index,
             state: crate::state::steam_deck::Cpu::default(),
+            sysfs: Self::find_card_sysfs(None::<&'static str>)
         }
     }
 
@@ -461,6 +546,7 @@ impl Into<CpuJson> for Cpu {
             online: self.online,
             clock_limits: self.clock_limits.map(|x| x.into()),
             governor: self.governor,
+            root: self.sysfs.root().and_then(|p| p.as_ref().to_str().map(|r| r.to_owned()))
         }
     }
 }

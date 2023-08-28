@@ -73,10 +73,6 @@ fn main() -> Result<(), ()> {
     }
 
     let _limits_handle = crate::settings::limits_worker_spawn();
-    log::info!(
-        "Detected device automatically, starting with driver: {:?} (This can be overriden)",
-        crate::settings::auto_detect_provider()
-    );
 
     let mut loaded_settings =
         persist::SettingsJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
@@ -88,6 +84,11 @@ fn main() -> Result<(), ()> {
                 )
             });
 
+    log::info!(
+        "Detected device automatically {:?}, using driver: {:?} (This can be overriden)",
+        crate::settings::auto_detect_provider(), loaded_settings.cpus.provider()
+    );
+
     log::debug!("Settings: {:?}", loaded_settings);
 
     let (api_handler, api_sender) = crate::api::handler::ApiMessageHandler::new();
@@ -95,6 +96,8 @@ fn main() -> Result<(), ()> {
     //let (_save_handle, save_sender) = save_worker::spawn(loaded_settings.clone());
     let _resume_handle = resume_worker::spawn(api_sender.clone());
     let _power_handle = power_worker::spawn(api_sender.clone());
+
+    let (message_getter, message_dismisser) = api::message::MessageHandler::new().to_callables();
 
     let instance = Instance::new(PORT)
         .register("V_INFO", |_: Vec<Primitive>| {
@@ -125,6 +128,10 @@ fn main() -> Result<(), ()> {
         .register_async(
             "BATTERY_charge_design",
             api::battery::charge_design(api_sender.clone()),
+        )
+        .register_async(
+            "BATTERY_charge_power",
+            api::battery::charge_power(api_sender.clone()),
         )
         .register(
             "BATTERY_set_charge_rate",
@@ -279,7 +286,13 @@ fn main() -> Result<(), ()> {
         .register(
             "GENERAL_on_unplugged",
             api::battery::on_unplugged(api_sender.clone()),
-        );
+        )
+        .register_async(
+            "GENERAL_get_periodicals",
+            api::general::get_periodicals(api_sender.clone())
+        )
+        .register_async("MESSAGE_get", message_getter)
+        .register_async("MESSAGE_dismiss", message_dismisser);
 
     if let Err(e) = loaded_settings.on_set() {
         e.iter()

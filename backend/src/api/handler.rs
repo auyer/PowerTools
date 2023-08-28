@@ -39,6 +39,7 @@ pub enum BatteryMessage {
     ReadChargeNow(Callback<Option<f64>>),
     ReadChargeDesign(Callback<Option<f64>>),
     ReadCurrentNow(Callback<Option<f64>>),
+    ReadChargePower(Callback<Option<f64>>),
     SetChargeLimit(Option<f64>),
     GetChargeLimit(Callback<Option<f64>>),
 }
@@ -55,6 +56,7 @@ impl BatteryMessage {
             Self::ReadChargeNow(cb) => cb(settings.read_charge_now()),
             Self::ReadChargeDesign(cb) => cb(settings.read_charge_design()),
             Self::ReadCurrentNow(cb) => cb(settings.read_current_now()),
+            Self::ReadChargePower(cb) => cb(settings.read_charge_power()),
             Self::SetChargeLimit(limit) => settings.charge_limit(limit),
             Self::GetChargeLimit(cb) => cb(settings.get_charge_limit()),
         }
@@ -268,7 +270,9 @@ impl ApiMessageHandler {
             while let Ok(msg) = self.intake.try_recv() {
                 dirty |= self.process(settings, msg);
             }
-            if dirty /*|| dirty_echo */ {
+            if dirty
+            /*|| dirty_echo */
+            {
                 //dirty_echo = dirty; // echo only once
 
                 // run on_set
@@ -288,6 +292,16 @@ impl ApiMessageHandler {
                     let settings_clone = settings.json();
                     let save_json: SettingsJson = settings_clone.into();
                     unwrap_maybe_fatal(save_json.save(&save_path), "Failed to save settings");
+                    if let Some(event) = &settings.general.on_event().on_save {
+                        if !event.is_empty() {
+                            unwrap_maybe_fatal(
+                                std::process::Command::new("/bin/bash")
+                                    .args(&["-c", event])
+                                    .spawn(),
+                                "Failed to start on_save event command",
+                            );
+                        }
+                    }
                     log::debug!("Saved settings to {}", save_path.display());
                     if let Err(e) = crate::utility::chown_settings_dir() {
                         log::error!("Failed to change config dir permissions: {}", e);
