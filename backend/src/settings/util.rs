@@ -61,6 +61,7 @@ mod test {
             online: status,
             clock_limits: None,
             governor: "schedutil".to_owned(),
+            root: Some("/".to_owned()),
         }
     }
 }
