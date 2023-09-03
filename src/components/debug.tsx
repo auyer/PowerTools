@@ -38,7 +38,7 @@ function buildDebug() {
             if (eggCount % 10 == 9) {
               // you know you're bored and/or conceited when you spend time adding an easter egg
               // that just sends people to your own project's repo
-              Navigation.NavigateToExternalWeb("https://github.com/NGnius/PowerTools/releases");
+              Navigation.NavigateToExternalWeb("https://git.ngni.us/NG-SD-Plugins/PowerTools/releases");
             }
             eggCount++;
           }}>
@@ -66,7 +66,7 @@ function buildDebug() {
             if (eggCount % 10 == 9) {
               // you know you're bored and/or conceited when you spend time adding an easter egg
               // that just sends people to your own project's repo
-              Navigation.NavigateToExternalWeb("https://github.com/NGnius/usdpl-rs");
+              Navigation.NavigateToExternalWeb("https://git.ngni.us/NG-SD-Plugins/usdpl-rs");
             }
             eggCount++;
           }}>
