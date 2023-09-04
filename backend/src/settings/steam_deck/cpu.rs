@@ -493,7 +493,7 @@ impl Cpu {
         if let Some(clock_limits) = &mut self.clock_limits {
             if let Some(min) = clock_limits.min {
                 clock_limits.min =
-                    Some(min.clamp(self.limits.clock_min.min, self.limits.clock_min.max));
+                    Some(min.clamp(self.limits.clock_max.min, self.limits.clock_min.max));
             }
             if let Some(max) = clock_limits.max {
                 clock_limits.max =
