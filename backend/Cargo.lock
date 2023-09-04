@@ -1052,7 +1052,7 @@ dependencies = [
 
 [[package]]
 name = "powertools"
-version = "1.4.0-beta3"
+version = "1.5.0-ng1"
 dependencies = [
  "async-trait",
  "libryzenadj",
@@ -1321,6 +1321,8 @@ dependencies = [
 [[package]]
 name = "sysfuss"
 version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fa4dd5879b3fd41aff63991a59970cdfeced6f0d5920c5da0937279904d9f45"
 
 [[package]]
 name = "termcolor"

@@ -307,6 +307,18 @@ impl Cpu {
         })
     }
 
+    fn reset_clock_limits(&self) -> Result<(), SettingError> {
+        self.sysfs.set(CPU_CLOCK_LIMITS_ATTRIBUTE.to_owned(), "r\n").map_err(|e| {
+            SettingError {
+                msg: format!(
+                    "Failed to write `r` to `{}`: {}",
+                    CPU_CLOCK_LIMITS_ATTRIBUTE, e
+                ),
+                setting: crate::settings::SettingVariant::Cpu,
+            }
+        })
+    }
+
     fn set_clock_limits(&mut self) -> Result<(), Vec<SettingError>> {
         let mut errors = Vec::new();
         if let Some(clock_limits) = &self.clock_limits {
@@ -390,6 +402,10 @@ impl Cpu {
                 .unwrap_or_else(|e| errors.push(e));
 
             self.set_confirm().unwrap_or_else(|e| errors.push(e));
+
+            self.reset_clock_limits().unwrap_or_else(|e| errors.push(e));
+            self.set_confirm().unwrap_or_else(|e| errors.push(e));
+
             POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
             if errors.is_empty() {
                 Ok(())
