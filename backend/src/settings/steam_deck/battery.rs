@@ -586,6 +586,7 @@ impl OnPowerEvent for Battery {
         .unwrap_or_else(|mut e| errors.append(&mut e));
         let attr_exists = MAX_BATTERY_CHARGE_LEVEL_ATTR.exists(&*self.sysfs_hwmon);
         log::info!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
+        let mut charge_limit_set_now = false;
         for ev in &mut self.events {
             if attr_exists {
                 if let EventTrigger::BatteryAbove(level) = ev.trigger {
@@ -597,11 +598,26 @@ impl OnPowerEvent for Battery {
                                     setting: crate::settings::SettingVariant::Battery,
                                 }
                             ));
+                        self.state.charge_limit_set = true;
+                        charge_limit_set_now = true;
                     }
                 }
             }
             ev.on_power_event(new_mode)
                 .unwrap_or_else(|mut e| errors.append(&mut e));
+        }
+        if self.state.charge_limit_set != charge_limit_set_now {
+            // only true when charge_limit_set is false and self.state.charge_limit_set is true
+            self.state.charge_limit_set = false;
+            if attr_exists {
+                self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 100)
+                    .unwrap_or_else(|e| errors.push(
+                        SettingError {
+                            msg: format!("Failed to reset (write to) {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
+                            setting: crate::settings::SettingVariant::Battery,
+                        }
+                    ));
+            }
         }
         if errors.is_empty() {
             Ok(())

@@ -174,7 +174,7 @@ impl Default for Base {
                 super::DeveloperMessage {
                     id: 1,
                     title: "Welcome".to_owned(),
-                    body: "Thanks for installing PowerTools! For more information, please check the wiki. For bugs and requests, please create an issue on GitHub.".to_owned(),
+                    body: "Thanks for installing PowerTools! For more information, please check the wiki. For bugs and requests, please create an issue.".to_owned(),
                     url: Some("https://git.ngni.us/NG-SD-Plugins/PowerTools/wiki".to_owned()),
                 }
             ],
