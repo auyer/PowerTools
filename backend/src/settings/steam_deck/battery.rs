@@ -585,7 +585,7 @@ impl OnPowerEvent for Battery {
         }
         .unwrap_or_else(|mut e| errors.append(&mut e));
         let attr_exists = MAX_BATTERY_CHARGE_LEVEL_ATTR.exists(&*self.sysfs_hwmon);
-        log::info!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
+        log::debug!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
         let mut charge_limit_set_now = false;
         for ev in &mut self.events {
             if attr_exists {
