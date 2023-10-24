@@ -1,8 +1,10 @@
 use std::convert::Into;
 
+use limits_core::json_v2::GenericGpuLimit;
+
 use crate::persist::GpuJson;
 use crate::settings::MinMax;
-use crate::settings::TGpu;
+use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
 
 #[derive(Debug, Clone)]
@@ -11,13 +13,18 @@ pub struct Gpu {
 }
 
 impl Gpu {
-    #[inline]
-    pub fn from_json(_other: GpuJson, _version: u64) -> Self {
-        Self { slow_memory: false }
-    }
-
     pub fn system_default() -> Self {
         Self { slow_memory: false }
+    }
+}
+
+impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
+    fn from_json_and_limits(_persistent: GpuJson, _version: u64, _limits: GenericGpuLimit) -> Self {
+        Self::system_default()
+    }
+
+    fn from_limits(_limits: GenericGpuLimit) -> Self {
+        Self::system_default()
     }
 }
 

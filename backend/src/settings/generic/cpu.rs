@@ -1,13 +1,13 @@
 use std::convert::{AsMut, AsRef, Into};
 
-use limits_core::json::GenericCpuLimit;
+use limits_core::json_v2::{GenericCpusLimit, GenericCpuLimit};
 
 use super::FromGenericCpuInfo;
 use crate::api::RangeLimit;
 use crate::persist::CpuJson;
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus};
+use crate::settings::{TCpu, TCpus, ProviderBuilder};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
@@ -87,31 +87,15 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> Cpus<C> {
             Err(_) => (false, false),
         }
     }
+}
 
-    pub fn from_limits(limits: limits_core::json::GenericCpuLimit) -> Self {
-        let cpu_count = Self::cpu_count().unwrap_or(8);
-        let (_, can_smt) = Self::system_smt_capabilities();
-        let mut new_cpus = Vec::with_capacity(cpu_count);
-        for i in 0..cpu_count {
-            let new_cpu = C::from_limits(i, limits.clone());
-            new_cpus.push(new_cpu);
-        }
-        Self {
-            cpus: new_cpus,
-            smt: true,
-            smt_capable: can_smt,
-        }
-    }
-
-    pub fn from_json_and_limits(
-        mut other: Vec<CpuJson>,
-        version: u64,
-        limits: limits_core::json::GenericCpuLimit,
-    ) -> Self {
+impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus<C> {
+    fn from_json_and_limits(mut other: Vec<CpuJson>, version: u64, limits: GenericCpusLimit) -> Self {
         let (_, can_smt) = Self::system_smt_capabilities();
         let mut result = Vec::with_capacity(other.len());
         let max_cpus = Self::cpu_count();
         let smt_guess = crate::settings::util::guess_smt(&other) && can_smt;
+        let fallback_cpu_limit = GenericCpuLimit::default();
         for (i, cpu) in other.drain(..).enumerate() {
             // prevent having more CPUs than available
             if let Some(max_cpus) = max_cpus {
@@ -119,7 +103,10 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> Cpus<C> {
                     break;
                 }
             }
-            let new_cpu = C::from_json_and_limits(cpu, version, i, limits.clone());
+            let cpu_limit = limits.cpus.get(i)
+                .or_else(|| limits.cpus.get(0))
+                .unwrap_or_else(|| &fallback_cpu_limit).clone();
+            let new_cpu = C::from_json_and_limits(cpu, version, i, cpu_limit);
             result.push(new_cpu);
         }
         if let Some(max_cpus) = max_cpus {
@@ -133,6 +120,25 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> Cpus<C> {
         Self {
             cpus: result,
             smt: smt_guess,
+            smt_capable: can_smt,
+        }
+    }
+
+    fn from_limits(limits: GenericCpusLimit) -> Self {
+        let cpu_count = Self::cpu_count().unwrap_or(8);
+        let (_, can_smt) = Self::system_smt_capabilities();
+        let mut new_cpus = Vec::with_capacity(cpu_count);
+        let fallback_cpu_limit = GenericCpuLimit::default();
+        for i in 0..cpu_count {
+            let cpu_limit = limits.cpus.get(i)
+                .or_else(|| limits.cpus.get(0))
+                .unwrap_or_else(|| &fallback_cpu_limit).clone();
+            let new_cpu = C::from_limits(i, cpu_limit);
+            new_cpus.push(new_cpu);
+        }
+        Self {
+            cpus: new_cpus,
+            smt: true,
             smt_capable: can_smt,
         }
     }
@@ -345,7 +351,7 @@ impl Cpu {
                 .clock_max
                 .clone()
                 .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(5_000))),
-            clock_step: self.limits.clock_step,
+            clock_step: self.limits.clock_step.unwrap_or(100),
             governors: self.governors(),
         }
     }

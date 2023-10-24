@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use crate::persist::GpuJson;
 use crate::settings::generic::Gpu as GenericGpu;
 use crate::settings::MinMax;
-use crate::settings::TGpu;
+use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError, SettingVariant};
 
 fn ryzen_adj_or_log() -> Option<Mutex<RyzenAdj>> {
@@ -35,8 +35,8 @@ impl std::fmt::Debug for Gpu {
     }
 }
 
-impl Gpu {
-    pub fn from_limits(limits: limits_core::json::GenericGpuLimit) -> Self {
+impl ProviderBuilder<GpuJson, limits_core::json_v2::GenericGpuLimit> for Gpu {
+    fn from_limits(limits: limits_core::json_v2::GenericGpuLimit) -> Self {
         Self {
             generic: GenericGpu::from_limits(limits),
             implementor: ryzen_adj_or_log(),
@@ -44,10 +44,10 @@ impl Gpu {
         }
     }
 
-    pub fn from_json_and_limits(
+    fn from_json_and_limits(
         other: GpuJson,
         version: u64,
-        limits: limits_core::json::GenericGpuLimit,
+        limits: limits_core::json_v2::GenericGpuLimit,
     ) -> Self {
         Self {
             generic: GenericGpu::from_json_and_limits(other, version, limits),
@@ -55,6 +55,9 @@ impl Gpu {
             state: Default::default(),
         }
     }
+}
+
+impl Gpu {
 
     fn set_all(&mut self) -> Result<(), Vec<SettingError>> {
         let mutex = match &self.implementor {

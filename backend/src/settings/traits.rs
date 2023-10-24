@@ -40,6 +40,12 @@ pub trait OnPowerEvent {
     }
 }
 
+pub trait ProviderBuilder<J, L> {
+    fn from_json_and_limits(persistent: J, version: u64, limits: L) -> Self;
+
+    fn from_limits(limits: L) -> Self;
+}
+
 pub trait TGpu: OnSet + OnResume + OnPowerEvent + Debug + Send {
     fn limits(&self) -> crate::api::GpuLimits;
 

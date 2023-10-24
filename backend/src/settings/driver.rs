@@ -1,4 +1,4 @@
-use super::{auto_detect0, General, SettingError, TBattery, TCpus, TGeneral, TGpu};
+use super::{auto_detect0, TBattery, TCpus, TGeneral, TGpu};
 use crate::persist::{DriverJson, SettingsJson};
 
 pub struct Driver {
@@ -12,96 +12,9 @@ impl Driver {
     pub fn init(
         settings: SettingsJson,
         json_path: std::path::PathBuf,
-    ) -> Result<Self, SettingError> {
-        Ok(match settings.version {
-            0 => Self::version0(settings, json_path)?,
-            _ => Self {
-                general: Box::new(General {
-                    persistent: settings.persistent,
-                    path: json_path,
-                    name: settings.name,
-                    driver: DriverJson::SteamDeck,
-                    events: settings.events.unwrap_or_default(),
-                }),
-                cpus: Box::new(super::steam_deck::Cpus::from_json(
-                    settings.cpus,
-                    settings.version,
-                )),
-                gpu: Box::new(super::steam_deck::Gpu::from_json(
-                    settings.gpu,
-                    settings.version,
-                )),
-                battery: Box::new(super::steam_deck::Battery::from_json(
-                    settings.battery,
-                    settings.version,
-                )),
-            },
-        })
-    }
-
-    fn version0(
-        settings: SettingsJson,
-        json_path: std::path::PathBuf,
-    ) -> Result<Self, SettingError> {
-        let name = settings.name.clone();
-        if let Some(provider) = &settings.provider {
-            match provider {
-                DriverJson::SteamDeck => Ok(Self {
-                    general: Box::new(General {
-                        persistent: settings.persistent,
-                        path: json_path,
-                        name: settings.name,
-                        driver: DriverJson::SteamDeck,
-                        events: settings.events.unwrap_or_default(),
-                    }),
-                    cpus: Box::new(super::steam_deck::Cpus::from_json(
-                        settings.cpus,
-                        settings.version,
-                    )),
-                    gpu: Box::new(super::steam_deck::Gpu::from_json(
-                        settings.gpu,
-                        settings.version,
-                    )),
-                    battery: Box::new(super::steam_deck::Battery::from_json(
-                        settings.battery,
-                        settings.version,
-                    )),
-                }),
-                // There's nothing special about SteamDeckAdvance, it just appears different
-                DriverJson::SteamDeckAdvance => Ok(Self {
-                    general: Box::new(General {
-                        persistent: settings.persistent,
-                        path: json_path,
-                        name: settings.name,
-                        driver: DriverJson::SteamDeckAdvance,
-                        events: settings.events.unwrap_or_default(),
-                    }),
-                    cpus: Box::new(super::steam_deck::Cpus::from_json(
-                        settings.cpus,
-                        settings.version,
-                    )),
-                    gpu: Box::new(super::steam_deck::Gpu::from_json(
-                        settings.gpu,
-                        settings.version,
-                    )),
-                    battery: Box::new(super::steam_deck::Battery::from_json(
-                        settings.battery,
-                        settings.version,
-                    )),
-                }),
-                DriverJson::Generic | DriverJson::GenericAMD => {
-                    Ok(super::detect::auto_detect0(Some(settings), json_path, name))
-                }
-                DriverJson::Unknown => {
-                    Ok(super::detect::auto_detect0(Some(settings), json_path, name))
-                }
-                DriverJson::AutoDetect => {
-                    Ok(super::detect::auto_detect0(Some(settings), json_path, name))
-                }
-            }
-        } else {
-            Ok(super::detect::auto_detect0(Some(settings), json_path, name))
-        }
+    ) -> Self {
+        let name_bup = settings.name.clone();
+        auto_detect0(Some(settings), json_path, name_bup)
     }
 
     pub fn system_default(json_path: std::path::PathBuf, name: String) -> Self {

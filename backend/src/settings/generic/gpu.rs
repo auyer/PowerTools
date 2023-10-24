@@ -1,11 +1,11 @@
 use std::convert::Into;
 
-use limits_core::json::GenericGpuLimit;
+use limits_core::json_v2::GenericGpuLimit;
 use sysfuss::{BasicEntityPath, SysEntity};
 
 use crate::api::RangeLimit;
 use crate::persist::GpuJson;
-use crate::settings::TGpu;
+use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
 
@@ -49,8 +49,34 @@ impl Gpu {
             }
         }
     }
+}
 
-    pub fn from_limits(limits: limits_core::json::GenericGpuLimit) -> Self {
+impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
+    fn from_json_and_limits(persistent: GpuJson, version: u64, limits: GenericGpuLimit) -> Self {
+        let clock_lims = if limits.clock_min.is_some() && limits.clock_max.is_some() {
+            persistent.clock_limits.map(|x| min_max_from_json(x, version))
+        } else {
+            None
+        };
+        Self {
+            slow_memory: false,
+            fast_ppt: if limits.fast_ppt.is_some() {
+                persistent.fast_ppt
+            } else {
+                None
+            },
+            slow_ppt: if limits.slow_ppt.is_some() {
+                persistent.slow_ppt
+            } else {
+                None
+            },
+            clock_limits: clock_lims,
+            limits,
+            sysfs: Self::find_card_sysfs(persistent.root)
+        }
+    }
+
+    fn from_limits(limits: GenericGpuLimit) -> Self {
         Self {
             slow_memory: false,
             fast_ppt: None,
@@ -58,34 +84,6 @@ impl Gpu {
             clock_limits: None,
             limits,
             sysfs: Self::find_card_sysfs(None::<&'static str>),
-        }
-    }
-
-    pub fn from_json_and_limits(
-        other: GpuJson,
-        version: u64,
-        limits: limits_core::json::GenericGpuLimit,
-    ) -> Self {
-        let clock_lims = if limits.clock_min.is_some() && limits.clock_max.is_some() {
-            other.clock_limits.map(|x| min_max_from_json(x, version))
-        } else {
-            None
-        };
-        Self {
-            slow_memory: false,
-            fast_ppt: if limits.fast_ppt.is_some() {
-                other.fast_ppt
-            } else {
-                None
-            },
-            slow_ppt: if limits.slow_ppt.is_some() {
-                other.slow_ppt
-            } else {
-                None
-            },
-            clock_limits: clock_lims,
-            limits,
-            sysfs: Self::find_card_sysfs(other.root)
         }
     }
 }

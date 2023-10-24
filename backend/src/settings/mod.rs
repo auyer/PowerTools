@@ -17,7 +17,7 @@ pub use general::{General, SettingVariant, Settings};
 pub use min_max::{min_max_from_json, MinMax};
 
 pub use error::SettingError;
-pub use traits::{OnPowerEvent, OnResume, OnSet, PowerMode, TBattery, TCpu, TCpus, TGeneral, TGpu};
+pub use traits::{OnPowerEvent, OnResume, OnSet, PowerMode, TBattery, TCpu, TCpus, TGeneral, TGpu, ProviderBuilder};
 
 #[cfg(test)]
 mod tests {

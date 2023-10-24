@@ -2,13 +2,15 @@ use std::convert::Into;
 
 use sysfuss::{BasicEntityPath, SysEntity, SysEntityAttributesExt};
 
-use super::oc_limits::{CpuLimits, CpusLimits, OverclockLimits};
+use limits_core::json_v2::{GenericCpusLimit, GenericCpuLimit};
+
 use super::POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT;
+use super::util::{range_max_or_fallback, range_min_or_fallback};
 use crate::api::RangeLimit;
 use crate::persist::CpuJson;
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus};
+use crate::settings::{TCpu, TCpus, ProviderBuilder};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
@@ -17,13 +19,17 @@ const CARD_EXTENSIONS: &[&'static str] = &[
     super::DPM_FORCE_LIMITS_ATTRIBUTE
 ];
 
+const MAX_CLOCK: u64 = 3500;
+const MIN_MAX_CLOCK: u64 = 200; // minimum value allowed for maximum CPU clock, MHz
+const MIN_MIN_CLOCK: u64 = 1400; // minimum value allowed for minimum CPU clock, MHz
+const CLOCK_STEP: u64 = 100;
+
 #[derive(Debug, Clone)]
 pub struct Cpus {
     pub cpus: Vec<Cpu>,
     pub smt: bool,
     pub smt_capable: bool,
-    pub(super) limits: CpusLimits,
-    driver_mode: crate::persist::DriverJson,
+    pub(super) limits: GenericCpusLimit,
 }
 
 impl OnSet for Cpus {
@@ -94,85 +100,42 @@ impl Cpus {
             Err(_) => (false, false),
         }
     }
+}
 
-    pub fn system_default() -> Self {
+impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
+    fn from_json_and_limits(mut persistent: Vec<CpuJson>, version: u64, limits: GenericCpusLimit) -> Self {
         POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.reset();
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        let oc_limits = oc_limits.cpus;
-        let driver = if is_default {
-            crate::persist::DriverJson::SteamDeck
-        } else {
-            crate::persist::DriverJson::SteamDeckAdvance
-        };
-        if let Some(max_cpu) = Self::cpu_count() {
-            let mut sys_cpus = Vec::with_capacity(max_cpu);
-            for i in 0..max_cpu {
-                sys_cpus.push(Cpu::system_default(
-                    i,
-                    oc_limits
-                        .cpus
-                        .get(i)
-                        .map(|x| x.to_owned())
-                        .unwrap_or_default(),
-                ));
-            }
-            let (_, can_smt) = Self::system_smt_capabilities();
-            Self {
-                cpus: sys_cpus,
-                smt: true,
-                smt_capable: can_smt,
-                limits: oc_limits,
-                driver_mode: driver,
-            }
-        } else {
-            Self {
-                cpus: vec![],
-                smt: false,
-                smt_capable: false,
-                limits: oc_limits,
-                driver_mode: driver,
-            }
-        }
-    }
-
-    #[inline]
-    pub fn from_json(mut other: Vec<CpuJson>, version: u64) -> Self {
-        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.reset();
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        let oc_limits = oc_limits.cpus;
-        let driver = if is_default {
-            crate::persist::DriverJson::SteamDeck
-        } else {
-            crate::persist::DriverJson::SteamDeckAdvance
-        };
         let (_, can_smt) = Self::system_smt_capabilities();
-        let mut result = Vec::with_capacity(other.len());
+        let mut result = Vec::with_capacity(persistent.len());
         let max_cpus = Self::cpu_count();
-        let smt_guess = crate::settings::util::guess_smt(&other) && can_smt;
-        for (i, cpu) in other.drain(..).enumerate() {
+        let smt_guess = crate::settings::util::guess_smt(&persistent) && can_smt;
+        for (i, cpu) in persistent.drain(..).enumerate() {
             // prevent having more CPUs than available
             if let Some(max_cpus) = max_cpus {
                 if i == max_cpus {
                     break;
                 }
             }
-            let new_cpu = Cpu::from_json(
-                cpu,
-                version,
-                i,
-                oc_limits
-                    .cpus
-                    .get(i)
-                    .map(|x| x.to_owned())
-                    .unwrap_or_default(),
-            );
+            let new_cpu = if let Some(cpu_limit) = limits.cpus.get(i) {
+                Cpu::from_json_and_limits(
+                    cpu,
+                    version,
+                    i,
+                    cpu_limit.to_owned()
+                )
+            } else {
+                Cpu::from_json(
+                    cpu,
+                    version,
+                    i,
+                )
+            };
             result.push(new_cpu);
         }
         if let Some(max_cpus) = max_cpus {
             if result.len() != max_cpus {
-                let mut sys_cpus = Cpus::system_default();
-                for i in result.len()..sys_cpus.cpus.len() {
-                    result.push(sys_cpus.cpus.remove(i));
+                for i in result.len()..max_cpus {
+                    result.push(Cpu::system_default(i));
                 }
             }
         }
@@ -180,8 +143,39 @@ impl Cpus {
             cpus: result,
             smt: smt_guess,
             smt_capable: can_smt,
-            limits: oc_limits,
-            driver_mode: driver,
+            limits: limits,
+        }
+    }
+
+    fn from_limits(limits: GenericCpusLimit) -> Self {
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.reset();
+        if let Some(max_cpu) = Self::cpu_count() {
+            let mut sys_cpus = Vec::with_capacity(max_cpu);
+            for i in 0..max_cpu {
+                let new_cpu = if let Some(cpu_limit) = limits.cpus.get(i) {
+                    Cpu::from_limits(
+                        i,
+                        cpu_limit.to_owned()
+                    )
+                } else {
+                    Cpu::system_default(i)
+                };
+                sys_cpus.push(new_cpu);
+            }
+            let (_, can_smt) = Self::system_smt_capabilities();
+            Self {
+                cpus: sys_cpus,
+                smt: true,
+                smt_capable: can_smt,
+                limits: limits,
+            }
+        } else {
+            Self {
+                cpus: vec![],
+                smt: false,
+                smt_capable: false,
+                limits: limits,
+            }
         }
     }
 }
@@ -224,7 +218,7 @@ impl TCpus for Cpus {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        self.driver_mode.clone()
+        crate::persist::DriverJson::SteamDeck
     }
 }
 
@@ -233,7 +227,7 @@ pub struct Cpu {
     pub online: bool,
     pub clock_limits: Option<MinMax<u64>>,
     pub governor: String,
-    limits: CpuLimits,
+    limits: GenericCpuLimit,
     index: usize,
     state: crate::state::steam_deck::Cpu,
     sysfs: BasicEntityPath,
@@ -249,7 +243,7 @@ enum ClockType {
 
 impl Cpu {
     #[inline]
-    fn from_json(other: CpuJson, version: u64, i: usize, oc_limits: CpuLimits) -> Self {
+    fn from_json_and_limits(other: CpuJson, version: u64, i: usize, oc_limits: GenericCpuLimit) -> Self {
         match version {
             0 => Self {
                 online: other.online,
@@ -270,6 +264,12 @@ impl Cpu {
                 sysfs: Self::find_card_sysfs(other.root),
             },
         }
+    }
+
+    #[inline]
+    fn from_json(other: CpuJson, version: u64, i: usize) -> Self {
+        let oc_limits = GenericCpuLimit::default_for(&limits_core::json_v2::CpuLimitType::SteamDeck, i);
+        Self::from_json_and_limits(other, version, i, oc_limits)
     }
 
     fn find_card_sysfs(root: Option<impl AsRef<std::path::Path>>) -> BasicEntityPath {
@@ -338,8 +338,8 @@ impl Cpu {
             }
             // min clock
             if let Some(min) = clock_limits.min {
-                let valid_min = if min < self.limits.clock_min.min {
-                    self.limits.clock_min.min
+                let valid_min = if min < range_min_or_fallback(&self.limits.clock_min, MIN_MIN_CLOCK) {
+                    range_min_or_fallback(&self.limits.clock_min, MIN_MIN_CLOCK)
                 } else {
                     min
                 };
@@ -367,10 +367,10 @@ impl Cpu {
                 // disable manual clock limits
                 log::debug!("Setting CPU {} to default clockspeed", self.index);
                 // max clock
-                self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
+                self.set_clock_limit(self.index, range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK), ClockType::Max)
                     .unwrap_or_else(|e| errors.push(e));
                 // min clock
-                self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
+                self.set_clock_limit(self.index, range_min_or_fallback(&self.limits.clock_min, MIN_MIN_CLOCK), ClockType::Min)
                     .unwrap_or_else(|e| errors.push(e));
             }
             // TODO remove this when it's no longer needed
@@ -395,10 +395,10 @@ impl Cpu {
             // disable manual clock limits
             log::debug!("Setting CPU {} to default clockspeed", self.index);
             // max clock
-            self.set_clock_limit(self.index, self.limits.clock_max.max, ClockType::Max)
+            self.set_clock_limit(self.index, range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK), ClockType::Max)
                 .unwrap_or_else(|e| errors.push(e));
             // min clock
-            self.set_clock_limit(self.index, self.limits.clock_min.min, ClockType::Min)
+            self.set_clock_limit(self.index, range_min_or_fallback(&self.limits.clock_min, MIN_MIN_CLOCK), ClockType::Min)
                 .unwrap_or_else(|e| errors.push(e));
 
             self.set_confirm().unwrap_or_else(|e| errors.push(e));
@@ -493,11 +493,11 @@ impl Cpu {
         if let Some(clock_limits) = &mut self.clock_limits {
             if let Some(min) = clock_limits.min {
                 clock_limits.min =
-                    Some(min.clamp(self.limits.clock_max.min, self.limits.clock_min.max));
+                    Some(min.clamp(range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK), range_max_or_fallback(&self.limits.clock_min, MAX_CLOCK)));
             }
             if let Some(max) = clock_limits.max {
                 clock_limits.max =
-                    Some(max.clamp(self.limits.clock_max.min, self.limits.clock_max.max));
+                    Some(max.clamp(range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK), range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK)));
             }
         }
     }
@@ -514,7 +514,7 @@ impl Cpu {
         }
     }*/
 
-    fn system_default(cpu_index: usize, oc_limits: CpuLimits) -> Self {
+    fn from_limits(cpu_index: usize, oc_limits: GenericCpuLimit) -> Self {
         Self {
             online: true,
             clock_limits: None,
@@ -526,17 +526,21 @@ impl Cpu {
         }
     }
 
+    fn system_default(cpu_index: usize) -> Self {
+        Self::from_limits(cpu_index, GenericCpuLimit::default_for(&limits_core::json_v2::CpuLimitType::SteamDeck, cpu_index))
+    }
+
     fn limits(&self) -> crate::api::CpuLimits {
         crate::api::CpuLimits {
             clock_min_limits: Some(RangeLimit {
-                min: self.limits.clock_max.min, // allows min to be set by max (it's weird, blame the kernel)
-                max: self.limits.clock_min.max,
+                min: range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK), // allows min to be set by max (it's weird, blame the kernel)
+                max: range_max_or_fallback(&self.limits.clock_min, MAX_CLOCK),
             }),
             clock_max_limits: Some(RangeLimit {
-                min: self.limits.clock_max.min,
-                max: self.limits.clock_max.max,
+                min: range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK),
+                max: range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK),
             }),
-            clock_step: self.limits.clock_step,
+            clock_step: self.limits.clock_step.unwrap_or(CLOCK_STEP),
             governors: self.governors(),
         }
     }

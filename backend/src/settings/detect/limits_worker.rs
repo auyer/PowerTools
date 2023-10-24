@@ -2,7 +2,7 @@ use std::thread::{self, JoinHandle};
 #[cfg(feature = "online")]
 use std::time::Duration;
 
-use limits_core::json::Base;
+use limits_core::json_v2::Base;
 
 #[cfg(feature = "online")]
 pub fn spawn() -> JoinHandle<()> {

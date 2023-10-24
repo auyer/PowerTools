@@ -1,9 +1,11 @@
 use std::convert::Into;
 
+use limits_core::json_v2::GenericCpusLimit;
+
 use crate::persist::CpuJson;
 use crate::settings::MinMax;
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus};
+use crate::settings::{TCpu, TCpus, ProviderBuilder};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
@@ -111,7 +113,7 @@ impl Cpus {
         }
     }
 
-    #[inline]
+    /*#[inline]
     pub fn from_json(mut other: Vec<CpuJson>, version: u64) -> Self {
         let (_, can_smt) = Self::system_smt_capabilities();
         let mut result = Vec::with_capacity(other.len());
@@ -140,6 +142,42 @@ impl Cpus {
             smt: smt_guess,
             smt_capable: can_smt,
         }
+    }*/
+}
+
+impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
+    fn from_json_and_limits(mut persistent: Vec<CpuJson>, version: u64, _limits: GenericCpusLimit) -> Self {
+        let (_, can_smt) = Self::system_smt_capabilities();
+        let mut result = Vec::with_capacity(persistent.len());
+        let max_cpus = Self::cpu_count();
+        let smt_guess = crate::settings::util::guess_smt(&persistent) && can_smt;
+        for (i, cpu) in persistent.drain(..).enumerate() {
+            // prevent having more CPUs than available
+            if let Some(max_cpus) = max_cpus {
+                if i == max_cpus {
+                    break;
+                }
+            }
+            let new_cpu = Cpu::from_json(cpu, version, i);
+            result.push(new_cpu);
+        }
+        if let Some(max_cpus) = max_cpus {
+            if result.len() != max_cpus {
+                let mut sys_cpus = Cpus::system_default();
+                for i in result.len()..sys_cpus.cpus.len() {
+                    result.push(sys_cpus.cpus.remove(i));
+                }
+            }
+        }
+        Self {
+            cpus: result,
+            smt: smt_guess,
+            smt_capable: can_smt,
+        }
+    }
+
+    fn from_limits(_limits: GenericCpusLimit) -> Self {
+        Self::system_default()
     }
 }
 
@@ -153,7 +191,7 @@ impl TCpus for Cpus {
         }
     }
 
-    fn json(&self) -> Vec<crate::persist::CpuJson> {
+    fn json(&self) -> Vec<CpuJson> {
         self.cpus.iter().map(|x| x.to_owned().into()).collect()
     }
 

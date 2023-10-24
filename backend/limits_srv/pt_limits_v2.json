@@ -1,0 +1,1250 @@
+{
+  "configs": [
+    {
+      "name": "Steam Deck Custom",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t: AMD Custom APU 0405\n",
+        "os": null,
+        "command": null,
+        "file_exists": "./limits_override.json"
+      },
+      "limits": {
+        "cpu": {
+          "provider": "SteamDeckAdvance",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "SteamDeckAdvance",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 30000000
+            },
+            "fast_ppt_default": 15000000,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 29000000
+            },
+            "slow_ppt_default": 15000000,
+            "ppt_divisor": 1000000,
+            "ppt_step": 1,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "SteamDeckAdvance",
+          "limits": {
+            "charge_rate": {
+              "min": 250,
+              "max": 2500
+            },
+            "charge_modes": [
+              "normal",
+              "discharge",
+              "idle"
+            ],
+            "charge_limit": {
+              "min": 10.0,
+              "max": 90.0
+            },
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "Steam Deck",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t: AMD Custom APU 0405\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "SteamDeck",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "SteamDeck",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 30000000
+            },
+            "fast_ppt_default": 15000000,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 29000000
+            },
+            "slow_ppt_default": 15000000,
+            "ppt_divisor": 1000000,
+            "ppt_step": 1,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "SteamDeck",
+          "limits": {
+            "charge_rate": {
+              "min": 250,
+              "max": 2500
+            },
+            "charge_modes": [
+              "normal",
+              "discharge",
+              "idle"
+            ],
+            "charge_limit": {
+              "min": 10.0,
+              "max": 90.0
+            },
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "AMD R3 2300U",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t+: AMD Ryzen 3 2300U\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 3700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 25000000
+            },
+            "fast_ppt_default": null,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 25000000
+            },
+            "slow_ppt_default": null,
+            "ppt_divisor": null,
+            "ppt_step": 1000000,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 1100
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 1100
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "Generic",
+          "limits": {
+            "charge_rate": null,
+            "charge_modes": [],
+            "charge_limit": null,
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "AMD R5 5560U",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t+: AMD Ryzen 5 5560U\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4000
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 25000000
+            },
+            "fast_ppt_default": null,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 25000000
+            },
+            "slow_ppt_default": null,
+            "ppt_divisor": null,
+            "ppt_step": 1000000,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "Generic",
+          "limits": {
+            "charge_rate": null,
+            "charge_modes": [],
+            "charge_limit": null,
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "AMD R7 5825U",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t+: AMD Ryzen 7 5825U\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4500
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 28000000
+            },
+            "fast_ppt_default": null,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 28000000
+            },
+            "slow_ppt_default": null,
+            "ppt_divisor": null,
+            "ppt_step": 1000000,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 2200
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 2200
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "Generic",
+          "limits": {
+            "charge_rate": null,
+            "charge_modes": [],
+            "charge_limit": null,
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "AMD R7 6800U",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t+: AMD Ryzen 7 6800U\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_max": {
+                  "min": 1000,
+                  "max": 4700
+                },
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "GenericAMD",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 28000000
+            },
+            "fast_ppt_default": null,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 28000000
+            },
+            "slow_ppt_default": null,
+            "ppt_divisor": null,
+            "ppt_step": 1000000,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 2200
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 2200
+            },
+            "clock_step": 100,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "Generic",
+          "limits": {
+            "charge_rate": null,
+            "charge_modes": [],
+            "charge_limit": null,
+            "extra_readouts": false
+          }
+        }
+      }
+    },
+    {
+      "name": "Fallback",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": null,
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "Unknown",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              },
+              {
+                "clock_min": null,
+                "clock_max": null,
+                "clock_step": 100,
+                "skip_resume_reclock": false
+              }
+            ],
+            "global_governors": true
+          }
+        },
+        "gpu": {
+          "provider": "Unknown",
+          "limits": {
+            "fast_ppt": null,
+            "fast_ppt_default": null,
+            "slow_ppt": null,
+            "slow_ppt_default": null,
+            "ppt_divisor": null,
+            "ppt_step": null,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_step": null,
+            "clock_min": null,
+            "clock_max": null,
+            "clock_step": null,
+            "skip_resume_reclock": false
+          }
+        },
+        "battery": {
+          "provider": "Unknown",
+          "limits": {
+            "charge_rate": null,
+            "charge_modes": [],
+            "charge_limit": null,
+            "extra_readouts": false
+          }
+        }
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "title": "Welcome",
+      "body": "Thanks for installing PowerTools! For more information, please check the wiki. For bugs and requests, please create an issue.",
+      "url": "https://git.ngni.us/NG-SD-Plugins/PowerTools/wiki"
+    }
+  ],
+  "refresh": "http://limits.ngni.us:45000/powertools/v2"
+}

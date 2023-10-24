@@ -2,11 +2,12 @@ use std::convert::Into;
 
 use sysfuss::{BasicEntityPath, HwMonPath, SysEntity, capability::attributes, SysEntityAttributesExt, SysAttribute};
 
-use super::oc_limits::{GpuLimits, OverclockLimits};
+use limits_core::json_v2::GenericGpuLimit;
+
 use super::POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT;
 use crate::api::RangeLimit;
 use crate::persist::GpuJson;
-use crate::settings::TGpu;
+use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
 
@@ -20,9 +21,8 @@ pub struct Gpu {
     pub slow_ppt: Option<u64>,
     pub clock_limits: Option<MinMax<u64>>,
     pub slow_memory: bool,
-    limits: GpuLimits,
+    limits: GenericGpuLimit,
     state: crate::state::steam_deck::Gpu,
-    driver_mode: crate::persist::DriverJson,
     sysfs_card: BasicEntityPath,
     sysfs_hwmon: HwMonPath
 }
@@ -45,41 +45,16 @@ enum ClockType {
     Max = 1,
 }
 
-impl Gpu {
-    #[inline]
-    pub fn from_json(other: GpuJson, version: u64) -> Self {
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        let driver = if is_default {
-            crate::persist::DriverJson::SteamDeck
-        } else {
-            crate::persist::DriverJson::SteamDeckAdvance
-        };
-        match version {
-            0 => Self {
-                fast_ppt: other.fast_ppt,
-                slow_ppt: other.slow_ppt,
-                clock_limits: other.clock_limits.map(|x| min_max_from_json(x, version)),
-                slow_memory: other.slow_memory,
-                limits: oc_limits.gpu,
-                state: crate::state::steam_deck::Gpu::default(),
-                driver_mode: driver,
-                sysfs_card: Self::find_card_sysfs(other.root.clone()),
-                sysfs_hwmon: Self::find_hwmon_sysfs(other.root),
-            },
-            _ => Self {
-                fast_ppt: other.fast_ppt,
-                slow_ppt: other.slow_ppt,
-                clock_limits: other.clock_limits.map(|x| min_max_from_json(x, version)),
-                slow_memory: other.slow_memory,
-                limits: oc_limits.gpu,
-                state: crate::state::steam_deck::Gpu::default(),
-                driver_mode: driver,
-                sysfs_card: Self::find_card_sysfs(other.root.clone()),
-                sysfs_hwmon: Self::find_hwmon_sysfs(other.root),
-            },
-        }
-    }
+const MAX_CLOCK: u64 = 1600;
+const MIN_CLOCK: u64 = 200;
+const MAX_FAST_PPT: u64 = 30_000_000;
+const MIN_FAST_PPT: u64 = 1_000_000;
+const MAX_SLOW_PPT: u64 = 29_000_000;
+const MIN_SLOW_PPT: u64 = 1_000_000;
+const MIDDLE_PPT: u64 = 15_000_000;
+const PPT_DIVISOR: u64 = 1_000;
 
+impl Gpu {
     fn find_card_sysfs(root: Option<impl AsRef<std::path::Path>>) -> BasicEntityPath {
         let root = crate::settings::util::root_or_default_sysfs(root);
         match root.class("drm", attributes(crate::settings::util::CARD_NEEDS.into_iter().map(|s| s.to_string()))) {
@@ -160,10 +135,10 @@ impl Gpu {
                 POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs_card)?;
                 // disable manual clock limits
                 // max clock
-                self.set_clock_limit(self.limits.clock_max.max, ClockType::Max)
+                self.set_clock_limit(self.limits.clock_max.and_then(|lim| lim.max).unwrap_or(MAX_CLOCK), ClockType::Max)
                     .unwrap_or_else(|e| errors.push(e));
                 // min clock
-                self.set_clock_limit(self.limits.clock_min.min, ClockType::Min)
+                self.set_clock_limit(self.limits.clock_min.and_then(|lim| lim.min).unwrap_or(MIN_CLOCK), ClockType::Min)
                     .unwrap_or_else(|e| errors.push(e));
 
                 self.set_confirm().unwrap_or_else(|e| errors.push(e));
@@ -251,7 +226,7 @@ impl Gpu {
                 });
         } else if self.state.fast_ppt_set {
             self.state.fast_ppt_set = false;
-            let fast_ppt = self.limits.fast_ppt_default;
+            let fast_ppt = self.limits.fast_ppt_default.unwrap_or(MIDDLE_PPT);
             self.sysfs_hwmon.set(FAST_PPT_ATTRIBUTE, fast_ppt)
                 .map_err(|e| SettingError {
                     msg: format!(
@@ -280,7 +255,7 @@ impl Gpu {
                 });
         } else if self.state.slow_ppt_set {
             self.state.slow_ppt_set = false;
-            let slow_ppt = self.limits.slow_ppt_default;
+            let slow_ppt = self.limits.slow_ppt_default.unwrap_or(MIDDLE_PPT);
             self.sysfs_hwmon.set(SLOW_PPT_ATTRIBUTE, slow_ppt)
                 .map_err(|e| SettingError {
                     msg: format!(
@@ -304,39 +279,20 @@ impl Gpu {
 
     fn clamp_all(&mut self) {
         if let Some(fast_ppt) = &mut self.fast_ppt {
-            *fast_ppt = (*fast_ppt).clamp(self.limits.fast_ppt.min, self.limits.fast_ppt.max);
+            *fast_ppt = (*fast_ppt).clamp(self.limits.fast_ppt.and_then(|lim| lim.min).unwrap_or(MIN_FAST_PPT), self.limits.fast_ppt.and_then(|lim| lim.max).unwrap_or(MAX_FAST_PPT));
         }
         if let Some(slow_ppt) = &mut self.slow_ppt {
-            *slow_ppt = (*slow_ppt).clamp(self.limits.slow_ppt.min, self.limits.slow_ppt.max);
+            *slow_ppt = (*slow_ppt).clamp(self.limits.slow_ppt.and_then(|lim| lim.min).unwrap_or(MIN_SLOW_PPT), self.limits.slow_ppt.and_then(|lim| lim.max).unwrap_or(MAX_SLOW_PPT));
         }
         if let Some(clock_limits) = &mut self.clock_limits {
             if let Some(min) = clock_limits.min {
                 clock_limits.min =
-                    Some(min.clamp(self.limits.clock_min.min, self.limits.clock_min.max));
+                    Some(min.clamp(self.limits.clock_min.and_then(|lim| lim.min).unwrap_or(MIN_CLOCK), self.limits.clock_min.and_then(|lim| lim.max).unwrap_or(MAX_CLOCK)));
             }
             if let Some(max) = clock_limits.max {
                 clock_limits.max =
-                    Some(max.clamp(self.limits.clock_max.min, self.limits.clock_max.max));
+                    Some(max.clamp(self.limits.clock_max.and_then(|lim| lim.min).unwrap_or(MIN_CLOCK), self.limits.clock_max.and_then(|lim| lim.max).unwrap_or(MAX_CLOCK)));
             }
-        }
-    }
-
-    pub fn system_default() -> Self {
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        Self {
-            fast_ppt: None,
-            slow_ppt: None,
-            clock_limits: None,
-            slow_memory: false,
-            limits: oc_limits.gpu,
-            state: crate::state::steam_deck::Gpu::default(),
-            driver_mode: if is_default {
-                crate::persist::DriverJson::SteamDeck
-            } else {
-                crate::persist::DriverJson::SteamDeckAdvance
-            },
-            sysfs_card: Self::find_card_sysfs(None::<&'static str>),
-            sysfs_hwmon: Self::find_hwmon_sysfs(None::<&'static str>),
         }
     }
 }
@@ -350,6 +306,46 @@ impl Into<GpuJson> for Gpu {
             clock_limits: self.clock_limits.map(|x| x.into()),
             slow_memory: self.slow_memory,
             root: self.sysfs_card.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|r| r.to_owned()))
+        }
+    }
+}
+
+impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
+    fn from_json_and_limits(persistent: GpuJson, version: u64, limits: GenericGpuLimit) -> Self {
+        match version {
+            0 => Self {
+                fast_ppt: persistent.fast_ppt,
+                slow_ppt: persistent.slow_ppt,
+                clock_limits: persistent.clock_limits.map(|x| min_max_from_json(x, version)),
+                slow_memory: persistent.slow_memory,
+                limits: limits,
+                state: crate::state::steam_deck::Gpu::default(),
+                sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
+                sysfs_hwmon: Self::find_hwmon_sysfs(persistent.root),
+            },
+            _ => Self {
+                fast_ppt: persistent.fast_ppt,
+                slow_ppt: persistent.slow_ppt,
+                clock_limits: persistent.clock_limits.map(|x| min_max_from_json(x, version)),
+                slow_memory: persistent.slow_memory,
+                limits: limits,
+                state: crate::state::steam_deck::Gpu::default(),
+                sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
+                sysfs_hwmon: Self::find_hwmon_sysfs(persistent.root),
+            },
+        }
+    }
+
+    fn from_limits(limits: GenericGpuLimit) -> Self {
+        Self {
+            fast_ppt: None,
+            slow_ppt: None,
+            clock_limits: None,
+            slow_memory: false,
+            limits: limits,
+            state: crate::state::steam_deck::Gpu::default(),
+            sysfs_card: Self::find_card_sysfs(None::<&'static str>),
+            sysfs_hwmon: Self::find_hwmon_sysfs(None::<&'static str>),
         }
     }
 }
@@ -375,26 +371,26 @@ impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
         crate::api::GpuLimits {
             fast_ppt_limits: Some(RangeLimit {
-                min: self.limits.fast_ppt.min / self.limits.ppt_divisor,
-                max: self.limits.fast_ppt.max / self.limits.ppt_divisor,
+                min: super::util::range_min_or_fallback(&self.limits.fast_ppt, MIN_FAST_PPT) / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                max: super::util::range_max_or_fallback(&self.limits.fast_ppt, MAX_FAST_PPT) / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
             }),
             slow_ppt_limits: Some(RangeLimit {
-                min: self.limits.slow_ppt.min / self.limits.ppt_divisor,
-                max: self.limits.slow_ppt.max / self.limits.ppt_divisor,
+                min: super::util::range_min_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT) / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                max: super::util::range_max_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT) / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
             }),
-            ppt_step: self.limits.ppt_step,
+            ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: None,
             tdp_boost_limits: None,
             tdp_step: 42,
             clock_min_limits: Some(RangeLimit {
-                min: self.limits.clock_min.min,
-                max: self.limits.clock_min.max,
+                min: super::util::range_min_or_fallback(&self.limits.clock_min, MIN_CLOCK),
+                max: super::util::range_max_or_fallback(&self.limits.clock_min, MAX_CLOCK),
             }),
             clock_max_limits: Some(RangeLimit {
-                min: self.limits.clock_max.min,
-                max: self.limits.clock_max.max,
+                min: super::util::range_min_or_fallback(&self.limits.clock_max, MIN_CLOCK),
+                max: super::util::range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK),
             }),
-            clock_step: self.limits.clock_step,
+            clock_step: self.limits.clock_step.unwrap_or(100),
             memory_control_capable: true,
         }
     }
@@ -404,14 +400,14 @@ impl TGpu for Gpu {
     }
 
     fn ppt(&mut self, fast: Option<u64>, slow: Option<u64>) {
-        self.fast_ppt = fast.map(|x| x * self.limits.ppt_divisor);
-        self.slow_ppt = slow.map(|x| x * self.limits.ppt_divisor);
+        self.fast_ppt = fast.map(|x| x * self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR));
+        self.slow_ppt = slow.map(|x| x * self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR));
     }
 
     fn get_ppt(&self) -> (Option<u64>, Option<u64>) {
         (
-            self.fast_ppt.map(|x| x / self.limits.ppt_divisor),
-            self.slow_ppt.map(|x| x / self.limits.ppt_divisor),
+            self.fast_ppt.map(|x| x / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR)),
+            self.slow_ppt.map(|x| x / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR)),
         )
     }
 
@@ -428,6 +424,6 @@ impl TGpu for Gpu {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        self.driver_mode.clone()
+        crate::persist::DriverJson::SteamDeck
     }
 }

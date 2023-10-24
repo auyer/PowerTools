@@ -156,27 +156,19 @@ impl OnSet for Settings {
 impl Settings {
     #[inline]
     pub fn from_json(other: SettingsJson, json_path: PathBuf) -> Self {
-        let name_bup = other.name.clone();
-        match super::Driver::init(other, json_path.clone()) {
-            Ok(x) => {
-                log::info!(
-                    "Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}",
-                    x.general.provider(),
-                    x.cpus.provider(),
-                    x.gpu.provider(),
-                    x.battery.provider()
-                );
-                Self {
-                    general: x.general,
-                    cpus: x.cpus,
-                    gpu: x.gpu,
-                    battery: x.battery,
-                }
-            }
-            Err(e) => {
-                log::error!("Driver init error: {}", e);
-                Self::system_default(json_path, name_bup)
-            }
+        let x = super::Driver::init(other, json_path.clone());
+        log::info!(
+            "Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}",
+            x.general.provider(),
+            x.cpus.provider(),
+            x.gpu.provider(),
+            x.battery.provider()
+        );
+        Self {
+            general: x.general,
+            cpus: x.cpus,
+            gpu: x.gpu,
+            battery: x.battery,
         }
     }
 
@@ -219,22 +211,12 @@ impl Settings {
                 *self.general.persistent() = false;
                 self.general.name(name);
             } else {
-                match super::Driver::init(settings_json, json_path.clone()) {
-                    Ok(x) => {
-                        log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
-                        self.general = x.general;
-                        self.cpus = x.cpus;
-                        self.gpu = x.gpu;
-                        self.battery = x.battery;
-                    }
-                    Err(e) => {
-                        log::error!("Driver init error: {}", e);
-                        self.general.name(name);
-                        *self.general.persistent() = false;
-                        self.general.path(json_path);
-                        return Err(e);
-                    }
-                };
+                let x = super::Driver::init(settings_json, json_path.clone());
+                log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
+                self.general = x.general;
+                self.cpus = x.cpus;
+                self.gpu = x.gpu;
+                self.battery = x.battery;
             }
         } else {
             if system_defaults {

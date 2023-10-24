@@ -4,11 +4,12 @@ use std::sync::Arc;
 use sysfuss::{PowerSupplyAttribute, PowerSupplyPath, HwMonAttribute, HwMonAttributeItem, HwMonAttributeType, HwMonPath, SysEntity, SysEntityAttributesExt, SysAttribute};
 use sysfuss::capability::attributes;
 
-use super::oc_limits::{BatteryLimits, OverclockLimits};
+use limits_core::json_v2::GenericBatteryLimit;
+
 use super::util::ChargeMode;
 use crate::api::RangeLimit;
 use crate::persist::{BatteryEventJson, BatteryJson};
-use crate::settings::TBattery;
+use crate::settings::{TBattery, ProviderBuilder};
 use crate::settings::{OnPowerEvent, OnResume, OnSet, PowerMode, SettingError};
 
 #[derive(Debug, Clone)]
@@ -16,9 +17,8 @@ pub struct Battery {
     pub charge_rate: Option<u64>,
     pub charge_mode: Option<ChargeMode>,
     events: Vec<EventInstruction>,
-    limits: BatteryLimits,
+    limits: GenericBatteryLimit,
     state: crate::state::steam_deck::Battery,
-    driver_mode: crate::persist::DriverJson,
     sysfs_bat: PowerSupplyPath,
     sysfs_hwmon: Arc<HwMonPath>,
 }
@@ -217,55 +217,10 @@ const MAXIMUM_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute = HwMonAttribute::custom(
 const MAX_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute = HwMonAttribute::custom("maximum_battery_charge_rate");
 const MAX_BATTERY_CHARGE_LEVEL_ATTR: HwMonAttribute = HwMonAttribute::custom("max_battery_charge_level");
 
-impl Battery {
-    #[inline]
-    pub fn from_json(other: BatteryJson, version: u64) -> Self {
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        let oc_limits = oc_limits.battery;
-        let driver = if is_default {
-            crate::persist::DriverJson::SteamDeck
-        } else {
-            crate::persist::DriverJson::SteamDeckAdvance
-        };
-        let hwmon_sys = Arc::new(Self::find_hwmon_sysfs(None::<&'static str>));
-        match version {
-            0 => Self {
-                charge_rate: other.charge_rate,
-                charge_mode: other
-                    .charge_mode
-                    .map(|x| Self::str_to_charge_mode(&x))
-                    .flatten(),
-                events: other
-                    .events
-                    .into_iter()
-                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
-                    .collect(),
-                limits: oc_limits,
-                state: crate::state::steam_deck::Battery::default(),
-                driver_mode: driver,
-                sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
-                sysfs_hwmon: hwmon_sys,
-            },
-            _ => Self {
-                charge_rate: other.charge_rate,
-                charge_mode: other
-                    .charge_mode
-                    .map(|x| Self::str_to_charge_mode(&x))
-                    .flatten(),
-                events: other
-                    .events
-                    .into_iter()
-                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
-                    .collect(),
-                limits: oc_limits,
-                state: crate::state::steam_deck::Battery::default(),
-                driver_mode: driver,
-                sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
-                sysfs_hwmon: hwmon_sys,
-            },
-        }
-    }
+const MAX_CHARGE_RATE: u64 = 2500;
+const MIN_CHARGE_RATE: u64 = 250;
 
+impl Battery {
     fn find_battery_sysfs(root: Option<impl AsRef<std::path::Path>>) -> PowerSupplyPath {
         let root = crate::settings::util::root_or_default_sysfs(root);
         match root.power_supply(attributes(BATTERY_NEEDS.into_iter().copied())) {
@@ -360,7 +315,7 @@ impl Battery {
                 MAXIMUM_BATTERY_CHARGE_RATE_ATTR
             };
             let path = attr.path(&*self.sysfs_hwmon);
-            self.sysfs_hwmon.set(attr, self.limits.charge_rate.max,).map_err(
+            self.sysfs_hwmon.set(attr, self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(2500)).map_err(
                 |e| SettingError {
                     msg: format!("Failed to write to `{}`: {}", path.display(), e),
                     setting: crate::settings::SettingVariant::Battery,
@@ -407,7 +362,7 @@ impl Battery {
     fn clamp_all(&mut self) {
         if let Some(charge_rate) = &mut self.charge_rate {
             *charge_rate =
-                (*charge_rate).clamp(self.limits.charge_rate.min, self.limits.charge_rate.max);
+                (*charge_rate).clamp(self.limits.charge_rate.and_then(|lim| lim.min).unwrap_or(MIN_CHARGE_RATE), self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(MAX_CHARGE_RATE));
         }
     }
 
@@ -489,26 +444,6 @@ impl Battery {
         }
     }
 
-    pub fn system_default() -> Self {
-        let (oc_limits, is_default) = OverclockLimits::load_or_default();
-        let oc_limits = oc_limits.battery;
-        let driver = if is_default {
-            crate::persist::DriverJson::SteamDeck
-        } else {
-            crate::persist::DriverJson::SteamDeckAdvance
-        };
-        Self {
-            charge_rate: None,
-            charge_mode: None,
-            events: Vec::new(),
-            limits: oc_limits,
-            state: crate::state::steam_deck::Battery::default(),
-            driver_mode: driver,
-            sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
-            sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
-        }
-    }
-
     fn find_limit_event(&self) -> Option<usize> {
         for (i, event) in self.events.iter().enumerate() {
             match event.trigger {
@@ -546,6 +481,58 @@ impl Into<BatteryJson> for Battery {
             charge_mode: self.charge_mode.map(Self::charge_mode_to_str),
             events: self.events.into_iter().map(|x| x.into()).collect(),
             root: self.sysfs_bat.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|x| x.to_owned()))
+        }
+    }
+}
+
+impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
+    fn from_json_and_limits(persistent: BatteryJson, version: u64, limits: GenericBatteryLimit) -> Self {
+        let hwmon_sys = Arc::new(Self::find_hwmon_sysfs(None::<&'static str>));
+        match version {
+            0 => Self {
+                charge_rate: persistent.charge_rate,
+                charge_mode: persistent
+                    .charge_mode
+                    .map(|x| Self::str_to_charge_mode(&x))
+                    .flatten(),
+                events: persistent
+                    .events
+                    .into_iter()
+                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
+                    .collect(),
+                limits: limits,
+                state: crate::state::steam_deck::Battery::default(),
+                sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
+                sysfs_hwmon: hwmon_sys,
+            },
+            _ => Self {
+                charge_rate: persistent.charge_rate,
+                charge_mode: persistent
+                    .charge_mode
+                    .map(|x| Self::str_to_charge_mode(&x))
+                    .flatten(),
+                events: persistent
+                    .events
+                    .into_iter()
+                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
+                    .collect(),
+                limits: limits,
+                state: crate::state::steam_deck::Battery::default(),
+                sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
+                sysfs_hwmon: hwmon_sys,
+            },
+        }
+    }
+
+    fn from_limits(limits: GenericBatteryLimit) -> Self {
+        Self {
+            charge_rate: None,
+            charge_mode: None,
+            events: Vec::new(),
+            limits: limits,
+            state: crate::state::steam_deck::Battery::default(),
+            sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
+            sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
         }
     }
 }
@@ -631,8 +618,8 @@ impl TBattery for Battery {
     fn limits(&self) -> crate::api::BatteryLimits {
         crate::api::BatteryLimits {
             charge_current: Some(RangeLimit {
-                min: self.limits.charge_rate.min,
-                max: self.limits.charge_rate.max,
+                min: self.limits.charge_rate.and_then(|lim| lim.min).unwrap_or(MIN_CHARGE_RATE),
+                max: self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(MAX_CHARGE_RATE),
             }),
             charge_current_step: 50,
             charge_modes: vec![
@@ -844,6 +831,6 @@ impl TBattery for Battery {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        self.driver_mode.clone()
+        crate::persist::DriverJson::SteamDeck
     }
 }

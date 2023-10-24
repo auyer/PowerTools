@@ -12,6 +12,14 @@ pub const JUPITER_HWMON_NAME: &'static str = "jupiter";
 pub const STEAMDECK_HWMON_NAME: &'static str = "steamdeck_hwmon";
 pub const GPU_HWMON_NAME: &'static str = "amdgpu";
 
+pub fn range_min_or_fallback<I: Copy>(range: &Option<limits_core::json_v2::RangeLimit<I>>, fallback: I) -> I {
+    range.and_then(|lim| lim.min).unwrap_or(fallback)
+}
+
+pub fn range_max_or_fallback<I: Copy>(range: &Option<limits_core::json_v2::RangeLimit<I>>, fallback: I) -> I {
+    range.and_then(|lim| lim.max).unwrap_or(fallback)
+}
+
 pub fn card_also_has(card: &dyn sysfuss::SysEntity, extensions: &'static [&'static str]) -> bool {
     extensions.iter()
         .all(|ext| card.as_ref().join(ext).exists())

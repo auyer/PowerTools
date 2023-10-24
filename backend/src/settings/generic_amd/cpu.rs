@@ -2,24 +2,24 @@ use crate::persist::CpuJson;
 use crate::settings::generic::{Cpu as GenericCpu, Cpus as GenericCpus, FromGenericCpuInfo};
 use crate::settings::MinMax;
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus};
+use crate::settings::{TCpu, TCpus, ProviderBuilder};
 
 #[derive(Debug)]
 pub struct Cpus {
     generic: GenericCpus<Cpu>,
 }
 
-impl Cpus {
-    pub fn from_limits(limits: limits_core::json::GenericCpuLimit) -> Self {
+impl ProviderBuilder<Vec<CpuJson>, limits_core::json_v2::GenericCpusLimit> for Cpus {
+    fn from_limits(limits: limits_core::json_v2::GenericCpusLimit) -> Self {
         Self {
             generic: GenericCpus::from_limits(limits),
         }
     }
 
-    pub fn from_json_and_limits(
+    fn from_json_and_limits(
         other: Vec<CpuJson>,
         version: u64,
-        limits: limits_core::json::GenericCpuLimit,
+        limits: limits_core::json_v2::GenericCpusLimit,
     ) -> Self {
         Self {
             generic: GenericCpus::from_json_and_limits(other, version, limits),
@@ -75,7 +75,7 @@ pub struct Cpu {
 }
 
 impl FromGenericCpuInfo for Cpu {
-    fn from_limits(cpu_index: usize, limits: limits_core::json::GenericCpuLimit) -> Self {
+    fn from_limits(cpu_index: usize, limits: limits_core::json_v2::GenericCpuLimit) -> Self {
         let gen = GenericCpu::from_limits(cpu_index, limits.clone());
         Self { generic: gen }
     }
@@ -84,7 +84,7 @@ impl FromGenericCpuInfo for Cpu {
         other: CpuJson,
         version: u64,
         cpu_index: usize,
-        limits: limits_core::json::GenericCpuLimit,
+        limits: limits_core::json_v2::GenericCpuLimit,
     ) -> Self {
         let gen = GenericCpu::from_json_and_limits(other, version, cpu_index, limits);
         Self { generic: gen }

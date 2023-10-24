@@ -1,11 +1,20 @@
 use std::convert::Into;
 
+use limits_core::json_v2::GenericBatteryLimit;
+
 use crate::persist::BatteryJson;
-use crate::settings::TBattery;
+use crate::settings::{TBattery, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
 
 #[derive(Debug, Clone)]
 pub struct Battery;
+
+impl Battery {
+    #[inline]
+    fn system_default() -> Self {
+        Battery
+    }
+}
 
 impl Into<BatteryJson> for Battery {
     #[inline]
@@ -16,6 +25,16 @@ impl Into<BatteryJson> for Battery {
             events: Vec::default(),
             root: None,
         }
+    }
+}
+
+impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
+    fn from_json_and_limits(_persistent: BatteryJson, _version: u64, _limits: GenericBatteryLimit) -> Self {
+        Battery::system_default()
+    }
+
+    fn from_limits(_limits: GenericBatteryLimit) -> Self {
+        Battery::system_default()
     }
 }
 

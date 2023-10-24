@@ -293,8 +293,8 @@
     {
       "id": 1,
       "title": "Welcome",
-      "body": "Thanks for installing PowerTools! For more information, please check the wiki. For bugs and requests, please create an issue on GitHub.",
-      "url": "https://github.com/NGnius/PowerTools/wiki"
+      "body": "Thanks for installing PowerTools! For more information, please check the wiki. For bugs and requests, please create an issue.",
+      "url": "https://git.ngni.us/NG-SD-Plugins/PowerTools/wiki"
     }
   ],
   "refresh": "http://limits.ngni.us:45000/powertools/v1"

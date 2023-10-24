@@ -4,6 +4,10 @@ pub fn limits_path() -> std::path::PathBuf {
     crate::utility::settings_dir().join(crate::consts::LIMITS_FILE)
 }
 
+pub fn limits_override_path() -> std::path::PathBuf {
+    crate::utility::settings_dir().join(crate::consts::LIMITS_OVERRIDE_FILE)
+}
+
 // NOTE: eats errors
 pub fn get_dev_messages() -> Vec<DeveloperMessage> {
     let limits_path = limits_path();

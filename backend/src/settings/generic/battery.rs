@@ -1,10 +1,10 @@
 use std::convert::Into;
 
-use limits_core::json::GenericBatteryLimit;
+use limits_core::json_v2::GenericBatteryLimit;
 use sysfuss::SysEntity;
 
 use crate::persist::BatteryJson;
-use crate::settings::TBattery;
+use crate::settings::{TBattery, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
 
 #[derive(Debug, Clone)]
@@ -56,24 +56,26 @@ impl Battery {
             }
         }
     }
+}
 
-    pub fn from_limits(limits: limits_core::json::GenericBatteryLimit) -> Self {
-        // TODO
-        Self {
-            limits,
-            sysfs: Self::find_psu_sysfs(None::<&'static str>),
-        }
-    }
-
-    pub fn from_json_and_limits(
-        other: BatteryJson,
+impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
+    fn from_json_and_limits(
+        persistent: BatteryJson,
         _version: u64,
-        limits: limits_core::json::GenericBatteryLimit,
+        limits: GenericBatteryLimit,
     ) -> Self {
         // TODO
         Self {
             limits,
-            sysfs: Self::find_psu_sysfs(other.root)
+            sysfs: Self::find_psu_sysfs(persistent.root)
+        }
+    }
+
+    fn from_limits(limits: GenericBatteryLimit) -> Self {
+        // TODO
+        Self {
+            limits,
+            sysfs: Self::find_psu_sysfs(None::<&'static str>),
         }
     }
 }
