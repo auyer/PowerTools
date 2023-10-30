@@ -2,17 +2,6 @@ name: Feature Request
 description: Suggest functionality to add
 labels: "enhancement"
 body:
-    - type: checkboxes
-      id: low-effort-checks
-      attributes:
-          label: Please confirm
-          description: Issues without all checks may be ignored/closed.
-          options:
-              - label: I have searched existing issues
-              - label: This issue is not a duplicate of an existing one
-              - label: I will fill this out to the best of my ability
-      validations:
-          required: true
     - type: textarea
       id: described
       attributes:
