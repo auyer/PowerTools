@@ -368,7 +368,7 @@ impl ApiMessageHandler {
                 false
             }
             ApiMessage::LoadSettings(id, name, variant_id, variant_name) => {
-                let path = format!("{}.json", id);
+                let path = format!("{}.ron", id);
                 match settings.load_file(path.into(), name, variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),

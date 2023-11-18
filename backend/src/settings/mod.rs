@@ -23,7 +23,7 @@ pub use traits::{OnPowerEvent, OnResume, OnSet, PowerMode, TBattery, TCpu, TCpus
 mod tests {
     #[test]
     fn system_defaults_test() {
-        let settings = super::Settings::system_default("idc".into(), "Cool name".into());
+        let settings = super::Settings::system_default("idc".into(), "Cool name".into(), 0, "Variant 0".into());
         println!("Loaded system settings: {:?}", settings);
     }
 }

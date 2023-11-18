@@ -103,3 +103,26 @@ pub fn read_version_file() -> String {
         }
     }
 }
+#[cfg(test)]
+mod generate {
+    #[test]
+    fn generate_default_limits_override() {
+        let limits = limits_core::json_v2::Limits {
+            cpu: limits_core::json_v2::Limit {
+                provider: limits_core::json_v2::CpuLimitType::SteamDeck,
+                limits: limits_core::json_v2::GenericCpusLimit::default_for(limits_core::json_v2::CpuLimitType::SteamDeck),
+            },
+            gpu: limits_core::json_v2::Limit {
+                provider: limits_core::json_v2::GpuLimitType::SteamDeck,
+                limits: limits_core::json_v2::GenericGpuLimit::default_for(limits_core::json_v2::GpuLimitType::SteamDeck),
+            },
+            battery: limits_core::json_v2::Limit {
+                provider: limits_core::json_v2::BatteryLimitType::SteamDeck,
+                limits: limits_core::json_v2::GenericBatteryLimit::default_for(limits_core::json_v2::BatteryLimitType::SteamDeck),
+            },
+        };
+        let output_file = std::fs::File::create("../limits_override.ron").unwrap();
+        ron::ser::to_writer_pretty(output_file, &limits, crate::utility::ron_pretty_config()).unwrap();
+    }
+}
+

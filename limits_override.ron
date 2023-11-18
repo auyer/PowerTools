@@ -1,0 +1,142 @@
+Limits(
+    cpu: Limit(
+        provider: SteamDeck,
+        limits: GenericCpusLimit(
+            cpus: [GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            ), GenericCpuLimit(
+                clock_min: Some(RangeLimit(
+                    min: Some(1400),
+                    max: Some(3500),
+                )),
+                clock_max: Some(RangeLimit(
+                    min: Some(400),
+                    max: Some(3500),
+                )),
+                clock_step: Some(100),
+                skip_resume_reclock: false,
+            )],
+            global_governors: true,
+        ),
+    ),
+    gpu: Limit(
+        provider: SteamDeck,
+        limits: GenericGpuLimit(
+            fast_ppt: Some(RangeLimit(
+                min: Some(1000000),
+                max: Some(30000000),
+            )),
+            fast_ppt_default: Some(15000000),
+            slow_ppt: Some(RangeLimit(
+                min: Some(1000000),
+                max: Some(29000000),
+            )),
+            slow_ppt_default: Some(15000000),
+            ppt_divisor: Some(1000000),
+            ppt_step: Some(1),
+            tdp: None,
+            tdp_boost: None,
+            tdp_step: None,
+            clock_min: Some(RangeLimit(
+                min: Some(400),
+                max: Some(1600),
+            )),
+            clock_max: Some(RangeLimit(
+                min: Some(400),
+                max: Some(1600),
+            )),
+            clock_step: Some(100),
+            skip_resume_reclock: false,
+        ),
+    ),
+    battery: Limit(
+        provider: SteamDeck,
+        limits: GenericBatteryLimit(
+            charge_rate: Some(RangeLimit(
+                min: Some(250),
+                max: Some(2500),
+            )),
+            charge_modes: ["normal", "discharge", "idle"],
+            charge_limit: Some(RangeLimit(
+                min: Some(10.0),
+                max: Some(90.0),
+            )),
+            extra_readouts: false,
+        ),
+    ),
+)

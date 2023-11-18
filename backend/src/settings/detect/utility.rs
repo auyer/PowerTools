@@ -12,7 +12,7 @@ pub fn limits_override_path() -> std::path::PathBuf {
 pub fn get_dev_messages() -> Vec<DeveloperMessage> {
     let limits_path = limits_path();
     if let Ok(file) = std::fs::File::open(&limits_path) {
-        if let Ok(base) = serde_json::from_reader::<_, Base>(file) {
+        if let Ok(base) = ron::de::from_reader::<_, Base>(file) {
             base.messages
         } else {
             vec![]

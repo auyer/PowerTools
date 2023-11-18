@@ -58,6 +58,7 @@ mod test {
 
     fn cpu_with_online(status: bool) -> CpuJson {
         CpuJson {
+            root: None,
             online: status,
             clock_limits: None,
             governor: "schedutil".to_owned(),
