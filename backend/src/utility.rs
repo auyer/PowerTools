@@ -22,10 +22,17 @@ pub fn ron_pretty_config() -> ron::ser::PrettyConfig {
         .compact_arrays(true)
 }
 
-pub fn settings_dir() -> std::path::PathBuf {
+#[allow(dead_code)]
+pub fn settings_dir_old() -> std::path::PathBuf {
     usdpl_back::api::dirs::home()
         .unwrap_or_else(|| "/tmp/".into())
         .join(".config/powertools/")
+}
+
+pub fn settings_dir() -> std::path::PathBuf {
+    usdpl_back::api::decky::settings_dir()
+        .unwrap_or_else(|_| "/tmp/".to_owned())
+        .into()
 }
 
 pub fn chown_settings_dir() -> std::io::Result<()> {
