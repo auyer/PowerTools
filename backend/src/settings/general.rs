@@ -4,7 +4,7 @@ use std::path::PathBuf;
 //use super::{Battery, Cpus, Gpu};
 use super::{OnResume, OnSet, SettingError};
 use super::{TBattery, TCpus, TGeneral, TGpu};
-use crate::persist::SettingsJson;
+use crate::persist::{SettingsJson, FileJson};
 //use crate::utility::unwrap_lock;
 
 const LATEST_VERSION: u64 = 0;
@@ -33,44 +33,19 @@ pub struct General {
     pub persistent: bool,
     pub path: PathBuf,
     pub name: String,
+    pub variant_id: u64,
+    pub variant_name: String,
     pub driver: crate::persist::DriverJson,
-    pub events: crate::persist::OnEventJson,
 }
 
 impl OnSet for General {
     fn on_set(&mut self) -> Result<(), Vec<SettingError>> {
-        if let Some(event) = &self.events.on_set {
-            if !event.is_empty() {
-                std::process::Command::new("/bin/bash")
-                    .args(&["-c", event])
-                    .spawn()
-                    .map_err(|e| {
-                        vec![SettingError {
-                            msg: format!("on_set event command error: {}", e),
-                            setting: SettingVariant::General,
-                        }]
-                    })?;
-            }
-        }
         Ok(())
     }
 }
 
 impl OnResume for General {
     fn on_resume(&self) -> Result<(), Vec<SettingError>> {
-        if let Some(event) = &self.events.on_resume {
-            if !event.is_empty() {
-                std::process::Command::new("/bin/bash")
-                    .args(&["-c", event])
-                    .spawn()
-                    .map_err(|e| {
-                        vec![SettingError {
-                            msg: format!("on_resume event command error: {}", e),
-                            setting: SettingVariant::General,
-                        }]
-                    })?;
-            }
-        }
         Ok(())
     }
 }
@@ -106,12 +81,24 @@ impl TGeneral for General {
         self.name = name;
     }
 
-    fn provider(&self) -> crate::persist::DriverJson {
-        self.driver.clone()
+    fn get_variant_id(&self) -> u64 {
+        self.variant_id
     }
 
-    fn on_event(&self) -> &crate::persist::OnEventJson {
-        &self.events
+    fn variant_id(&mut self, id: u64) {
+        self.variant_id = id;
+    }
+
+    fn get_variant_name(&self) -> &'_ str {
+        &self.variant_name
+    }
+
+    fn variant_name(&mut self, name: String) {
+        self.variant_name = name;
+    }
+
+    fn provider(&self) -> crate::persist::DriverJson {
+        self.driver.clone()
     }
 }
 
@@ -155,8 +142,8 @@ impl OnSet for Settings {
 
 impl Settings {
     #[inline]
-    pub fn from_json(other: SettingsJson, json_path: PathBuf) -> Self {
-        let x = super::Driver::init(other, json_path.clone());
+    pub fn from_json(name: String, other: SettingsJson, json_path: PathBuf) -> Self {
+        let x = super::Driver::init(name, &other, json_path.clone());
         log::info!(
             "Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}",
             x.general.provider(),
@@ -172,8 +159,8 @@ impl Settings {
         }
     }
 
-    pub fn system_default(json_path: PathBuf, name: String) -> Self {
-        let driver = super::Driver::system_default(json_path, name);
+    pub fn system_default(json_path: PathBuf, name: String, variant_id: u64, variant_name: String) -> Self {
+        let driver = super::Driver::system_default(json_path, name, variant_id, variant_name);
         Self {
             general: driver.general,
             cpus: driver.cpus,
@@ -182,26 +169,40 @@ impl Settings {
         }
     }
 
-    pub fn load_system_default(&mut self, name: String) {
-        let driver = super::Driver::system_default(self.general.get_path().to_owned(), name);
+    pub fn load_system_default(&mut self, name: String, variant_id: u64, variant_name: String) {
+        let driver = super::Driver::system_default(self.general.get_path().to_owned(), name, variant_id, variant_name);
         self.cpus = driver.cpus;
         self.gpu = driver.gpu;
         self.battery = driver.battery;
         self.general = driver.general;
     }
 
+    pub fn get_variant<'a>(settings_file: &'a FileJson, variant_id: u64, variant_name: String) -> Result<&'a SettingsJson, SettingError> {
+        if let Some(variant) = settings_file.variants.get(&variant_id.to_string()) {
+            Ok(variant)
+        } else {
+            Err(SettingError {
+                msg: format!("Cannot get non-existent variant `{}` (id:{})", variant_name, variant_id),
+                setting: SettingVariant::General,
+            })
+        }
+    }
+
     pub fn load_file(
         &mut self,
         filename: PathBuf,
         name: String,
+        variant: u64,
+        variant_name: String,
         system_defaults: bool,
     ) -> Result<bool, SettingError> {
         let json_path = crate::utility::settings_dir().join(&filename);
         if json_path.exists() {
-            let settings_json = SettingsJson::open(&json_path).map_err(|e| SettingError {
-                msg: e.to_string(),
+            let file_json = FileJson::open(&json_path).map_err(|e| SettingError {
+                msg: format!("Failed to open settings {}: {}", json_path.display(), e),
                 setting: SettingVariant::General,
             })?;
+            let settings_json = Self::get_variant(&file_json, variant, variant_name)?;
             if !settings_json.persistent {
                 log::warn!(
                     "Loaded persistent config `{}` ({}) with persistent=false",
@@ -211,7 +212,7 @@ impl Settings {
                 *self.general.persistent() = false;
                 self.general.name(name);
             } else {
-                let x = super::Driver::init(settings_json, json_path.clone());
+                let x = super::Driver::init(name, settings_json, json_path.clone());
                 log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
                 self.general = x.general;
                 self.cpus = x.cpus;
@@ -220,24 +221,15 @@ impl Settings {
             }
         } else {
             if system_defaults {
-                self.load_system_default(name);
+                self.load_system_default(name, variant, variant_name);
             } else {
                 self.general.name(name);
+                self.general.variant_name(variant_name);
             }
             *self.general.persistent() = false;
         }
         self.general.path(filename);
-        if let Some(event) = &self.general.on_event().on_load {
-            if !event.is_empty() {
-                std::process::Command::new("/bin/bash")
-                    .args(&["-c", event])
-                    .spawn()
-                    .map_err(|e| SettingError {
-                        msg: format!("on_save event command error: {}", e),
-                        setting: SettingVariant::General,
-                    })?;
-            }
-        }
+        self.general.variant_id(variant);
         Ok(*self.general.persistent())
     }
 
@@ -275,13 +267,13 @@ impl Settings {
     pub fn json(&self) -> SettingsJson {
         SettingsJson {
             version: LATEST_VERSION,
-            name: self.general.get_name().to_owned(),
+            name: self.general.get_variant_name().to_owned(),
+            variant: self.general.get_variant_id(),
             persistent: self.general.get_persistent(),
             cpus: self.cpus.json(),
             gpu: self.gpu.json(),
             battery: self.battery.json(),
             provider: Some(self.general.provider()),
-            events: Some(self.general.on_event().clone()),
         }
     }
 }

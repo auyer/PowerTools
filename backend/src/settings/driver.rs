@@ -10,15 +10,17 @@ pub struct Driver {
 
 impl Driver {
     pub fn init(
-        settings: SettingsJson,
+        name: String,
+        settings: &SettingsJson,
         json_path: std::path::PathBuf,
     ) -> Self {
         let name_bup = settings.name.clone();
-        auto_detect0(Some(settings), json_path, name_bup)
+        let id_bup = settings.variant;
+        auto_detect0(Some(settings), json_path, name, id_bup, name_bup)
     }
 
-    pub fn system_default(json_path: std::path::PathBuf, name: String) -> Self {
-        auto_detect0(None, json_path, name)
+    pub fn system_default(json_path: std::path::PathBuf, name: String, variant_id: u64, variant_name: String) -> Self {
+        auto_detect0(None, json_path, name, variant_id, variant_name)
     }
 }
 

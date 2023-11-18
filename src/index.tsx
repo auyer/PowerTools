@@ -191,7 +191,7 @@ const reload = function() {
       backend.log(backend.LogLevel.Info, "RegisterForGameActionStart callback(" + actionType + ", " + id + ")");
       // don't use gameInfo.appid, haha
       backend.resolve(
-        backend.loadGeneralSettings(id.toString(), gameInfo.display_name),
+        backend.loadGeneralSettings(id.toString(), gameInfo.display_name, 0, undefined),
         (ok: boolean) => {backend.log(backend.LogLevel.Debug, "Loading settings ok? " + ok)}
       );
   });

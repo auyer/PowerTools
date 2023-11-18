@@ -1,18 +1,7 @@
-use std::fmt::Display;
 //use std::sync::{LockResult, MutexGuard};
 //use std::fs::{Permissions, metadata};
 use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
-
-pub fn unwrap_maybe_fatal<T: Sized, E: Display>(result: Result<T, E>, message: &str) -> T {
-    match result {
-        Ok(x) => x,
-        Err(e) => {
-            log::error!("{}: {}", message, e);
-            panic!("{}: {}", message, e);
-        }
-    }
-}
 
 /*pub fn unwrap_lock<'a, T: Sized>(
     result: LockResult<MutexGuard<'a, T>>,
@@ -26,6 +15,12 @@ pub fn unwrap_maybe_fatal<T: Sized, E: Display>(result: Result<T, E>, message: &
         }
     }
 }*/
+
+pub fn ron_pretty_config() -> ron::ser::PrettyConfig {
+    ron::ser::PrettyConfig::default()
+        .struct_names(true)
+        .compact_arrays(true)
+}
 
 pub fn settings_dir() -> std::path::PathBuf {
     usdpl_back::api::dirs::home()

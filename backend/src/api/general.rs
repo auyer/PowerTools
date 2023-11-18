@@ -55,18 +55,34 @@ pub fn load_settings(
     sender: Sender<ApiMessage>,
 ) -> impl Fn(super::ApiParameterType) -> super::ApiParameterType {
     let sender = Mutex::new(sender); // Sender is not Sync; this is required for safety
-    let setter = move |path: u64, name: String| {
+    let setter = move |id: u64, name: String, variant: u64, variant_name: Option<String>| {
         sender
             .lock()
             .unwrap()
-            .send(ApiMessage::LoadSettings(path, name))
+            .send(ApiMessage::LoadSettings(id, name, variant, variant_name.unwrap_or_else(|| crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned())))
             .expect("load_settings send failed")
     };
     move |params_in: super::ApiParameterType| {
         if let Some(Primitive::String(id)) = params_in.get(0) {
             if let Some(Primitive::String(name)) = params_in.get(1) {
-                setter(id.parse().unwrap_or_default(), name.to_owned());
-                vec![true.into()]
+                if let Some(Primitive::F64(variant_id)) = params_in.get(2) {
+                    if let Some(Primitive::String(variant_name)) = params_in.get(3) {
+                        setter(id.parse().unwrap_or_default(),
+                               name.to_owned(),
+                               *variant_id as _,
+                               Some(variant_name.to_owned()));
+                        vec![true.into()]
+                    } else {
+                        setter(id.parse().unwrap_or_default(),
+                               name.to_owned(),
+                               *variant_id as _,
+                               None);
+                        vec![true.into()]
+                    }
+                } else {
+                    log::warn!("load_settings missing variant id parameter");
+                    vec!["load_settings missing variant id parameter".into()]
+                }
             } else {
                 log::warn!("load_settings missing name parameter");
                 vec!["load_settings missing name parameter".into()]

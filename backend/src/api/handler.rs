@@ -5,7 +5,6 @@ use crate::persist::SettingsJson;
 use crate::settings::{
     MinMax, OnPowerEvent, OnResume, OnSet, PowerMode, Settings, TBattery, TCpus, TGeneral, TGpu,
 };
-use crate::utility::unwrap_maybe_fatal;
 
 type Callback<T> = Box<dyn FnOnce(T) + Send>;
 
@@ -23,7 +22,7 @@ pub enum ApiMessage {
     OnChargeChange(f64), // battery fill amount: 0 = empty, 1 = full
     PowerVibeCheck,
     WaitForEmptyQueue(Callback<()>),
-    LoadSettings(u64, String), // (path, name)
+    LoadSettings(u64, String, u64, String), // (path, name, variant, variant name)
     LoadMainSettings,
     LoadSystemSettings,
     GetLimits(Callback<super::SettingsLimits>),
@@ -287,21 +286,14 @@ impl ApiMessageHandler {
                 log::debug!("api_worker is saving...");
                 let is_persistent = *settings.general.persistent();
                 let save_path =
-                    crate::utility::settings_dir().join(settings.general.get_path().clone());
+                    crate::utility::settings_dir().join(settings.general.get_path());
                 if is_persistent {
                     let settings_clone = settings.json();
                     let save_json: SettingsJson = settings_clone.into();
-                    unwrap_maybe_fatal(save_json.save(&save_path), "Failed to save settings");
-                    if let Some(event) = &settings.general.on_event().on_save {
-                        if !event.is_empty() {
-                            unwrap_maybe_fatal(
-                                std::process::Command::new("/bin/bash")
-                                    .args(&["-c", event])
-                                    .spawn(),
-                                "Failed to start on_save event command",
-                            );
-                        }
+                    if let Err(e) = crate::persist::FileJson::update_variant_or_create(&save_path, save_json, settings.general.get_name().to_owned()) {
+                        log::error!("Failed to create/update settings file {}: {}", save_path.display(), e);
                     }
+                    //unwrap_maybe_fatal(save_json.save(&save_path), "Failed to save settings");
                     log::debug!("Saved settings to {}", save_path.display());
                     if let Err(e) = crate::utility::chown_settings_dir() {
                         log::error!("Failed to change config dir permissions: {}", e);
@@ -375,9 +367,9 @@ impl ApiMessageHandler {
                 self.on_empty.push(callback);
                 false
             }
-            ApiMessage::LoadSettings(id, name) => {
+            ApiMessage::LoadSettings(id, name, variant_id, variant_name) => {
                 let path = format!("{}.json", id);
-                match settings.load_file(path.into(), name, false) {
+                match settings.load_file(path.into(), name, variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
@@ -387,6 +379,8 @@ impl ApiMessageHandler {
                 match settings.load_file(
                     crate::consts::DEFAULT_SETTINGS_FILE.into(),
                     crate::consts::DEFAULT_SETTINGS_NAME.to_owned(),
+                    0,
+                    crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
                     true,
                 ) {
                     Ok(success) => log::info!("Loaded main settings file? {}", success),
@@ -395,7 +389,7 @@ impl ApiMessageHandler {
                 true
             }
             ApiMessage::LoadSystemSettings => {
-                settings.load_system_default(settings.general.get_name().to_owned());
+                settings.load_system_default(settings.general.get_name().to_owned(), settings.general.get_variant_id(), settings.general.get_variant_name().to_owned());
                 true
             }
             ApiMessage::GetLimits(cb) => {

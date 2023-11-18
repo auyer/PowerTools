@@ -247,8 +247,13 @@ export async function getGeneralPersistent(): Promise<boolean> {
     return (await call_backend("GENERAL_get_persistent", []))[0];
 }
 
-export async function loadGeneralSettings(id: string, name: string): Promise<boolean> {
-    return (await call_backend("GENERAL_load_settings", [id, name]))[0];
+export async function loadGeneralSettings(id: string, name: string, variant_id: number, variant_name: string | undefined): Promise<boolean> {
+    if (variant_name) {
+        return (await call_backend("GENERAL_load_settings", [id, name, variant_id, variant_name]))[0];
+    } else {
+        return (await call_backend("GENERAL_load_settings", [id, name, variant_id]))[0];
+    }
+
 }
 
 export async function loadGeneralDefaultSettings(): Promise<boolean> {

@@ -75,12 +75,20 @@ fn main() -> Result<(), ()> {
     let _limits_handle = crate::settings::limits_worker_spawn();
 
     let mut loaded_settings =
-        persist::SettingsJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
-            .map(|settings| settings::Settings::from_json(settings, DEFAULT_SETTINGS_FILE.into()))
+        persist::FileJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
+            .map(|mut file| file.variants.remove("0")
+                .map(|settings| settings::Settings::from_json(DEFAULT_SETTINGS_NAME.into(), settings, DEFAULT_SETTINGS_FILE.into()))
+                .unwrap_or_else(|| settings::Settings::system_default(
+                    DEFAULT_SETTINGS_FILE.into(),
+                    DEFAULT_SETTINGS_NAME.into(),
+                    0,
+                    DEFAULT_SETTINGS_VARIANT_NAME.into())))
             .unwrap_or_else(|_| {
                 settings::Settings::system_default(
                     DEFAULT_SETTINGS_FILE.into(),
                     DEFAULT_SETTINGS_NAME.into(),
+                    0,
+                    DEFAULT_SETTINGS_VARIANT_NAME.into(),
                 )
             });
 

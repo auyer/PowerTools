@@ -2,13 +2,15 @@ mod battery;
 mod cpu;
 mod driver;
 mod error;
+mod file;
 mod general;
 mod gpu;
 
 pub use battery::{BatteryEventJson, BatteryJson};
 pub use cpu::CpuJson;
 pub use driver::DriverJson;
-pub use general::{MinMaxJson, OnEventJson, SettingsJson};
+pub use file::FileJson;
+pub use general::{MinMaxJson, SettingsJson};
 pub use gpu::GpuJson;
 
-pub use error::JsonError;
+pub use error::{SerdeError, RonError};

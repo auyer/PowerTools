@@ -109,9 +109,15 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
 
     fn name(&mut self, name: String);
 
-    fn provider(&self) -> crate::persist::DriverJson;
+    fn get_variant_id(&self) -> u64;
 
-    fn on_event(&self) -> &'_ crate::persist::OnEventJson;
+    fn variant_id(&mut self, id: u64);
+
+    fn get_variant_name(&self) -> &'_ str;
+
+    fn variant_name(&mut self, name: String);
+
+    fn provider(&self) -> crate::persist::DriverJson;
 }
 
 pub trait TBattery: OnSet + OnResume + OnPowerEvent + Debug + Send {

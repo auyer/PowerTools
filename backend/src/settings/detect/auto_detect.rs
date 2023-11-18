@@ -10,7 +10,7 @@ use crate::settings::{Driver, General, TBattery, TCpus, TGeneral, TGpu, Provider
 fn get_limits() -> limits_core::json_v2::Base {
     let limits_path = super::utility::limits_path();
     match File::open(&limits_path) {
-        Ok(f) => match serde_json::from_reader(f) {
+        Ok(f) => match ron::de::from_reader(f) {
             Ok(lim) => lim,
             Err(e) => {
                 log::warn!(
@@ -35,7 +35,7 @@ fn get_limits() -> limits_core::json_v2::Base {
 fn get_limits_overrides() -> Option<Limits> {
     let limits_override_path = super::utility::limits_override_path();
     match File::open(&limits_override_path) {
-        Ok(f) => match serde_json::from_reader(f) {
+        Ok(f) => match ron::de::from_reader(f) {
             Ok(lim) => Some(lim),
             Err(e) => {
                 log::warn!(
@@ -63,6 +63,8 @@ pub fn auto_detect_provider() -> DriverJson {
         None,
         crate::utility::settings_dir().join("autodetect.json"),
         "".to_owned(),
+        0,
+        crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
     )
     .battery
     .provider();
@@ -72,16 +74,19 @@ pub fn auto_detect_provider() -> DriverJson {
 
 /// Device detection logic
 pub fn auto_detect0(
-    settings_opt: Option<SettingsJson>,
+    settings_opt: Option<&SettingsJson>,
     json_path: std::path::PathBuf,
     name: String,
+    variant_id: u64,
+    variant_name: String,
 ) -> Driver {
     let mut general_driver = Box::new(General {
         persistent: false,
         path: json_path,
         name,
+        variant_id,
+        variant_name,
         driver: DriverJson::AutoDetect,
-        events: Default::default(),
     });
 
     let cpu_info: String = usdpl_back::api::files::read_single("/proc/cpuinfo").unwrap_or_default();

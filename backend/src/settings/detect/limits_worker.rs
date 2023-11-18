@@ -15,7 +15,7 @@ pub fn spawn() -> JoinHandle<()> {
                 // try to load limits from file, fallback to built-in default
                 let base = if limits_path.exists() {
                     match std::fs::File::open(&limits_path) {
-                        Ok(f) => match serde_json::from_reader(f) {
+                        Ok(f) => match ron::de::from_reader(f) {
                             Ok(b) => b,
                             Err(e) => {
                                 log::error!("Cannot parse {}: {}", limits_path.display(), e);
@@ -72,7 +72,7 @@ pub fn get_limits_cached() -> Base {
     let limits_path = super::utility::limits_path();
     if limits_path.is_file() {
         match std::fs::File::open(&limits_path) {
-            Ok(f) => match serde_json::from_reader(f) {
+            Ok(f) => match ron::de::from_reader(f) {
                 Ok(b) => b,
                 Err(e) => {
                     log::error!("Cannot parse {}: {}", limits_path.display(), e);
@@ -93,7 +93,7 @@ pub fn get_limits_cached() -> Base {
 fn save_base(new_base: &Base, path: impl AsRef<std::path::Path>) {
     let limits_path = path.as_ref();
     match std::fs::File::create(&limits_path) {
-        Ok(f) => match serde_json::to_writer_pretty(f, &new_base) {
+        Ok(f) => match ron::ser::to_writer_pretty(f, &new_base, crate::utility::ron_pretty_config()) {
             Ok(_) => log::info!("Successfully saved new limits to {}", limits_path.display()),
             Err(e) => log::error!(
                 "Failed to save limits json to file `{}`: {}",

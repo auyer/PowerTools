@@ -5,6 +5,7 @@ pub const PACKAGE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 pub const DEFAULT_SETTINGS_FILE: &str = "default_settings.json";
 pub const DEFAULT_SETTINGS_NAME: &str = "Main";
+pub const DEFAULT_SETTINGS_VARIANT_NAME: &str = "Primary";
 
 pub const LIMITS_FILE: &str = "limits_cache.json";
 pub const LIMITS_OVERRIDE_FILE: &str = "limits_override.json";
