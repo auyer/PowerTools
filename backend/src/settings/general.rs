@@ -178,7 +178,7 @@ impl Settings {
     }
 
     pub fn get_variant<'a>(settings_file: &'a FileJson, variant_id: u64, variant_name: String) -> Result<&'a SettingsJson, SettingError> {
-        if let Some(variant) = settings_file.variants.get(&variant_id.to_string()) {
+        if let Some(variant) = settings_file.variants.get(&variant_id) {
             Ok(variant)
         } else {
             Err(SettingError {

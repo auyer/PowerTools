@@ -76,7 +76,7 @@ fn main() -> Result<(), ()> {
 
     let mut loaded_settings =
         persist::FileJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
-            .map(|mut file| file.variants.remove("0")
+            .map(|mut file| file.variants.remove(&0)
                 .map(|settings| settings::Settings::from_json(DEFAULT_SETTINGS_NAME.into(), settings, DEFAULT_SETTINGS_FILE.into()))
                 .unwrap_or_else(|| settings::Settings::system_default(
                     DEFAULT_SETTINGS_FILE.into(),

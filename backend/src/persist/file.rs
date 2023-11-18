@@ -9,7 +9,7 @@ use super::SettingsJson;
 pub struct FileJson {
     pub version: u64,
     pub name: String,
-    pub variants: HashMap<String, SettingsJson>,
+    pub variants: HashMap<u64, SettingsJson>,
 }
 
 impl FileJson {
@@ -45,11 +45,11 @@ impl FileJson {
 
         let file = if path.exists() {
             let mut file = Self::open(path)?;
-            file.variants.insert(setting.variant.to_string(), setting);
+            file.variants.insert(setting.variant, setting);
             file
         } else {
             let mut setting_variants = HashMap::with_capacity(1);
-            setting_variants.insert(setting.variant.to_string(), setting);
+            setting_variants.insert(setting.variant, setting);
             Self {
                 version: 0,
                 name: given_name,

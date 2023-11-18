@@ -20,7 +20,7 @@ impl Default for SettingsJson {
     fn default() -> Self {
         Self {
             version: 0,
-            name: crate::consts::DEFAULT_SETTINGS_NAME.to_owned(),
+            name: crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
             variant: 0,
             persistent: false,
             cpus: Vec::with_capacity(8),
