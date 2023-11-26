@@ -597,7 +597,7 @@ impl OnPowerEvent for Battery {
             // only true when charge_limit_set is false and self.state.charge_limit_set is true
             self.state.charge_limit_set = false;
             if attr_exists {
-                self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 100)
+                self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 0)
                     .unwrap_or_else(|e| errors.push(
                         SettingError {
                             msg: format!("Failed to reset (write to) {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
