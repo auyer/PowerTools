@@ -4,7 +4,9 @@ use super::RangeLimit;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 //#[serde(tag = "target")]
 pub enum BatteryLimitType {
+    #[serde(rename = "GabeBoy", alias = "SteamDeck")]
     SteamDeck,
+    #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
     SteamDeckAdvance,
     Generic,
     Unknown,

@@ -1,6 +1,6 @@
 Limits(
     cpu: Limit(
-        provider: SteamDeck,
+        provider: GabeBoy,
         limits: GenericCpusLimit(
             cpus: [GenericCpuLimit(
                 clock_min: Some(RangeLimit(
@@ -95,7 +95,7 @@ Limits(
         ),
     ),
     gpu: Limit(
-        provider: SteamDeck,
+        provider: GabeBoy,
         limits: GenericGpuLimit(
             fast_ppt: Some(RangeLimit(
                 min: Some(1000000),
@@ -125,7 +125,7 @@ Limits(
         ),
     ),
     battery: Limit(
-        provider: SteamDeck,
+        provider: GabeBoy,
         limits: GenericBatteryLimit(
             charge_rate: Some(RangeLimit(
                 min: Some(250),
