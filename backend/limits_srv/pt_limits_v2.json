@@ -895,7 +895,7 @@
       "name": "AMD R7 6800U",
       "conditions": {
         "dmi": null,
-        "cpuinfo": "model name\t+: AMD Ryzen 7 6800U\n",
+        "cpuinfo": "model name\t+: AMD Ryzen 7 6800U( with Radeon Graphics)?\n",
         "os": null,
         "command": null,
         "file_exists": null

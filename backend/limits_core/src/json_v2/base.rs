@@ -1,5 +1,5 @@
-use std::default::Default;
 use serde::{Deserialize, Serialize};
+use std::default::Default;
 
 /// Base JSON limits information
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -191,7 +191,7 @@ impl Default for Base {
                     name: "AMD R7 6800U".to_owned(),
                     conditions: super::Conditions {
                         dmi: None,
-                        cpuinfo: Some("model name\t+: AMD Ryzen 7 6800U\n".to_owned()),
+                        cpuinfo: Some("model name\t+: AMD Ryzen 7 6800U( with Radeon Graphics)?\n".to_owned()),
                         os: None,
                         command: None,
                         file_exists: None,
