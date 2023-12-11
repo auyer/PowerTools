@@ -7,9 +7,40 @@ use crate::settings::MinMax;
 use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError, SettingVariant};
 
+fn msg_or_err<D: std::fmt::Display, E: std::fmt::Display>(output: &mut String, msg: &str, result: Result<D, E>) {
+    use std::fmt::Write;
+    match result {
+        Ok(val) => writeln!(output, "{}: {}", msg, val).unwrap(),
+        Err(e) => writeln!(output, "{} failed: {}", msg, e).unwrap(),
+    }
+}
+
+fn log_capabilities(ryzenadj: &RyzenAdj) {
+    log::info!("RyzenAdj v{}.{}.{}", libryzenadj::libryzenadj_sys::RYZENADJ_REVISION_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MAJOR_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MINIOR_VER);
+    if let Some(x) = ryzenadj.get_init_table_err() {
+        log::warn!("RyzenAdj table init error: {}", x);
+    }
+    let mut log_msg = String::new();
+    msg_or_err(&mut log_msg, "bios version", ryzenadj.get_bios_if_ver());
+    msg_or_err(&mut log_msg, "refresh", ryzenadj.refresh().map(|_| "success"));
+    msg_or_err(&mut log_msg, "CPU family", ryzenadj.get_cpu_family().map(|fam| {
+        let fam_dbg = format!("{:?}", fam);
+        format!("{} (#{})", fam_dbg, fam as i32)
+    }));
+    msg_or_err(&mut log_msg, "get_fast_value (PPT)", ryzenadj.get_fast_value());
+    msg_or_err(&mut log_msg, "get_slow_value (PPT)", ryzenadj.get_slow_value());
+    msg_or_err(&mut log_msg, "get_gfx_clk", ryzenadj.get_gfx_clk());
+    msg_or_err(&mut log_msg, "get_gfx_volt", ryzenadj.get_gfx_volt());
+
+    log::info!("RyzenAdj GPU info:\n{}", log_msg);
+}
+
 fn ryzen_adj_or_log() -> Option<Mutex<RyzenAdj>> {
     match RyzenAdj::new() {
-        Ok(x) => Some(Mutex::new(x)),
+        Ok(x) => {
+            log_capabilities(&x);
+            Some(Mutex::new(x))
+        },
         Err(e) => {
             log::error!("RyzenAdj init error: {}", e);
             None
@@ -256,9 +287,29 @@ impl OnSet for Gpu {
 
 impl crate::settings::OnPowerEvent for Gpu {}
 
+fn bad_gpu_limits() -> crate::api::GpuLimits {
+    crate::api::GpuLimits {
+        fast_ppt_limits: None,
+        slow_ppt_limits: None,
+        ppt_step: 1,
+        tdp_limits: None,
+        tdp_boost_limits: None,
+        tdp_step: 1,
+        clock_min_limits: None,
+        clock_max_limits: None,
+        clock_step: 100,
+        memory_control_capable: false,
+    }
+}
+
 impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
-        self.generic.limits()
+        if self.implementor.is_some() {
+            // NOTE: since set functions may succeed when gets do not, there is no good way to (automatically) check whether things are working
+            self.generic.limits()
+        } else {
+            bad_gpu_limits()
+        }
     }
 
     fn json(&self) -> crate::persist::GpuJson {

@@ -90,9 +90,10 @@ impl Default for Base {
                         gpu: super::GpuLimit {
                             provider: super::GpuLimitType::GenericAMD,
                             limits: super::GenericGpuLimit {
-                                fast_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(25_000_000) }),
-                                slow_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(25_000_000) }),
-                                ppt_step: Some(1_000_000),
+                                fast_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(25_000) }),
+                                slow_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(25_000) }),
+                                ppt_step: Some(1_000),
+                                ppt_divisor: Some(1_000),
                                 clock_min: Some(super::RangeLimit { min: Some(400), max: Some(1100) }),
                                 clock_max: Some(super::RangeLimit { min: Some(400), max: Some(1100) }),
                                 clock_step: Some(100),
@@ -131,9 +132,10 @@ impl Default for Base {
                         gpu: super::GpuLimit {
                             provider: super::GpuLimitType::GenericAMD,
                             limits: super::GenericGpuLimit {
-                                fast_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(25_000_000) }),
-                                slow_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(25_000_000) }),
-                                ppt_step: Some(1_000_000),
+                                fast_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(25_000) }),
+                                slow_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(25_000) }),
+                                ppt_step: Some(1_000),
+                                ppt_divisor: Some(1_000),
                                 clock_min: Some(super::RangeLimit { min: Some(400), max: Some(1600) }),
                                 clock_max: Some(super::RangeLimit { min: Some(400), max: Some(1600) }),
                                 clock_step: Some(100),
@@ -172,9 +174,10 @@ impl Default for Base {
                         gpu: super::GpuLimit {
                             provider: super::GpuLimitType::GenericAMD,
                             limits: super::GenericGpuLimit {
-                                fast_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(28_000_000) }),
-                                slow_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(28_000_000) }),
-                                ppt_step: Some(1_000_000),
+                                fast_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(28_000) }),
+                                slow_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(28_000) }),
+                                ppt_step: Some(1_000),
+                                ppt_divisor: Some(1_000),
                                 clock_min: Some(super::RangeLimit { min: Some(400), max: Some(2200) }),
                                 clock_max: Some(super::RangeLimit { min: Some(400), max: Some(2200) }),
                                 clock_step: Some(100),
@@ -213,12 +216,55 @@ impl Default for Base {
                         gpu: super::GpuLimit {
                             provider: super::GpuLimitType::GenericAMD,
                             limits: super::GenericGpuLimit {
-                                fast_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(28_000_000) }),
-                                slow_ppt: Some(super::RangeLimit { min: Some(1_000_000), max: Some(28_000_000) }),
-                                ppt_step: Some(1_000_000),
+                                fast_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(28_000) }),
+                                slow_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(28_000) }),
+                                ppt_step: Some(1_000),
+                                ppt_divisor: Some(1_000),
                                 clock_min: Some(super::RangeLimit { min: Some(400), max: Some(2200) }),
                                 clock_max: Some(super::RangeLimit { min: Some(400), max: Some(2200) }),
                                 clock_step: Some(100),
+                                ..Default::default()
+                            }
+                        },
+                        battery: super::Limit {
+                            provider: super::BatteryLimitType::Generic,
+                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::Generic),
+                        }
+                    }
+                },
+                super::Config {
+                    name: "AMD R7 7840U".to_owned(),
+                    conditions: super::Conditions {
+                        dmi: None,
+                        cpuinfo: Some("model name\\s+: AMD Ryzen 7 7840U( w\\/ Radeon  780M Graphics)?\n".to_owned()),
+                        os: None,
+                        command: None,
+                        file_exists: None,
+                    },
+                    limits: super::Limits {
+                        cpu: super::CpuLimit {
+                            provider: super::CpuLimitType::GenericAMD,
+                            limits: super::GenericCpusLimit {
+                                cpus: vec![
+                                    super::GenericCpuLimit {
+                                        clock_min: Some(super::RangeLimit { min: Some(400), max: Some(5100) }),
+                                        clock_max: Some(super::RangeLimit { min: Some(400), max: Some(5100) }),
+                                        clock_step: Some(100),
+                                        skip_resume_reclock: false,
+                                    }; 16], // 8 cores with SMTx2
+                                global_governors: true,
+                            }
+                        },
+                        gpu: super::GpuLimit {
+                            provider: super::GpuLimitType::GenericAMD,
+                            limits: super::GenericGpuLimit {
+                                fast_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(53_000) }),
+                                slow_ppt: Some(super::RangeLimit { min: Some(1_000), max: Some(43_000) }),
+                                ppt_step: Some(1_000),
+                                ppt_divisor: Some(1_000),
+                                clock_min: None,
+                                clock_max: None,
+                                clock_step: None,
                                 ..Default::default()
                             }
                         },

@@ -1,7 +1,7 @@
 use std::convert::Into;
 
 use limits_core::json_v2::GenericBatteryLimit;
-use sysfuss::SysEntity;
+use sysfuss::{SysEntity, SysEntityAttributesExt};
 
 use crate::persist::BatteryJson;
 use crate::settings::{TBattery, ProviderBuilder};
@@ -27,7 +27,7 @@ impl Into<BatteryJson> for Battery {
 }
 
 impl Battery {
-    fn read_f64<P: AsRef<std::path::Path>>(path: P) -> Result<f64, SettingError> {
+    /*fn read_f64<P: AsRef<std::path::Path>>(path: P) -> Result<f64, SettingError> {
         let path = path.as_ref();
         match usdpl_back::api::files::read_single::<_, f64, _>(path) {
             Err(e) => Err(SettingError {
@@ -38,13 +38,14 @@ impl Battery {
             // so convert this to mA for consistency
             Ok(val) => Ok(val / 1000.0),
         }
-    }
+    }*/
 
     fn find_psu_sysfs(root: Option<impl AsRef<std::path::Path>>) -> sysfuss::PowerSupplyPath {
         let root = crate::settings::util::root_or_default_sysfs(root);
         match root.power_supply(crate::settings::util::always_satisfied) {
-            Ok(mut iter) => {
-                iter.next()
+            Ok(iter) => {
+                iter.filter(|x| x.name().is_ok_and(|name| name.starts_with("BAT")))
+                    .next()
                     .unwrap_or_else(|| {
                         log::error!("Failed to find generic battery power_supply in sysfs (no results), using naive fallback");
                         root.power_supply_by_name("BAT0")
@@ -53,6 +54,28 @@ impl Battery {
             Err(e) => {
                 log::error!("Failed to find generic battery power_supply in sysfs ({}), using naive fallback", e);
                 root.power_supply_by_name("BAT0")
+            }
+        }
+    }
+
+    fn get_design_voltage(&self) -> Option<f64> {
+        match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::VoltageMax) {
+            Ok(x) => Some(x/1000000.0),
+            Err(e) => {
+                log::debug!("get_design_voltage voltage_max err: {}", e);
+                match sysfuss::SysEntityRawExt::attribute::<_, f64, _>(&self.sysfs, "voltage_min_design".to_owned()) { // Framework 13 AMD
+                    Ok(x) => Some(x/1000000.0),
+                    Err(e) => {
+                        log::debug!("get_design_voltage voltage_min_design err: {}", e);
+                        match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::VoltageMin) {
+                            Ok(x) => Some(x/1000000.0),
+                            Err(e) => {
+                                log::debug!("get_design_voltage voltage_min err: {}", e);
+                                None
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -124,37 +147,55 @@ impl TBattery for Battery {
     }
 
     fn read_charge_full(&self) -> Option<f64> {
-        match Self::read_f64("/sys/class/power_supply/BAT0/energy_full") {
-            Ok(x) => Some(x),
-            Err(e) => {
-                log::warn!("read_charge_full err: {}", e.msg);
-                None
+        if let Some(battery_voltage) = self.get_design_voltage() {
+            match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::ChargeFull) {
+                Ok(x) => Some(x/1000000.0 * battery_voltage),
+                Err(e) => {
+                    log::warn!("read_charge_full err: {}", e);
+                    None
+                }
             }
+        } else {
+            None
         }
     }
 
     fn read_charge_now(&self) -> Option<f64> {
-        match Self::read_f64("/sys/class/power_supply/BAT0/energy_now") {
-            Ok(x) => Some(x),
-            Err(e) => {
-                log::warn!("read_charge_now err: {}", e.msg);
-                None
+        if let Some(battery_voltage) = self.get_design_voltage() {
+            match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::ChargeNow) {
+                Ok(x) => Some(x/1000000.0 * battery_voltage),
+                Err(e) => {
+                    log::warn!("read_charge_now err: {}", e);
+                    None
+                }
             }
+        } else {
+            None
         }
     }
 
     fn read_charge_design(&self) -> Option<f64> {
-        match Self::read_f64("/sys/class/power_supply/BAT0/energy_design") {
-            Ok(x) => Some(x),
-            Err(e) => {
-                log::warn!("read_charge_design err: {}", e.msg);
-                None
+        if let Some(battery_voltage) = self.get_design_voltage() {
+            match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::ChargeFullDesign) {
+                Ok(x) => Some(x/1000000.0 * battery_voltage),
+                Err(e) => {
+                    log::warn!("read_charge_design err: {}", e);
+                    None
+                }
             }
+        } else {
+            None
         }
     }
 
     fn read_current_now(&self) -> Option<f64> {
-        None
+        match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::CurrentNow) {
+            Ok(x) => Some(x/1000.0), // expects mA, reads uA
+            Err(e) => {
+                log::warn!("read_current_now err: {}", e);
+                None
+            }
+        }
     }
 
     fn read_charge_power(&self) -> Option<f64> {
@@ -164,6 +205,13 @@ impl TBattery for Battery {
     fn charge_limit(&mut self, _limit: Option<f64>) {}
 
     fn get_charge_limit(&self) -> Option<f64> {
+        /*match self.sysfs.attribute::<f64, _>(sysfuss::PowerSupplyAttribute::ChargeControlLimit) {
+            Ok(x) => Some(x/1000.0),
+            Err(e) => {
+                log::warn!("read_charge_design err: {}", e);
+                None
+            }
+        }*/
         None
     }
 

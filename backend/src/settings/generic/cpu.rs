@@ -218,6 +218,13 @@ pub struct Cpu {
     }
 }*/
 
+impl Cpu {
+    #[inline]
+    fn current_governor(index: usize) -> String {
+        usdpl_back::api::files::read_single(cpu_governor_path(index)).unwrap_or_else(|_| "schedutil".to_owned())
+    }
+}
+
 impl AsRef<Cpu> for Cpu {
     #[inline]
     fn as_ref(&self) -> &Cpu {
@@ -237,7 +244,7 @@ impl FromGenericCpuInfo for Cpu {
     fn from_limits(cpu_index: usize, limits: GenericCpuLimit) -> Self {
         Self {
             online: true,
-            governor: "schedutil".to_owned(),
+            governor: Self::current_governor(cpu_index),
             clock_limits: None,
             limits,
             index: cpu_index,

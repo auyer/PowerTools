@@ -25,6 +25,7 @@ fn main() -> Result<(), ()> {
         .join(PACKAGE_NAME.to_owned() + ".log");
     #[cfg(not(debug_assertions))]
     let log_filepath = std::path::Path::new("/tmp").join(format!("{}.log", PACKAGE_NAME));
+    println!("Logging to: {:?}", log_filepath);
     #[cfg(debug_assertions)]
     let old_log_filepath = usdpl_back::api::dirs::home()
         .unwrap_or_else(|| "/tmp/".into())
@@ -46,12 +47,11 @@ fn main() -> Result<(), ()> {
             LevelFilter::Info
         },
         Default::default(),
-        std::fs::File::create(&log_filepath).unwrap(),
+        std::fs::File::create(&log_filepath).expect("Failed to create log file"),
         //std::fs::File::create("/home/deck/powertools-rs.log").unwrap(),
     )
     .unwrap();
     log::debug!("Logging to: {:?}.", log_filepath);
-    println!("Logging to: {:?}", log_filepath);
     log::info!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
     println!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
     log::info!(

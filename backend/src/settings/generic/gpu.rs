@@ -15,7 +15,7 @@ pub struct Gpu {
     pub fast_ppt: Option<u64>,
     pub slow_ppt: Option<u64>,
     pub clock_limits: Option<MinMax<u64>>,
-    limits: GenericGpuLimit,
+    pub limits: GenericGpuLimit,
     sysfs: BasicEntityPath,
 }
 
@@ -122,13 +122,23 @@ impl TGpu for Gpu {
                 .limits
                 .fast_ppt
                 .clone()
-                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15_000_000))),
+                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15)))
+                .map(|mut x| if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    x.min /= ppt_divisor;
+                    x.max /= ppt_divisor;
+                    x
+                } else {x}),
             slow_ppt_limits: self
                 .limits
                 .slow_ppt
                 .clone()
-                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15_000_000))),
-            ppt_step: self.limits.ppt_step.unwrap_or(1_000_000),
+                .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15)))
+                .map(|mut x| if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    x.min /= ppt_divisor;
+                    x.max /= ppt_divisor;
+                    x
+                } else {x}),
+            ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: self
                 .limits
                 .tdp
@@ -161,7 +171,8 @@ impl TGpu for Gpu {
 
     fn ppt(&mut self, fast: Option<u64>, slow: Option<u64>) {
         if let Some(fast_lims) = &self.limits.fast_ppt {
-            self.fast_ppt = fast.map(|x| {
+            self.fast_ppt = fast.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x * ppt_divisor } else { x })
+            .map(|x| {
                 x.clamp(
                     fast_lims.min.unwrap_or(0),
                     fast_lims.max.unwrap_or(u64::MAX),
@@ -169,7 +180,8 @@ impl TGpu for Gpu {
             });
         }
         if let Some(slow_lims) = &self.limits.slow_ppt {
-            self.slow_ppt = slow.map(|x| {
+            self.slow_ppt = slow.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x * ppt_divisor } else { x })
+            .map(|x| {
                 x.clamp(
                     slow_lims.min.unwrap_or(0),
                     slow_lims.max.unwrap_or(u64::MAX),
