@@ -191,7 +191,8 @@ impl TGpu for Gpu {
     }
 
     fn get_ppt(&self) -> (Option<u64>, Option<u64>) {
-        (self.fast_ppt, self.slow_ppt)
+        (self.fast_ppt.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x / ppt_divisor } else { x }),
+         self.slow_ppt.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x / ppt_divisor } else { x }))
     }
 
     fn clock_limits(&mut self, limits: Option<MinMax<u64>>) {
