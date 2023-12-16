@@ -20,7 +20,7 @@ impl Default for Base {
                     name: "Steam Deck Custom".to_owned(),
                     conditions: super::Conditions {
                         dmi: None,
-                        cpuinfo: Some("model name\t: AMD Custom APU 0405\n".to_owned()),
+                        cpuinfo: Some("model name\t: AMD Custom APU (0405)|(0932)\n".to_owned()),
                         os: None,
                         command: None,
                         file_exists: Some("./limits_override.json".into()),
@@ -44,7 +44,7 @@ impl Default for Base {
                     name: "Steam Deck".to_owned(),
                     conditions: super::Conditions {
                         dmi: None,
-                        cpuinfo: Some("model name\t: AMD Custom APU 0405\n".to_owned()),
+                        cpuinfo: Some("model name\t: AMD Custom APU (0405)|(0932)\n".to_owned()),
                         os: None,
                         command: None,
                         file_exists: None,

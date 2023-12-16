@@ -4,7 +4,7 @@
       "name": "Steam Deck Custom",
       "conditions": {
         "dmi": null,
-        "cpuinfo": "model name\t: AMD Custom APU 0405\n",
+        "cpuinfo": "model name\t: AMD Custom APU (0405)|(0932)\n",
         "os": null,
         "command": null,
         "file_exists": "./pt_oc.json"
@@ -28,7 +28,7 @@
       "name": "Steam Deck",
       "conditions": {
         "dmi": null,
-        "cpuinfo": "model name\t: AMD Custom APU 0405\n",
+        "cpuinfo": "model name\t: AMD Custom APU (0405)|(0932)\n",
         "os": null,
         "command": null,
         "file_exists": null
