@@ -303,6 +303,8 @@ impl Into<GpuJson> for Gpu {
         GpuJson {
             fast_ppt: self.fast_ppt,
             slow_ppt: self.slow_ppt,
+            tdp: None,
+            tdp_boost: None,
             clock_limits: self.clock_limits.map(|x| x.into()),
             slow_memory: self.slow_memory,
             root: self.sysfs_card.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|r| r.to_owned()))

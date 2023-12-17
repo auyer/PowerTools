@@ -163,12 +163,20 @@ const reload = function() {
   backend.resolve(backend.getMessages(null), (messages: backend.Message[]) => { set_value(MESSAGE_LIST, messages) });
 };
 
-// init USDPL WASM and connection to back-end
-(async function(){
-  await backend.initBackend();
-  usdplReady = true;
-  reload(); // technically this is only a load
+const clearHooks = function() {
+  clearInterval(periodicHook!);
+  periodicHook = null;
+  lifetimeHook?.unregister();
+  startHook?.unregister();
+  endHook?.unregister();
 
+  backend.log(backend.LogLevel.Debug, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
+};
+
+const registerCallbacks = function(autoclear: boolean) {
+  if (autoclear) {
+    clearHooks();
+  }
   // register Steam callbacks
   //@ts-ignore
   lifetimeHook = SteamClient.GameSessions.RegisterForAppLifetimeNotifications((update) => {
@@ -203,6 +211,15 @@ const reload = function() {
   });
 
   backend.log(backend.LogLevel.Debug, "Registered PowerTools callbacks, hello!");
+};
+
+// init USDPL WASM and connection to back-end
+(async function(){
+  await backend.initBackend();
+  usdplReady = true;
+  reload(); // technically this is only a load
+
+  registerCallbacks(true);
 })();
 
 const periodicals = function() {
@@ -334,19 +351,15 @@ export default definePlugin((serverApi: ServerAPI) => {
   if (now.getDate() == 1 && now.getMonth() == 3) {
     ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
   }
+  registerCallbacks(false);
   return {
     title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,
     icon: ico,
     onDismount() {
       backend.log(backend.LogLevel.Debug, "PowerTools shutting down");
-      clearInterval(periodicHook!);
-      periodicHook = null;
-      lifetimeHook?.unregister();
-      startHook?.unregister();
-      endHook?.unregister();
+      clearHooks();
       //serverApi.routerHook.removeRoute("/decky-plugin-test");
-      backend.log(backend.LogLevel.Debug, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
     },
   };
 });

@@ -17,6 +17,7 @@ fn msg_or_err<D: std::fmt::Display, E: std::fmt::Display>(output: &mut String, m
 
 fn log_capabilities(ryzenadj: &RyzenAdj) {
     log::info!("RyzenAdj v{}.{}.{}", libryzenadj::libryzenadj_sys::RYZENADJ_REVISION_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MAJOR_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MINIOR_VER);
+    #[cfg(feature = "experimental")]
     if let Some(x) = ryzenadj.get_init_table_err() {
         log::warn!("RyzenAdj table init error: {}", x);
     }

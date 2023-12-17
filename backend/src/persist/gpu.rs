@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct GpuJson {
     pub fast_ppt: Option<u64>,
     pub slow_ppt: Option<u64>,
+    pub tdp: Option<u64>,
+    pub tdp_boost: Option<u64>,
     pub clock_limits: Option<MinMaxJson<u64>>,
     pub slow_memory: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -19,6 +21,8 @@ impl Default for GpuJson {
         Self {
             fast_ppt: None,
             slow_ppt: None,
+            tdp: None,
+            tdp_boost: None,
             clock_limits: None,
             slow_memory: false,
             root: None,

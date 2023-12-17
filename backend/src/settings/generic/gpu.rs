@@ -14,6 +14,8 @@ pub struct Gpu {
     pub slow_memory: bool,
     pub fast_ppt: Option<u64>,
     pub slow_ppt: Option<u64>,
+    pub tdp: Option<u64>,
+    pub tdp_boost: Option<u64>,
     pub clock_limits: Option<MinMax<u64>>,
     pub limits: GenericGpuLimit,
     sysfs: BasicEntityPath,
@@ -70,6 +72,16 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
             } else {
                 None
             },
+            tdp: if limits.tdp.is_some() {
+                persistent.tdp
+            } else {
+                None
+            },
+            tdp_boost: if limits.tdp_boost.is_some() {
+                persistent.tdp_boost
+            } else {
+                None
+            },
             clock_limits: clock_lims,
             limits,
             sysfs: Self::find_card_sysfs(persistent.root)
@@ -81,6 +93,8 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
             slow_memory: false,
             fast_ppt: None,
             slow_ppt: None,
+            tdp: None,
+            tdp_boost: None,
             clock_limits: None,
             limits,
             sysfs: Self::find_card_sysfs(None::<&'static str>),
@@ -94,6 +108,8 @@ impl Into<GpuJson> for Gpu {
         GpuJson {
             fast_ppt: self.fast_ppt,
             slow_ppt: self.slow_ppt,
+            tdp: self.tdp,
+            tdp_boost: self.tdp_boost,
             clock_limits: self.clock_limits.map(|x| x.into()),
             slow_memory: false,
             root: self.sysfs.root().and_then(|p| p.as_ref().to_str().map(|s| s.to_owned()))
