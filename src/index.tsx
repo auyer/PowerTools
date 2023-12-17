@@ -77,6 +77,8 @@ var startHook: any = null;
 var endHook: any = null;
 var usdplReady = false;
 
+var tryNotifyProfileChange = function() {};
+
 type MinMax = {
   min: number | null;
   max: number | null;
@@ -170,7 +172,7 @@ const clearHooks = function() {
   startHook?.unregister();
   endHook?.unregister();
 
-  backend.log(backend.LogLevel.Debug, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
+  backend.log(backend.LogLevel.Info, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
 };
 
 const registerCallbacks = function(autoclear: boolean) {
@@ -185,9 +187,14 @@ const registerCallbacks = function(autoclear: boolean) {
           //backend.log(backend.LogLevel.Debug, "AppID " + update.unAppID.toString() + " is now running");
       } else {
           //backend.log(backend.LogLevel.Debug, "AppID " + update.unAppID.toString() + " is no longer running");
-          backend.resolve(
-            backend.loadGeneralDefaultSettings(),
-            (ok: boolean) => {backend.log(backend.LogLevel.Debug, "Loading default settings ok? " + ok)}
+          backend.resolve(backend.loadGeneralDefaultSettings(), (ok: boolean) => {
+              backend.log(backend.LogLevel.Debug, "Loading default settings ok? " + ok);
+              reload();
+              backend.resolve(backend.waitForComplete(), (_) => {
+                backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to game exit");
+                tryNotifyProfileChange();
+              });
+            }
           );
       }
   });
@@ -200,12 +207,26 @@ const registerCallbacks = function(autoclear: boolean) {
       // don't use gameInfo.appid, haha
       backend.resolve(
         backend.loadGeneralSettings(id.toString(), gameInfo.display_name, 0, undefined),
-        (ok: boolean) => {backend.log(backend.LogLevel.Debug, "Loading settings ok? " + ok)}
+        (ok: boolean) => {
+          backend.log(backend.LogLevel.Debug, "Loading settings ok? " + ok);
+          reload();
+          backend.resolve(backend.waitForComplete(), (_) => {
+            backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to new game launch");
+            tryNotifyProfileChange();
+          });
+        }
       );
   });
 
+  // this fires immediately, so let's ignore that callback
+  let hasFiredImmediately = false;
   //@ts-ignore
   endHook = SteamClient.Apps.RegisterForGameActionEnd((actionType) => {
+      if (!hasFiredImmediately) {
+        hasFiredImmediately = true;
+        backend.log(backend.LogLevel.Debug, "RegisterForGameActionEnd immediately fired callback(" + actionType + ")");
+        return;
+      }
       backend.log(backend.LogLevel.Info, "RegisterForGameActionEnd callback(" + actionType + ")");
       setTimeout(() => backend.forceApplySettings(), AUTOMATIC_REAPPLY_WAIT);
   });
@@ -233,16 +254,13 @@ const periodicals = function() {
     const oldValue = get_value(PATH_GEN);
     set_value(PATH_GEN, path);
     if (path != oldValue) {
-      backend.log(backend.LogLevel.Info, "Frontend values reload triggered by path change: " + oldValue + " -> " + path);
+      backend.log(backend.LogLevel.Debug, "Frontend values reload triggered by path change: " + oldValue + " -> " + path);
       reload();
     }
   })
 };
 
-const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
-
-  const [idc, reloadGUI] = useState<any>("/shrug");
-
+const periodicalsSetup = function(reloadGUI: (s: string) => void) {
   if (periodicHook != null) {
     clearInterval(periodicHook);
     periodicHook = null;
@@ -252,6 +270,14 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
       periodicals();
       reloadGUI("periodic" + (new Date()).getTime().toString());
   }, PERIODICAL_BACKEND_PERIOD);
+};
+
+const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
+
+  const [idc, reloadGUI] = useState<any>("/shrug");
+  tryNotifyProfileChange = function() { reloadGUI("ProfileChangeByNotification") };
+
+  periodicalsSetup(reloadGUI);
 
   if (!usdplReady || !get_value(LIMITS_INFO)) {
     // Not translated on purpose (to avoid USDPL issues)
@@ -263,6 +289,8 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
           onClick={(_: MouseEvent) => {
             console.log("POWERTOOLS: manual reload after startup failure");
             reload();
+            // try to reload GUI too
+            backend.resolve(backend.waitForComplete(), (_) => {reloadGUI("LoadSystemDefaults")});
           }}
         >
         Reload
@@ -351,7 +379,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   if (now.getDate() == 1 && now.getMonth() == 3) {
     ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
   }
-  registerCallbacks(false);
+  //registerCallbacks(false);
   return {
     title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,
@@ -359,6 +387,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     onDismount() {
       backend.log(backend.LogLevel.Debug, "PowerTools shutting down");
       clearHooks();
+      tryNotifyProfileChange = function() {};
       //serverApi.routerHook.removeRoute("/decky-plugin-test");
     },
   };
