@@ -1,0 +1,21 @@
+[package]
+name = "community_settings_srv"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+community_settings_core = { version = "0.1", path = "../community_settings_core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ron = "0.8"
+
+clap = { version = "4", features = ["derive", "std", "color"], default-features = false }
+tokio = { version = "1", features = ["full"] }
+actix-web = { version = "4.4" }
+mime = { version = "0.3.17" }
+
+# logging
+log = "0.4"
+simplelog = "0.12"
