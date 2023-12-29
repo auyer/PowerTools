@@ -17,9 +17,9 @@ class Plugin:
             env_proc["LD_LIBRARY_PATH"] += ":"+PARENT_DIR+"/bin"
         else:
             env_proc["LD_LIBRARY_PATH"] = ":"+PARENT_DIR+"/bin"
-        self.backend_proc = subprocess.Popen(
+        '''self.backend_proc = subprocess.Popen(
             [PARENT_DIR + "/bin/backend"],
-            env = env_proc)
+            env = env_proc)'''
         while True:
             await asyncio.sleep(1)
 

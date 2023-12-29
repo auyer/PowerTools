@@ -27,20 +27,15 @@ const THINGS: &[u8] = &[
 const TIME_UNIT: std::time::Duration = std::time::Duration::from_millis(200);
 
 pub fn flash_led() {
-    let led_status = sd_led::Setting::LEDStatus;
-    let old_led_state = sd_led::raw_io::write_read(led_status as _)
-        .map_err(|e| log::error!("Failed to read LED status: {}", e));
     for &code in THINGS {
         let on = code != 0;
-        if let Err(e) = sd_led::set_led(on, on, false) {
+        if let Err(e) = smokepatio::ec::led::constant::set(if on { smokepatio::ec::led::constant::Colour::White } else { smokepatio::ec::led::constant::Colour::Off }) {
             log::error!("Thing err: {}", e);
         }
         std::thread::sleep(TIME_UNIT);
     }
-    if let Ok(old_led_state) = old_led_state {
-        log::debug!("Restoring LED state to {:#02b}", old_led_state);
-        sd_led::raw_io::write2(led_status as _, old_led_state)
-            .map_err(|e| log::error!("Failed to restore LED status: {}", e))
-            .unwrap();
-    }
+    log::debug!("Restoring LED state");
+    smokepatio::ec::led::constant::set(smokepatio::ec::led::constant::Colour::Off)
+        .map_err(|e| log::error!("Failed to restore LED status: {}", e))
+        .unwrap();
 }

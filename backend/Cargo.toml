@@ -29,8 +29,8 @@ simplelog = "0.12"
 # limits & driver functionality
 limits_core = { version = "3", path = "./limits_core" }
 regex = "1"
-libryzenadj = { version = "0.12" }
-sd_led = { version = "*", path = "./sd_led" }
+smokepatio = { version = "*", path = "../../smokepatio" }
+libryzenadj = { version = "0.14", path = "../../libryzenadj-rs-14" }
 # ureq's tls feature does not like musl targets
 ureq = { version = "2", features = ["json", "gzip", "brotli", "charset"], default-features = false, optional = true }
 

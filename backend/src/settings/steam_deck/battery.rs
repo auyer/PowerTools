@@ -6,7 +6,7 @@ use sysfuss::capability::attributes;
 
 use limits_core::json_v2::GenericBatteryLimit;
 
-use sd_led::ChargeMode;
+use smokepatio::ec::ChargeMode;
 use crate::api::RangeLimit;
 use crate::persist::{BatteryEventJson, BatteryJson};
 use crate::settings::{TBattery, ProviderBuilder};
@@ -131,7 +131,7 @@ impl EventInstruction {
 
     fn set_charge_mode(&self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
-            sd_led::set(sd_led::Setting::ChargeMode, charge_mode as _)
+            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, charge_mode as _)
                 .map_err(|e| SettingError {
                     msg: format!("Failed to set charge mode: {}", e),
                     setting: crate::settings::SettingVariant::Battery,
@@ -329,7 +329,7 @@ impl Battery {
     fn set_charge_mode(&mut self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
             self.state.charge_mode_set = true;
-            sd_led::set(sd_led::Setting::ChargeMode, charge_mode as _)
+            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, charge_mode as _)
                 .map_err(|e| SettingError {
                     msg: format!("Failed to set charge mode: {}", e),
                     setting: crate::settings::SettingVariant::Battery,
@@ -337,7 +337,7 @@ impl Battery {
                 .map(|_| ())
         } else if self.state.charge_mode_set {
             self.state.charge_mode_set = false;
-            sd_led::set(sd_led::Setting::ChargeMode, ChargeMode::Normal as _)
+            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, ChargeMode::Normal as _)
                 .map_err(|e| SettingError {
                     msg: format!("Failed to set charge mode: {}", e),
                     setting: crate::settings::SettingVariant::Battery,
