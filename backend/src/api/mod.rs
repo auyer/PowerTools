@@ -7,6 +7,7 @@ pub mod gpu;
 pub mod handler;
 pub mod message;
 mod utility;
+pub mod web;
 
 pub(super) type ApiParameterType = Vec<usdpl_back::core::serdes::Primitive>;
 

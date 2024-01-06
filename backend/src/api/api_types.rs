@@ -61,3 +61,9 @@ pub struct GpuLimits {
     pub clock_step: u64,
     pub memory_control_capable: bool,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct VariantInfo {
+    pub id: String,
+    pub name: String,
+}

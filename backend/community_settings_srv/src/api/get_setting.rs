@@ -8,7 +8,8 @@ fn special_settings() -> community_settings_core::v1::Metadata {
         name: "Zeroth the Least".to_owned(),
         steam_app_id: 1675200,
         steam_user_id: 76561198116690523,
-        stream_username: "NGnius".to_owned(),
+        steam_username: "NGnius".to_owned(),
+        tags: vec!["0".to_owned(), "gr8".to_owned()],
         id: 0.to_string(),
         config: community_settings_core::v1::Config {
             cpus: vec![
@@ -51,7 +52,7 @@ fn special_settings() -> community_settings_core::v1::Metadata {
     }
 }
 
-#[get("/api/setting/{id}")]
+#[get("/api/setting/by_id/{id}")]
 pub async fn get_setting_handler(
     id: web::Path<String>,
     accept: web::Header<header::Accept>,

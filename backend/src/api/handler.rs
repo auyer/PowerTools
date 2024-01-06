@@ -227,6 +227,9 @@ pub enum GeneralMessage {
     GetPersistent(Callback<bool>),
     GetCurrentProfileName(Callback<String>),
     GetPath(Callback<std::path::PathBuf>),
+    GetCurrentVariant(Callback<super::VariantInfo>),
+    GetAllVariants(Callback<Vec<super::VariantInfo>>),
+    AddVariant(crate::persist::SettingsJson, Callback<Vec<super::VariantInfo>>),
     ApplyNow,
 }
 
@@ -238,6 +241,15 @@ impl GeneralMessage {
             Self::GetPersistent(cb) => cb(*settings.persistent()),
             Self::GetCurrentProfileName(cb) => cb(settings.get_name().to_owned()),
             Self::GetPath(cb) => cb(settings.get_path().to_owned()),
+            Self::GetCurrentVariant(cb) => cb(settings.get_variant_info()),
+            Self::GetAllVariants(cb) => cb(settings.get_variants()),
+            Self::AddVariant(variant, cb) => match settings.add_variant(variant) {
+                Ok(variants) => cb(variants),
+                Err(e) => {
+                    print_errors("GeneralMessage::AddVariant => TGeneral::add_variant", vec![e]);
+                    cb(Vec::with_capacity(0))
+                },
+            },
             Self::ApplyNow => {}
         }
         dirty
@@ -389,7 +401,7 @@ impl ApiMessageHandler {
                 true
             }
             ApiMessage::LoadSystemSettings => {
-                settings.load_system_default(settings.general.get_name().to_owned(), settings.general.get_variant_id(), settings.general.get_variant_name().to_owned());
+                settings.load_system_default(settings.general.get_name().to_owned(), settings.general.get_variant_id(), settings.general.get_variant_info().name);
                 true
             }
             ApiMessage::GetLimits(cb) => {

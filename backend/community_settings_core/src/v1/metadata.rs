@@ -5,7 +5,8 @@ pub struct Metadata {
     pub name: String,
     pub steam_app_id: u32,
     pub steam_user_id: u64,
-    pub stream_username: String,
+    pub steam_username: String,
+    pub tags: Vec<String>,
     /// Should always be a valid u128, but some parsers do not support that
     pub id: String,
     pub config: super::Config,

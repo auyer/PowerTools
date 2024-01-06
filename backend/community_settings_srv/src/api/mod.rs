@@ -1,6 +1,8 @@
+mod get_game;
 mod get_setting;
 mod save_setting;
 
+pub use get_game::get_setting_by_app_id_handler as get_setting_by_steam_app_id;
 pub use get_setting::get_setting_handler as get_setting_by_id;
 pub use save_setting::save_setting_handler as save_setting_with_new_id;
 

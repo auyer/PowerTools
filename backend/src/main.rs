@@ -299,8 +299,24 @@ fn main() -> Result<(), ()> {
             "GENERAL_get_periodicals",
             api::general::get_periodicals(api_sender.clone())
         )
+        .register_async(
+            "GENERAL_get_all_variants",
+            api::general::get_all_variants(api_sender.clone())
+        )
+        .register_async(
+            "GENERAL_get_current_variant",
+            api::general::get_current_variant(api_sender.clone())
+        )
         .register_async("MESSAGE_get", message_getter)
-        .register_async("MESSAGE_dismiss", message_dismisser);
+        .register_async("MESSAGE_dismiss", message_dismisser)
+        .register_async(
+            "WEB_search_by_app",
+            api::web::search_by_app_id()
+        )
+        .register_async(
+            "WEB_download_new",
+            api::web::download_new_config(api_sender.clone())
+        );
 
     if let Err(e) = loaded_settings.on_set() {
         e.iter()

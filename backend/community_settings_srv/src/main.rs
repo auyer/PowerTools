@@ -25,6 +25,10 @@ async fn main() -> std::io::Result<()> {
     .unwrap();
     log::debug!("Logging to: {}", args.log.display());
 
+    // setup
+    log::debug!("Building folder layout (if not exists) at: {}", &args.folder.display());
+    file_util::build_folder_layout(&args.folder)?;
+
     let leaked_args: &'static cli::Cli = Box::leak::<'static>(Box::new(args));
     HttpServer::new(move || {
             App::new()
@@ -32,6 +36,7 @@ async fn main() -> std::io::Result<()> {
                 //.app_data(web::Data::new(IndexPage::load("dist/index.html").unwrap()))
                 //.app_data(basic::Config::default().realm("Restricted area"))
                 .service(api::get_setting_by_id)
+                .service(api::get_setting_by_steam_app_id)
                 .service(api::save_setting_with_new_id)
         })
             .bind(("0.0.0.0", leaked_args.port))?

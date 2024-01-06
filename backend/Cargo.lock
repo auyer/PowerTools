@@ -290,6 +290,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "community_settings_core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "core-foundation-sys"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -778,7 +785,9 @@ dependencies = [
 
 [[package]]
 name = "libryzenadj"
-version = "0.14.0"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5bccdf07c3234c06c435648a53d8cb369f76d20e03bb8d2f8c24fb2330efc32"
 dependencies = [
  "errno",
  "libryzenadj-sys",
@@ -788,7 +797,9 @@ dependencies = [
 
 [[package]]
 name = "libryzenadj-sys"
-version = "0.14.0"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1de3621be974e892e12d4a07a6a2e32b6a05950759b062d94f5b54f78fabc3a"
 dependencies = [
  "bindgen",
  "cmake",
@@ -1055,6 +1066,7 @@ name = "powertools"
 version = "1.5.0-ng1"
 dependencies = [
  "async-trait",
+ "community_settings_core",
  "libryzenadj",
  "limits_core",
  "log",

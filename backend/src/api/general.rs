@@ -391,3 +391,61 @@ fn wait_for_response<T>(sender: &Sender<ApiMessage>, rx: mpsc::Receiver<T>, api_
     sender.send(api_msg).expect(&format!("{} send failed", op));
     rx.recv().expect(&format!("{} callback recv failed", op))
 }
+
+/// Generate get variants
+pub fn get_all_variants(sender: Sender<ApiMessage>) -> impl AsyncCallable {
+    let sender = Arc::new(Mutex::new(sender)); // Sender is not Sync; this is required for safety
+    let getter = move || {
+        let sender2 = sender.clone();
+        move || {
+            let (tx, rx) = mpsc::channel();
+            let callback =
+                move |variants: Vec<super::VariantInfo>| tx.send(variants).expect("get_all_variants callback send failed");
+            sender2
+                .lock()
+                .unwrap()
+                .send(ApiMessage::General(GeneralMessage::GetAllVariants(
+                    Box::new(callback),
+                )))
+                .expect("get_all_variants send failed");
+            rx.recv().expect("get_all_variants callback recv failed")
+        }
+    };
+    super::async_utils::AsyncIshGetter {
+        set_get: getter,
+        trans_getter: |result| {
+            let mut output = Vec::with_capacity(result.len());
+            for status in result.iter() {
+                output.push(Primitive::Json(serde_json::to_string(status).expect("Failed to serialize variant info to JSON")));
+            }
+            output
+        },
+    }
+}
+
+/// Generate get current variant
+pub fn get_current_variant(sender: Sender<ApiMessage>) -> impl AsyncCallable {
+    let sender = Arc::new(Mutex::new(sender)); // Sender is not Sync; this is required for safety
+    let getter = move || {
+        let sender2 = sender.clone();
+        move || {
+            let (tx, rx) = mpsc::channel();
+            let callback =
+                move |variant: super::VariantInfo| tx.send(variant).expect("get_all_variants callback send failed");
+            sender2
+                .lock()
+                .unwrap()
+                .send(ApiMessage::General(GeneralMessage::GetCurrentVariant(
+                    Box::new(callback),
+                )))
+                .expect("get_current_variant send failed");
+            rx.recv().expect("get_current_variant callback recv failed")
+        }
+    };
+    super::async_utils::AsyncIshGetter {
+        set_get: getter,
+        trans_getter: |result| {
+            vec![Primitive::Json(serde_json::to_string(&result).expect("Failed to serialize variant info to JSON"))]
+        },
+    }
+}

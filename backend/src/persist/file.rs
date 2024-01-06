@@ -37,14 +37,24 @@ impl FileJson {
         ron::de::from_reader(&mut file).map_err(|e| SerdeError::Serde(e.into()))
     }
 
-    pub fn update_variant_or_create<P: AsRef<std::path::Path>>(path: P, setting: SettingsJson, given_name: String) -> Result<(), SerdeError> {
+    fn next_available_id(&self) -> u64 {
+        self.variants.keys()
+            .max()
+            .map(|k| k+1)
+            .unwrap_or(0)
+    }
+
+    pub fn update_variant_or_create<P: AsRef<std::path::Path>>(path: P, mut setting: SettingsJson, given_name: String) -> Result<Self, SerdeError> {
         if !setting.persistent {
-            return Ok(())
+            return Self::open(path)
         }
         let path = path.as_ref();
 
         let file = if path.exists() {
             let mut file = Self::open(path)?;
+            if setting.variant == u64::MAX {
+                setting.variant = file.next_available_id();
+            }
             file.variants.insert(setting.variant, setting);
             file
         } else {
@@ -57,6 +67,7 @@ impl FileJson {
             }
         };
 
-        file.save(path)
+        file.save(path)?;
+        Ok(file)
     }
 }

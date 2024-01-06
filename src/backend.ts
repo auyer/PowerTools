@@ -349,3 +349,34 @@ export async function getPeriodicals(): Promise<Periodicals> {
         settings_path: result[4],
     };
 }
+
+export type StoreMetadata = {
+    name: string,
+    steam_app_id: number,
+    steam_user_id: number,
+    steam_username: string,
+    tags: string[],
+    id: string,
+    //config: any,
+}
+
+export async function searchStoreByAppId(id: number): Promise<StoreMetadata[]> {
+    return (await call_backend("WEB_search_by_app", [id]))[0];
+}
+
+export type VariantInfo = {
+    id: string,
+    name: string,
+}
+
+export async function storeDownloadById(id: string): Promise<VariantInfo[]> {
+    return (await call_backend("WEB_download_new", [id]));
+}
+
+export async function getAllSettingVariants(): Promise<VariantInfo[]> {
+    return (await call_backend("GENERAL_get_all_variants", []));
+}
+
+export async function getCurrentSettingVariant(): Promise<VariantInfo> {
+    return (await call_backend("GENERAL_get_current_variant", []))[0];
+}

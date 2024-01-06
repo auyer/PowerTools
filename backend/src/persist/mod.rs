@@ -14,3 +14,5 @@ pub use general::{MinMaxJson, SettingsJson};
 pub use gpu::GpuJson;
 
 pub use error::{SerdeError, RonError};
+
+pub const LATEST_VERSION: u64 = 0;

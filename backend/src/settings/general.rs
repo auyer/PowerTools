@@ -89,12 +89,43 @@ impl TGeneral for General {
         self.variant_id = id;
     }
 
-    fn get_variant_name(&self) -> &'_ str {
-        &self.variant_name
-    }
-
     fn variant_name(&mut self, name: String) {
         self.variant_name = name;
+    }
+
+    fn get_variants(&self) -> Vec<crate::api::VariantInfo> {
+        if let Ok(file) = crate::persist::FileJson::open(self.get_path()) {
+            file.variants.into_iter()
+                .map(|(id, conf)| crate::api::VariantInfo {
+                    id: id.to_string(),
+                    name: conf.name,
+                })
+                .collect()
+        } else {
+            vec![self.get_variant_info()]
+        }
+    }
+
+    fn add_variant(&self, variant: crate::persist::SettingsJson) -> Result<Vec<crate::api::VariantInfo>, SettingError> {
+        let variant_name = variant.name.clone();
+        crate::persist::FileJson::update_variant_or_create(self.get_path(), variant, variant_name)
+            .map_err(|e| SettingError {
+                msg: format!("failed to add variant: {}", e),
+                setting: SettingVariant::General,
+            })
+            .map(|file| file.variants.into_iter()
+                .map(|(id, conf)| crate::api::VariantInfo {
+                    id: id.to_string(),
+                    name: conf.name,
+                })
+                .collect())
+    }
+
+    fn get_variant_info(&self) -> crate::api::VariantInfo {
+        crate::api::VariantInfo {
+            id: self.variant_id.to_string(),
+            name: self.variant_name.clone(),
+        }
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
@@ -265,9 +296,10 @@ impl Settings {
     }*/
 
     pub fn json(&self) -> SettingsJson {
+        let variant_info = self.general.get_variant_info();
         SettingsJson {
             version: LATEST_VERSION,
-            name: self.general.get_variant_name().to_owned(),
+            name: variant_info.name,
             variant: self.general.get_variant_id(),
             persistent: self.general.get_persistent(),
             cpus: self.cpus.json(),

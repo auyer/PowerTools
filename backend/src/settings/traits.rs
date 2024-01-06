@@ -109,13 +109,17 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
 
     fn name(&mut self, name: String);
 
-    fn get_variant_id(&self) -> u64;
-
     fn variant_id(&mut self, id: u64);
 
-    fn get_variant_name(&self) -> &'_ str;
-
     fn variant_name(&mut self, name: String);
+
+    fn get_variant_id(&self) -> u64;
+
+    fn get_variants(&self) -> Vec<crate::api::VariantInfo>;
+
+    fn get_variant_info(&self) -> crate::api::VariantInfo;
+
+    fn add_variant(&self, variant: crate::persist::SettingsJson) -> Result<Vec<crate::api::VariantInfo>, SettingError>;
 
     fn provider(&self) -> crate::persist::DriverJson;
 }
