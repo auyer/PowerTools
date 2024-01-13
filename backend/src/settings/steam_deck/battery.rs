@@ -1,12 +1,12 @@
 use std::convert::Into;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use sysfuss::{PowerSupplyAttribute, PowerSupplyPath, HwMonAttribute, HwMonAttributeItem, HwMonAttributeType, HwMonPath, SysEntity, SysEntityAttributesExt, SysAttribute};
 use sysfuss::capability::attributes;
 
 use limits_core::json_v2::GenericBatteryLimit;
 
-use smokepatio::ec::ChargeMode;
+use smokepatio::ec::{ControllerSet, unnamed_power::{UnnamedPowerEC, ChargeMode}};
 use crate::api::RangeLimit;
 use crate::persist::{BatteryEventJson, BatteryJson};
 use crate::settings::{TBattery, ProviderBuilder};
@@ -21,6 +21,7 @@ pub struct Battery {
     state: crate::state::steam_deck::Battery,
     sysfs_bat: PowerSupplyPath,
     sysfs_hwmon: Arc<HwMonPath>,
+    bat_ec: Arc<Mutex<UnnamedPowerEC>>,
 }
 
 #[derive(Debug, Clone)]
@@ -39,6 +40,7 @@ struct EventInstruction {
     charge_mode: Option<ChargeMode>,
     is_triggered: bool,
     sysfs_hwmon: Arc<HwMonPath>,
+    bat_ec: Arc<Mutex<UnnamedPowerEC>>,
 }
 
 impl OnPowerEvent for EventInstruction {
@@ -116,7 +118,7 @@ impl EventInstruction {
         }
     }
 
-    fn from_json(other: BatteryEventJson, _version: u64, hwmon: Arc<HwMonPath>) -> Self {
+    fn from_json(other: BatteryEventJson, _version: u64, hwmon: Arc<HwMonPath>, ec: Arc<Mutex<UnnamedPowerEC>>) -> Self {
         Self {
             trigger: Self::str_to_trigger(&other.trigger).unwrap_or(EventTrigger::Ignored),
             charge_rate: other.charge_rate,
@@ -126,17 +128,17 @@ impl EventInstruction {
                 .flatten(),
             is_triggered: false,
             sysfs_hwmon: hwmon,
+            bat_ec: ec,
         }
     }
 
     fn set_charge_mode(&self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
-            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, charge_mode as _)
-                .map_err(|e| SettingError {
-                    msg: format!("Failed to set charge mode: {}", e),
-                    setting: crate::settings::SettingVariant::Battery,
-                })
-                .map(|_| ())
+            let mut lock = self.bat_ec.lock().expect("failed to lock battery controller");
+            lock.set(charge_mode).map_err(|_| SettingError {
+                msg: format!("Failed to set charge mode"),
+                setting: crate::settings::SettingVariant::Battery,
+            })
         } else {
             Ok(())
         }
@@ -329,20 +331,18 @@ impl Battery {
     fn set_charge_mode(&mut self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
             self.state.charge_mode_set = true;
-            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, charge_mode as _)
-                .map_err(|e| SettingError {
-                    msg: format!("Failed to set charge mode: {}", e),
-                    setting: crate::settings::SettingVariant::Battery,
-                })
-                .map(|_| ())
+            let mut lock = self.bat_ec.lock().expect("Failed to lock battery controller");
+            lock.set(charge_mode).map_err(|_| SettingError {
+                msg: format!("Failed to set charge mode"),
+                setting: crate::settings::SettingVariant::Battery,
+            })
         } else if self.state.charge_mode_set {
             self.state.charge_mode_set = false;
-            smokepatio::ec::set(smokepatio::ec::Setting::ChargeMode, ChargeMode::Normal as _)
-                .map_err(|e| SettingError {
-                    msg: format!("Failed to set charge mode: {}", e),
-                    setting: crate::settings::SettingVariant::Battery,
-                })
-                .map(|_| ())
+            let mut lock = self.bat_ec.lock().expect("Failed to lock battery controller");
+            lock.set(ChargeMode::Normal).map_err(|_| SettingError {
+                msg: format!("Failed to set charge mode"),
+                setting: crate::settings::SettingVariant::Battery,
+            })
         } else {
             Ok(())
         }
@@ -488,6 +488,7 @@ impl Into<BatteryJson> for Battery {
 impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
     fn from_json_and_limits(persistent: BatteryJson, version: u64, limits: GenericBatteryLimit) -> Self {
         let hwmon_sys = Arc::new(Self::find_hwmon_sysfs(None::<&'static str>));
+        let ec = Arc::new(Mutex::new(UnnamedPowerEC::new()));
         match version {
             0 => Self {
                 charge_rate: persistent.charge_rate,
@@ -498,12 +499,13 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 events: persistent
                     .events
                     .into_iter()
-                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
+                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone(), ec.clone()))
                     .collect(),
                 limits: limits,
                 state: crate::state::steam_deck::Battery::default(),
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
+                bat_ec: ec,
             },
             _ => Self {
                 charge_rate: persistent.charge_rate,
@@ -514,12 +516,13 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 events: persistent
                     .events
                     .into_iter()
-                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone()))
+                    .map(|x| EventInstruction::from_json(x, version, hwmon_sys.clone(), ec.clone()))
                     .collect(),
                 limits: limits,
                 state: crate::state::steam_deck::Battery::default(),
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
+                bat_ec: ec,
             },
         }
     }
@@ -533,6 +536,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
             state: crate::state::steam_deck::Battery::default(),
             sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
             sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
+            bat_ec: Arc::new(Mutex::new(UnnamedPowerEC::new())),
         }
     }
 }
@@ -728,6 +732,7 @@ impl TBattery for Battery {
                     charge_mode: Some(ChargeMode::Idle),
                     is_triggered: false,
                     sysfs_hwmon: self.sysfs_hwmon.clone(),
+                    bat_ec: self.bat_ec.clone(),
                 };
             } else {
                 self.events.remove(index);
@@ -743,6 +748,7 @@ impl TBattery for Battery {
                 charge_mode: Some(ChargeMode::Idle),
                 is_triggered: false,
                 sysfs_hwmon: self.sysfs_hwmon.clone(),
+                bat_ec: self.bat_ec.clone(),
             });
         }
         // lower limit
@@ -760,6 +766,7 @@ impl TBattery for Battery {
                     charge_mode: Some(ChargeMode::Normal),
                     is_triggered: false,
                     sysfs_hwmon: self.sysfs_hwmon.clone(),
+                    bat_ec: self.bat_ec.clone(),
                 };
             } else {
                 self.events.remove(index);
@@ -776,6 +783,7 @@ impl TBattery for Battery {
                 charge_mode: Some(ChargeMode::Normal),
                 is_triggered: false,
                 sysfs_hwmon: self.sysfs_hwmon.clone(),
+                bat_ec: self.bat_ec.clone(),
             });
         }
     }

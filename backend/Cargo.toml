@@ -30,7 +30,7 @@ simplelog = "0.12"
 limits_core = { version = "3", path = "./limits_core" }
 community_settings_core = { version = "0.1", path = "./community_settings_core" }
 regex = "1"
-smokepatio = { version = "*", path = "../../smokepatio" }
+smokepatio = { version = "0.1", features = [ "std" ], path = "../../smokepatio" }
 #libryzenadj = { version = "0.14", path = "../../libryzenadj-rs-14" }
 libryzenadj = { version = "0.13" }
 # ureq's tls feature does not like musl targets

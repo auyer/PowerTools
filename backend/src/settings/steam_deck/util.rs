@@ -27,15 +27,18 @@ const THINGS: &[u8] = &[
 const TIME_UNIT: std::time::Duration = std::time::Duration::from_millis(200);
 
 pub fn flash_led() {
+    use smokepatio::ec::ControllerSet;
+    let mut ec = smokepatio::ec::unnamed_power::UnnamedPowerEC::new();
     for &code in THINGS {
         let on = code != 0;
-        if let Err(e) = smokepatio::ec::led::constant::set(if on { smokepatio::ec::led::constant::Colour::White } else { smokepatio::ec::led::constant::Colour::Off }) {
+        let colour = if on { smokepatio::ec::unnamed_power::StaticColour::Red } else { smokepatio::ec::unnamed_power::StaticColour::Off };
+        if let Err(e) = ec.set(colour) {
             log::error!("Thing err: {}", e);
         }
         std::thread::sleep(TIME_UNIT);
     }
     log::debug!("Restoring LED state");
-    smokepatio::ec::led::constant::set(smokepatio::ec::led::constant::Colour::Off)
+    ec.set(smokepatio::ec::unnamed_power::StaticColour::Off)
         .map_err(|e| log::error!("Failed to restore LED status: {}", e))
         .unwrap();
 }

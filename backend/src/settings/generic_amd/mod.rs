@@ -1,7 +1,7 @@
 mod cpu;
 mod gpu;
 
-pub use cpu::{Cpu, Cpus};
+pub use cpu::Cpus;
 pub use gpu::Gpu;
 
 fn _impl_checker() {

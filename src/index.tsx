@@ -58,6 +58,8 @@ import {
   PERSISTENT_GEN,
   NAME_GEN,
   PATH_GEN,
+  VARIANTS_GEN,
+  CURRENT_VARIANT_GEN,
 
   MESSAGE_LIST,
 
@@ -158,6 +160,8 @@ const reload = function() {
   backend.resolve(backend.getGeneralPersistent(), (value: boolean) => { set_value(PERSISTENT_GEN, value) });
   backend.resolve(backend.getGeneralSettingsName(), (name: string) => { set_value(NAME_GEN, name) });
   backend.resolve(backend.getGeneralSettingsPath(), (path: string) => { set_value(PATH_GEN, path) });
+  backend.resolve(backend.getAllSettingVariants(), (variants: backend.VariantInfo[]) => { set_value(VARIANTS_GEN, variants) });
+  backend.resolve(backend.getCurrentSettingVariant(), (variant: backend.VariantInfo) => { set_value(CURRENT_VARIANT_GEN, variant) });
 
   backend.resolve(backend.getInfo(), (info: string) => { set_value(BACKEND_INFO, info) });
   backend.resolve(backend.getDriverProviderName("gpu"), (driver: string) => { set_value(DRIVER_INFO, driver) });
