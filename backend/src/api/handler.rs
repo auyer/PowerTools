@@ -23,6 +23,7 @@ pub enum ApiMessage {
     PowerVibeCheck,
     WaitForEmptyQueue(Callback<()>),
     LoadSettings(u64, String, u64, String), // (path, name, variant, variant name)
+    LoadVariant(u64, String), // (variant, variant name) -- path and name assumed to be for current profile
     LoadMainSettings,
     LoadSystemSettings,
     GetLimits(Callback<super::SettingsLimits>),
@@ -275,6 +276,7 @@ fn print_errors(call_name: &str, errors: Vec<crate::settings::SettingError>) {
 
 impl ApiMessageHandler {
     pub fn process_forever(&mut self, settings: &mut Settings) {
+        crate::utility::ioperm_power_ec();
         //let mut dirty_echo = true; // set everything twice, to make sure PowerTools wins on race conditions
         while let Ok(msg) = self.intake.recv() {
             let mut dirty = self.process(settings, msg);
@@ -382,6 +384,14 @@ impl ApiMessageHandler {
             ApiMessage::LoadSettings(id, name, variant_id, variant_name) => {
                 let path = format!("{}.ron", id);
                 match settings.load_file(path.into(), name, variant_id, variant_name, false) {
+                    Ok(success) => log::info!("Loaded settings file? {}", success),
+                    Err(e) => log::warn!("Load file err: {}", e),
+                }
+                true
+            }
+            ApiMessage::LoadVariant(variant_id, variant_name) => {
+                let path = settings.general.get_path();
+                match settings.load_file(path.into(), settings.general.get_name().to_owned(), variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }

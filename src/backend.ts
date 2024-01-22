@@ -247,13 +247,22 @@ export async function getGeneralPersistent(): Promise<boolean> {
     return (await call_backend("GENERAL_get_persistent", []))[0];
 }
 
-export async function loadGeneralSettings(id: string, name: string, variant_id: number, variant_name: string | undefined): Promise<boolean> {
+export async function loadGeneralSettings(id: string, name: string, variant_id: string, variant_name: string | undefined): Promise<boolean> {
     if (variant_name) {
         return (await call_backend("GENERAL_load_settings", [id, name, variant_id, variant_name]))[0];
     } else {
         return (await call_backend("GENERAL_load_settings", [id, name, variant_id]))[0];
     }
 
+}
+
+export async function loadGeneralSettingsVariant(variant_id: string, variant_name: string | undefined): Promise<boolean> {
+    console.log("GENERAL_load_variant");
+    if (variant_name) {
+        return (await call_backend("GENERAL_load_variant", [variant_id, variant_name]))[0];
+    } else {
+        return (await call_backend("GENERAL_load_variant", [variant_id]))[0];
+    }
 }
 
 export async function loadGeneralDefaultSettings(): Promise<boolean> {
@@ -361,6 +370,7 @@ export type StoreMetadata = {
 }
 
 export async function searchStoreByAppId(id: number): Promise<StoreMetadata[]> {
+    console.log("WEB_search_by_app");
     return (await call_backend("WEB_search_by_app", [id]))[0];
 }
 
@@ -374,9 +384,11 @@ export async function storeDownloadById(id: string): Promise<VariantInfo[]> {
 }
 
 export async function getAllSettingVariants(): Promise<VariantInfo[]> {
+    console.log("GENERAL_get_all_variants");
     return (await call_backend("GENERAL_get_all_variants", []));
 }
 
 export async function getCurrentSettingVariant(): Promise<VariantInfo> {
+    console.log("GENERAL_get_current_variant");
     return (await call_backend("GENERAL_get_current_variant", []))[0];
 }

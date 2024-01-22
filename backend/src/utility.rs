@@ -103,6 +103,16 @@ pub fn read_version_file() -> String {
         }
     }
 }
+
+pub fn ioperm_power_ec() {
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    unsafe {
+        let temp_ec = smokepatio::ec::unnamed_power::UnnamedPowerEC::new();
+        libc::ioperm(temp_ec.ec().data() as _, 1, 1);
+        libc::ioperm(temp_ec.ec().cmd() as _, 1, 1);
+    }
+}
+
 #[cfg(test)]
 mod generate {
     #[test]

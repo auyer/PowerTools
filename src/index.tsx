@@ -1,7 +1,7 @@
 import {
   ButtonItem,
   definePlugin,
-  //DialogButton,
+  DialogButton,
   //Menu,
   //MenuItem,
   PanelSection,
@@ -13,15 +13,15 @@ import {
   ToggleField,
   //Dropdown,
   Field,
-  //DropdownOption,
-  //SingleDropdownOption,
+  Dropdown,
+  SingleDropdownOption,
   //NotchLabel
   //gamepadDialogClasses,
   //joinClassNames,
 } from "decky-frontend-lib";
 import { VFC, useState } from "react";
 import { GiDrill, GiTimeBomb, GiTimeTrap, GiDynamite } from "react-icons/gi";
-import { HiRefresh, HiTrash } from "react-icons/hi";
+import { HiRefresh, HiTrash, HiPlus, HiUpload } from "react-icons/hi";
 
 //import * as python from "./python";
 import * as backend from "./backend";
@@ -73,7 +73,7 @@ import { Battery } from "./components/battery";
 import { Cpus } from "./components/cpus";
 import { DevMessages } from "./components/message";
 
-var periodicHook: NodeJS.Timer | null = null;
+var periodicHook: NodeJS.Timeout | null = null;
 var lifetimeHook: any = null;
 var startHook: any = null;
 var endHook: any = null;
@@ -206,11 +206,12 @@ const registerCallbacks = function(autoclear: boolean) {
   startHook = SteamClient.Apps.RegisterForGameActionStart((actionType, id) => {
       //@ts-ignore
       let gameInfo: any = appStore.GetAppOverviewByGameID(id);
+      let appId = gameInfo.appid.toString();
 
       backend.log(backend.LogLevel.Info, "RegisterForGameActionStart callback(" + actionType + ", " + id + ")");
       // don't use gameInfo.appid, haha
       backend.resolve(
-        backend.loadGeneralSettings(id.toString(), gameInfo.display_name, 0, undefined),
+        backend.loadGeneralSettings(appId, gameInfo.display_name, "0", undefined),
         (ok: boolean) => {
           backend.log(backend.LogLevel.Debug, "Loading settings ok? " + ok);
           reload();
@@ -303,6 +304,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
     )
   }
 
+  const variantOptions: SingleDropdownOption[] = (get_value(VARIANTS_GEN) as backend.VariantInfo[]).map((elem) => {return {
+        data: elem,
+        label: <span>{elem.name}</span>,
+    };});
+
   return (
     <PanelSection>
       <DevMessages idc={idc}/>
@@ -337,6 +343,69 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
           label={tr("Profile")}>
           {get_value(NAME_GEN)}
         </Field>
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <Field
+          label={tr("Profile Variant")} // TODO translate
+          >
+          <Dropdown
+              menuLabel={tr("Profile Variant")}
+              rgOptions={variantOptions}
+              selectedOption={variantOptions.find((val: SingleDropdownOption, _index, _arr) => {
+                backend.log(backend.LogLevel.Debug, "POWERTOOLS: looking for data " + (get_value(CURRENT_VARIANT_GEN) as backend.VariantInfo).toString());
+                return (val.data as backend.VariantInfo).id == (get_value(CURRENT_VARIANT_GEN) as backend.VariantInfo).id;
+              })}
+              strDefaultLabel={(get_value(VARIANTS_GEN) as backend.VariantInfo[])[0].name}
+              onChange={(elem: SingleDropdownOption) => {
+                let data = elem.data as backend.VariantInfo;
+                backend.log(backend.LogLevel.Debug, "Profile variant dropdown selected " + elem.data.toString());
+                backend.loadGeneralSettingsVariant(data.id, data.name);
+                set_value(CURRENT_VARIANT_GEN, elem.data as backend.VariantInfo);
+                reloadGUI("ProfileVariantGovernor");
+              }}
+          />
+        </Field>
+      </PanelSectionRow>
+      <PanelSectionRow style={{
+        alignItems: "center",
+        display: "flex",
+        justifyContent: "space-around",
+      }}>
+        <DialogButton
+          style={{
+            maxWidth: "45%",
+            minWidth: "auto",
+          }}
+          //layout="below"
+          onClick={(_: MouseEvent) => {
+            backend.log(backend.LogLevel.Debug, "Creating new PowerTools settings variant");
+            backend.resolve(
+              backend.loadGeneralSettingsVariant("please give me a new ID k thx bye" /* anything that cannot be parsed as a u64 will be set to u64::MAX, which will cause the back-end to auto-generate an ID */, undefined),
+              (ok: boolean) => {
+                backend.log(backend.LogLevel.Debug, "New settings variant ok? " + ok);
+                reload();
+                backend.resolve(backend.waitForComplete(), (_) => {
+                  backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to new settings variant");
+                  tryNotifyProfileChange();
+                });
+              }
+            );
+          }}
+        >
+          <HiPlus/>
+        </DialogButton>
+        <DialogButton
+          style={{
+            maxWidth: "45%",
+            minWidth: "auto",
+          }}
+          //layout="below"
+          onClick={(_: MouseEvent) => {
+            backend.log(backend.LogLevel.Debug, "Clicked on unimplemented upload button");
+          }}
+        >
+          <HiUpload/>
+        </DialogButton>
       </PanelSectionRow>
 
       <Debug idc={idc}/>
@@ -389,9 +458,9 @@ export default definePlugin((serverApi: ServerAPI) => {
     content: <Content serverAPI={serverApi} />,
     icon: ico,
     onDismount() {
+      tryNotifyProfileChange = function() {};
       backend.log(backend.LogLevel.Debug, "PowerTools shutting down");
       clearHooks();
-      tryNotifyProfileChange = function() {};
       //serverApi.routerHook.removeRoute("/decky-plugin-test");
     },
   };

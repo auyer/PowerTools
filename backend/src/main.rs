@@ -255,6 +255,10 @@ fn main() -> Result<(), ()> {
             api::general::load_settings(api_sender.clone()),
         )
         .register(
+            "GENERAL_load_variant",
+            api::general::load_variant(api_sender.clone()),
+        )
+        .register(
             "GENERAL_load_default_settings",
             api::general::load_default_settings(api_sender.clone()),
         )
@@ -317,6 +321,8 @@ fn main() -> Result<(), ()> {
             "WEB_download_new",
             api::web::download_new_config(api_sender.clone())
         );
+
+    utility::ioperm_power_ec();
 
     if let Err(e) = loaded_settings.on_set() {
         e.iter()

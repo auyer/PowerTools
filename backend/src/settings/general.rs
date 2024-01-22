@@ -229,27 +229,38 @@ impl Settings {
     ) -> Result<bool, SettingError> {
         let json_path = crate::utility::settings_dir().join(&filename);
         if json_path.exists() {
-            let file_json = FileJson::open(&json_path).map_err(|e| SettingError {
-                msg: format!("Failed to open settings {}: {}", json_path.display(), e),
-                setting: SettingVariant::General,
-            })?;
-            let settings_json = Self::get_variant(&file_json, variant, variant_name)?;
-            if !settings_json.persistent {
-                log::warn!(
-                    "Loaded persistent config `{}` ({}) with persistent=false",
-                    &settings_json.name,
-                    json_path.display()
-                );
-                *self.general.persistent() = false;
-                self.general.name(name);
+            if variant == u64::MAX {
+                *self.general.persistent() = true;
+                let file_json = FileJson::update_variant_or_create(&json_path, self.json(), variant_name.clone()).map_err(|e| SettingError {
+                    msg: format!("Failed to open settings {}: {}", json_path.display(), e),
+                    setting: SettingVariant::General,
+                })?;
+                self.general.variant_id(file_json.variants.iter().find(|(_key, val)| val.name == variant_name).map(|(key, _val)| *key).expect("Setting variant was not added properly"));
+                self.general.variant_name(variant_name);
             } else {
-                let x = super::Driver::init(name, settings_json, json_path.clone());
-                log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
-                self.general = x.general;
-                self.cpus = x.cpus;
-                self.gpu = x.gpu;
-                self.battery = x.battery;
+                let file_json = FileJson::open(&json_path).map_err(|e| SettingError {
+                    msg: format!("Failed to open settings {}: {}", json_path.display(), e),
+                    setting: SettingVariant::General,
+                })?;
+                let settings_json = Self::get_variant(&file_json, variant, variant_name)?;
+                if !settings_json.persistent {
+                    log::warn!(
+                        "Loaded persistent config `{}` ({}) with persistent=false",
+                        &settings_json.name,
+                        json_path.display()
+                    );
+                    *self.general.persistent() = false;
+                    self.general.name(name);
+                } else {
+                    let x = super::Driver::init(name, settings_json, json_path.clone());
+                    log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
+                    self.general = x.general;
+                    self.cpus = x.cpus;
+                    self.gpu = x.gpu;
+                    self.battery = x.battery;
+                }
             }
+
         } else {
             if system_defaults {
                 self.load_system_default(name, variant, variant_name);

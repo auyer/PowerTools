@@ -1073,6 +1073,7 @@ version = "1.5.0-ng1"
 dependencies = [
  "async-trait",
  "community_settings_core",
+ "libc",
  "libryzenadj",
  "limits_core",
  "log",
