@@ -111,7 +111,7 @@ impl Into<GpuJson> for Gpu {
             tdp: self.tdp,
             tdp_boost: self.tdp_boost,
             clock_limits: self.clock_limits.map(|x| x.into()),
-            slow_memory: false,
+            memory_clock: None,
             root: self.sysfs.root().and_then(|p| p.as_ref().to_str().map(|s| s.to_owned()))
         }
     }
@@ -177,7 +177,8 @@ impl TGpu for Gpu {
                 .clone()
                 .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(3_000))),
             clock_step: self.limits.clock_step.unwrap_or(100),
-            memory_control_capable: false,
+            memory_control: None,
+            memory_step: 100,
         }
     }
 
@@ -227,8 +228,10 @@ impl TGpu for Gpu {
         self.clock_limits.as_ref()
     }
 
-    fn slow_memory(&mut self) -> &mut bool {
-        &mut self.slow_memory
+    fn memory_clock(&mut self, _speed: Option<u64>) {}
+
+    fn get_memory_clock(&self) -> Option<u64> {
+        None
     }
 
     fn provider(&self) -> crate::persist::DriverJson {

@@ -299,7 +299,8 @@ fn bad_gpu_limits() -> crate::api::GpuLimits {
         clock_min_limits: None,
         clock_max_limits: None,
         clock_step: 100,
-        memory_control_capable: false,
+        memory_control: None,
+        memory_step: 400,
     }
 }
 
@@ -333,8 +334,12 @@ impl TGpu for Gpu {
         self.generic.get_clock_limits()
     }
 
-    fn slow_memory(&mut self) -> &mut bool {
-        self.generic.slow_memory()
+    fn memory_clock(&mut self, speed: Option<u64>) {
+        self.generic.memory_clock(speed)
+    }
+
+    fn get_memory_clock(&self) -> Option<u64> {
+        self.generic.get_memory_clock()
     }
 
     fn provider(&self) -> crate::persist::DriverJson {

@@ -8,13 +8,11 @@ use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
 
 #[derive(Debug, Clone)]
-pub struct Gpu {
-    slow_memory: bool, // ignored
-}
+pub struct Gpu {}
 
 impl Gpu {
     pub fn system_default() -> Self {
-        Self { slow_memory: false }
+        Self { }
     }
 }
 
@@ -37,7 +35,7 @@ impl Into<GpuJson> for Gpu {
             tdp: None,
             tdp_boost: None,
             clock_limits: None,
-            slow_memory: false,
+            memory_clock: None,
             root: None,
         }
     }
@@ -69,7 +67,8 @@ impl TGpu for Gpu {
             clock_min_limits: None,
             clock_max_limits: None,
             clock_step: 100,
-            memory_control_capable: false,
+            memory_control: None,
+            memory_step: 400,
         }
     }
 
@@ -89,8 +88,10 @@ impl TGpu for Gpu {
         None
     }
 
-    fn slow_memory(&mut self) -> &mut bool {
-        &mut self.slow_memory
+    fn memory_clock(&mut self, _speed: Option<u64>) {}
+
+    fn get_memory_clock(&self) -> Option<u64> {
+        None
     }
 
     fn provider(&self) -> crate::persist::DriverJson {

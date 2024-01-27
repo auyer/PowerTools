@@ -90,7 +90,8 @@ export type GpuLimits = {
     clock_min_limits: RangeLimit | null;
     clock_max_limits: RangeLimit | null;
     clock_step: number;
-    memory_control_capable: boolean;
+    memory_control: RangeLimit | null,
+    memory_step: number,
 };
 
 // API
@@ -229,12 +230,16 @@ export async function unsetGpuClockLimits(): Promise<any[]> {
     return (await call_backend("GPU_unset_clock_limits", []));
 }
 
-export async function setGpuSlowMemory(val: boolean): Promise<boolean> {
-    return (await call_backend("GPU_set_slow_memory", [val]))[0];
+export async function setGpuSlowMemory(clock: number): Promise<number> {
+    return (await call_backend("GPU_set_slow_memory", [clock]))[0];
 }
 
-export async function getGpuSlowMemory(): Promise<boolean> {
+export async function getGpuSlowMemory(): Promise<number> {
     return (await call_backend("GPU_get_slow_memory", []))[0];
+}
+
+export async function unsetGpuSlowMemory(): Promise<any[]> {
+    return (await call_backend("GPU_unset_slow_memory", []));
 }
 
 // general

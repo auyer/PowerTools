@@ -59,7 +59,8 @@ pub struct GpuLimits {
     pub clock_min_limits: Option<RangeLimit<u64>>,
     pub clock_max_limits: Option<RangeLimit<u64>>,
     pub clock_step: u64,
-    pub memory_control_capable: bool,
+    pub memory_control: Option<RangeLimit<u64>>,
+    pub memory_step: u64,
 }
 
 #[derive(Serialize, Deserialize)]

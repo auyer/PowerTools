@@ -243,6 +243,10 @@ fn main() -> Result<(), ()> {
             "GPU_get_slow_memory",
             api::gpu::get_slow_memory(api_sender.clone()),
         )
+        .register(
+            "GPU_unset_slow_memory",
+            api::gpu::unset_slow_memory(api_sender.clone()),
+        )
         // general API functions
         .register(
             "GENERAL_set_persistent",

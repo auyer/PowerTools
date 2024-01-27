@@ -70,7 +70,7 @@ fn web_config_to_settings_json(meta: community_settings_core::v1::Metadata) -> c
                 min: lim.min,
                 max: lim.max,
             }),
-            slow_memory: meta.config.gpu.slow_memory,
+            memory_clock: meta.config.gpu.memory_clock,
             root: None,
         },
         battery: crate::persist::BatteryJson {
@@ -138,7 +138,7 @@ fn settings_to_web_config(app_id: u32, user_id: u64, username: String, settings:
                     min: lim.min,
                     max: lim.max,
                 }),
-                slow_memory: settings.gpu.slow_memory,
+                memory_clock: settings.gpu.memory_clock,
             },
             battery: community_settings_core::v1::Battery {
                 charge_rate: settings.battery.charge_rate,

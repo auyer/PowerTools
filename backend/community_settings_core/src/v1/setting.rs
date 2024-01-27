@@ -43,5 +43,5 @@ pub struct Gpu {
     pub tdp: Option<u64>,
     pub tdp_boost: Option<u64>,
     pub clock_limits: Option<MinMax<u64>>,
-    pub slow_memory: bool,
+    pub memory_clock: Option<u64>,
 }

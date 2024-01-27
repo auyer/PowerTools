@@ -8,6 +8,8 @@ pub enum GpuLimitType {
     SteamDeck,
     #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
     SteamDeckAdvance,
+    #[serde(rename = "GabeBoy101", alias = "SteamDeckOLED")]
+    SteamDeckOLED,
     Generic,
     GenericAMD,
     Unknown,
@@ -27,6 +29,8 @@ pub struct GenericGpuLimit {
     pub clock_min: Option<RangeLimit<u64>>,
     pub clock_max: Option<RangeLimit<u64>>,
     pub clock_step: Option<u64>,
+    pub memory_clock: Option<RangeLimit<u64>>,
+    pub memory_clock_step: Option<u64>,
     pub skip_resume_reclock: bool,
 }
 
@@ -34,6 +38,7 @@ impl GenericGpuLimit {
     pub fn default_for(t: GpuLimitType) -> Self {
         match t {
             GpuLimitType::SteamDeck | GpuLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            GpuLimitType::SteamDeckOLED => Self::default_steam_deck_oled(),
             _t => Self::default(),
         }
     }
@@ -64,8 +69,22 @@ impl GenericGpuLimit {
                 max: Some(1600),
             }),
             clock_step: Some(100),
+            // Disabled for now since LCD version is a bit broken on sysfs right now
+            /*memory_clock: Some(RangeLimit {
+                min: Some(400),
+                max: Some(800),
+            }),
+            memory_clock_step: Some(400),*/
+            memory_clock: None,
+            memory_clock_step: None,
             skip_resume_reclock: false,
         }
+    }
+
+    fn default_steam_deck_oled() -> Self {
+        let mut sd = Self::default_steam_deck();
+        sd.memory_clock_step = Some(200);
+        sd
     }
 
     pub fn apply_override(&mut self, limit_override: Self) {

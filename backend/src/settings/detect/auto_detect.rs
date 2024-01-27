@@ -203,6 +203,13 @@ pub fn auto_detect0(
                             relevant_limits.gpu.limits,
                         ))
                     }
+                    GpuLimitType::SteamDeckOLED => {
+                        Box::new(crate::settings::steam_deck::Gpu::from_json_and_limits(
+                            settings.gpu.clone(),
+                            settings.version,
+                            relevant_limits.gpu.limits,
+                        ))
+                    }
                     GpuLimitType::Generic => {
                         Box::new(crate::settings::generic::Gpu::from_json_and_limits(
                             settings.gpu.clone(),
@@ -287,6 +294,9 @@ pub fn auto_detect0(
                         Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
                     }
                     GpuLimitType::SteamDeckAdvance => {
+                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
+                    }
+                    GpuLimitType::SteamDeckOLED => {
                         Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
                     }
                     GpuLimitType::Generic => {

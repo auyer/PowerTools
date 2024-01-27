@@ -198,8 +198,8 @@ pub enum GpuMessage {
     GetPpt(Callback<(Option<u64>, Option<u64>)>),
     SetClockLimits(Option<MinMax<u64>>),
     GetClockLimits(Callback<Option<MinMax<u64>>>),
-    SetSlowMemory(bool),
-    GetSlowMemory(Callback<bool>),
+    SetMemoryClock(Option<u64>),
+    GetMemoryClock(Callback<Option<u64>>),
 }
 
 impl GpuMessage {
@@ -210,8 +210,8 @@ impl GpuMessage {
             Self::GetPpt(cb) => cb(settings.get_ppt()),
             Self::SetClockLimits(clocks) => settings.clock_limits(clocks),
             Self::GetClockLimits(cb) => cb(settings.get_clock_limits().map(|x| x.to_owned())),
-            Self::SetSlowMemory(val) => *settings.slow_memory() = val,
-            Self::GetSlowMemory(cb) => cb(*settings.slow_memory()),
+            Self::SetMemoryClock(val) => settings.memory_clock(val),
+            Self::GetMemoryClock(cb) => cb(settings.get_memory_clock()),
         }
         dirty
     }
@@ -219,7 +219,7 @@ impl GpuMessage {
     fn is_modify(&self) -> bool {
         matches!(
             self,
-            Self::SetPpt(_, _) | Self::SetClockLimits(_) | Self::SetSlowMemory(_)
+            Self::SetPpt(_, _) | Self::SetClockLimits(_) | Self::SetMemoryClock(_)
         )
     }
 }

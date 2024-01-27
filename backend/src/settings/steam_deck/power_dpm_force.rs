@@ -96,7 +96,7 @@ impl PDFPLManager {
         if let Ok(mode_now) =
             entity.attribute::<String, _>(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned())
         {
-            log::debug!("Mode for `{}` is now `{}`", path.display(), mode_now);
+            log::debug!("Mode for `{}` is now `{}` ({:#b})", path.display(), mode_now, self.get());
         } else {
             log::debug!("Error getting new mode for debugging purposes");
         }

@@ -180,16 +180,42 @@ export class Gpu extends Component<backend.IdcProps> {
                 }}
                 />}
             </PanelSectionRow>
-            {(get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_control_capable && <PanelSectionRow>
+            {((get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_control) && <PanelSectionRow>
                 <ToggleField
-                checked={get_value(SLOW_MEMORY_GPU)}
+                checked={get_value(SLOW_MEMORY_GPU) != null}
                 label={tr("Downclock Memory")}
                 description={tr("Force RAM into low-power mode")}
                 onChange={(value: boolean) => {
-                    backend.resolve(backend.setGpuSlowMemory(value), (val: boolean) => {
-                        set_value(SLOW_MEMORY_GPU, val);
-                        reloadGUI("GPUSlowMemory");
-                    })
+                    if (value) {
+                        set_value(SLOW_MEMORY_GPU, (get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_control!.max);
+                        reloadGUI("GPUMemFreqToggle");
+                    } else {
+                        set_value(SLOW_MEMORY_GPU, null);
+                        backend.resolve(backend.unsetGpuSlowMemory(), (_: any[]) => {
+                            reloadGUI("GPUUnsetMemFreq");
+                        });
+                    }
+                }}
+                />
+            </PanelSectionRow>}
+            {get_value(SLOW_MEMORY_GPU) != null && <PanelSectionRow>
+                <SliderField
+                label={tr("Maximum (MHz)")}
+                value={get_value(SLOW_MEMORY_GPU)}
+                max={(get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_control!.max}
+                min={(get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_control!.min}
+                step={(get_value(LIMITS_INFO) as backend.SettingsLimits).gpu.memory_step}
+                showValue={true}
+                disabled={get_value(SLOW_MEMORY_GPU) == null}
+                onChange={(val: number) => {
+                    backend.log(backend.LogLevel.Debug, "GPU memory clock Max is now " + val.toString());
+                    backend.resolve(
+                        backend.setGpuSlowMemory(val),
+                        (val: number) => {
+                            set_value(SLOW_MEMORY_GPU, val);
+                            reloadGUI("GPUSetMemFreq");
+                        }
+                    );
                 }}
                 />
             </PanelSectionRow>}

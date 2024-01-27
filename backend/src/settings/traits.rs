@@ -59,7 +59,9 @@ pub trait TGpu: OnSet + OnResume + OnPowerEvent + Debug + Send {
 
     fn get_clock_limits(&self) -> Option<&MinMax<u64>>;
 
-    fn slow_memory(&mut self) -> &mut bool;
+    fn memory_clock(&mut self, speed: Option<u64>);
+
+    fn get_memory_clock(&self) -> Option<u64>;
 
     fn provider(&self) -> crate::persist::DriverJson {
         crate::persist::DriverJson::AutoDetect

@@ -17,34 +17,10 @@ impl Default for Base {
         Base {
             configs: vec![
                 super::Config {
-                    name: "Steam Deck Custom".to_owned(),
-                    conditions: super::Conditions {
-                        dmi: None,
-                        cpuinfo: Some("model name\t: AMD Custom APU (0405)|(0932)\n".to_owned()),
-                        os: None,
-                        command: None,
-                        file_exists: Some("./limits_override.json".into()),
-                    },
-                    limits: super::Limits {
-                        cpu: super::Limit {
-                            provider: super::CpuLimitType::SteamDeckAdvance,
-                            limits: super::GenericCpusLimit::default_for(super::CpuLimitType::SteamDeckAdvance),
-                        },
-                        gpu: super::Limit {
-                            provider: super::GpuLimitType::SteamDeckAdvance,
-                            limits: super::GenericGpuLimit::default_for(super::GpuLimitType::SteamDeckAdvance),
-                        },
-                        battery: super::Limit {
-                            provider: super::BatteryLimitType::SteamDeckAdvance,
-                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::SteamDeckAdvance),
-                        },
-                    }
-                },
-                super::Config {
                     name: "Steam Deck".to_owned(),
                     conditions: super::Conditions {
                         dmi: None,
-                        cpuinfo: Some("model name\t: AMD Custom APU (0405)|(0932)\n".to_owned()),
+                        cpuinfo: Some("model name\t: AMD Custom APU 0405\n".to_owned()),
                         os: None,
                         command: None,
                         file_exists: None,
@@ -57,6 +33,30 @@ impl Default for Base {
                         gpu: super::Limit {
                             provider: super::GpuLimitType::SteamDeck,
                             limits: super::GenericGpuLimit::default_for(super::GpuLimitType::SteamDeck),
+                        },
+                        battery: super::Limit {
+                            provider: super::BatteryLimitType::SteamDeck,
+                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::SteamDeck),
+                        },
+                    }
+                },
+                super::Config {
+                    name: "Steam Deck OLED".to_owned(),
+                    conditions: super::Conditions {
+                        dmi: None,
+                        cpuinfo: Some("model name\t: AMD Custom APU 0932\n".to_owned()),
+                        os: None,
+                        command: None,
+                        file_exists: None,
+                    },
+                    limits: super::Limits {
+                        cpu: super::Limit {
+                            provider: super::CpuLimitType::SteamDeck,
+                            limits: super::GenericCpusLimit::default_for(super::CpuLimitType::SteamDeck),
+                        },
+                        gpu: super::Limit {
+                            provider: super::GpuLimitType::SteamDeck,
+                            limits: super::GenericGpuLimit::default_for(super::GpuLimitType::SteamDeckOLED),
                         },
                         battery: super::Limit {
                             provider: super::BatteryLimitType::SteamDeck,

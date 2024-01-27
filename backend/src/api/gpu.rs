@@ -160,17 +160,17 @@ pub fn set_slow_memory(
     sender: Sender<ApiMessage>,
 ) -> impl Fn(super::ApiParameterType) -> super::ApiParameterType {
     let sender = Mutex::new(sender); // Sender is not Sync; this is required for safety
-    let setter = move |value: bool| {
+    let setter = move |value: u64| {
         sender
             .lock()
             .unwrap()
-            .send(ApiMessage::Gpu(GpuMessage::SetSlowMemory(value)))
+            .send(ApiMessage::Gpu(GpuMessage::SetMemoryClock(Some(value))))
             .expect("unset_clock_limits send failed")
     };
     move |params_in: super::ApiParameterType| {
-        if let Some(&Primitive::Bool(memory_is_slow)) = params_in.get(0) {
-            setter(memory_is_slow);
-            vec![memory_is_slow.into()]
+        if let Some(&Primitive::F64(mem_clock)) = params_in.get(0) {
+            setter(mem_clock as _);
+            vec![mem_clock.into()]
         } else {
             vec!["set_slow_memory missing parameter 0".into()]
         }
@@ -183,14 +183,14 @@ pub fn get_slow_memory(sender: Sender<ApiMessage>) -> impl AsyncCallable {
         let sender2 = sender.clone();
         move || {
             let (tx, rx) = mpsc::channel();
-            let callback = move |value: bool| {
+            let callback = move |value: Option<u64>| {
                 tx.send(value)
                     .expect("get_slow_memory callback send failed")
             };
             sender2
                 .lock()
                 .unwrap()
-                .send(ApiMessage::Gpu(GpuMessage::GetSlowMemory(Box::new(
+                .send(ApiMessage::Gpu(GpuMessage::GetMemoryClock(Box::new(
                     callback,
                 ))))
                 .expect("get_slow_memory send failed");
@@ -199,6 +199,23 @@ pub fn get_slow_memory(sender: Sender<ApiMessage>) -> impl AsyncCallable {
     };
     super::async_utils::AsyncIshGetter {
         set_get: getter,
-        trans_getter: |value: bool| vec![value.into()],
+        trans_getter: |value: Option<u64>| vec![super::utility::map_optional(value)],
+    }
+}
+
+pub fn unset_slow_memory(
+    sender: Sender<ApiMessage>,
+) -> impl Fn(super::ApiParameterType) -> super::ApiParameterType {
+    let sender = Mutex::new(sender); // Sender is not Sync; this is required for safety
+    let setter = move || {
+        sender
+            .lock()
+            .unwrap()
+            .send(ApiMessage::Gpu(GpuMessage::SetMemoryClock(None)))
+            .expect("unset_slow_memory send failed")
+    };
+    move |_: super::ApiParameterType| {
+        setter();
+        vec![true.into()]
     }
 }

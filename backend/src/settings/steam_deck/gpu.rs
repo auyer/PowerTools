@@ -1,6 +1,6 @@
 use std::convert::Into;
 
-use sysfuss::{BasicEntityPath, HwMonPath, SysEntity, capability::attributes, SysEntityAttributesExt, SysAttribute};
+use sysfuss::{BasicEntityPath, HwMonPath, SysEntity, capability::attributes, SysEntityAttributes, SysEntityAttributesExt, SysAttribute};
 
 use limits_core::json_v2::GenericGpuLimit;
 
@@ -20,7 +20,7 @@ pub struct Gpu {
     pub fast_ppt: Option<u64>,
     pub slow_ppt: Option<u64>,
     pub clock_limits: Option<MinMax<u64>>,
-    pub slow_memory: bool,
+    pub memory_clock: Option<u64>,
     limits: GenericGpuLimit,
     state: crate::state::steam_deck::Gpu,
     sysfs_card: BasicEntityPath,
@@ -47,6 +47,8 @@ enum ClockType {
 
 const MAX_CLOCK: u64 = 1600;
 const MIN_CLOCK: u64 = 200;
+const MAX_MEMORY_CLOCK: u64 = 800;
+const MIN_MEMORY_CLOCK: u64 = 400;
 const MAX_FAST_PPT: u64 = 30_000_000;
 const MIN_FAST_PPT: u64 = 1_000_000;
 const MAX_SLOW_PPT: u64 = 29_000_000;
@@ -108,6 +110,63 @@ impl Gpu {
         })
     }
 
+    fn is_memory_clock_maxed(&self) -> bool {
+        if let Some(clock) = &self.memory_clock {
+            if let Some(limit) = &self.limits.memory_clock {
+                if let Some(limit) = &limit.max {
+                    if let Some(step) = &self.limits.memory_clock_step {
+                        log::debug!("chosen_clock: {}, limit_clock: {}, step: {}", clock, limit, step);
+                        return clock > &(limit - step);
+                    } else {
+                        log::debug!("chosen_clock: {}, limit_clock: {}", clock, limit);
+                        return clock == limit;
+                    }
+                }
+            }
+        }
+        true
+    }
+
+    fn quantize_memory_clock(&self, clock: u64) -> u64 {
+        if let Ok(f) = self.sysfs_card.read_value(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned()) {
+            let options = parse_pp_dpm_fclk(&String::from_utf8_lossy(&f));
+            // round (and find) nearest valid clock step
+            // roughly price is right strategy (clock step will always be lower or equal to chosen)
+            for i in 0..options.len() {
+                let (current_val_opt, current_speed_opt) = &options[i];
+                let current_speed_opt = *current_speed_opt as u64;
+                if clock == current_speed_opt {
+                    return *current_val_opt as _;
+                } else if current_speed_opt > clock {
+                    if i == 0 {
+                        return *current_val_opt as _;
+                    } else {
+                        return options[i-1].0 as _;
+                    }
+                }
+            }
+            options[options.len() - 1].0 as _
+        } else {
+            self.is_memory_clock_maxed() as u64
+        }
+    }
+
+    fn build_memory_clock_payload(&self, clock: u64) -> String {
+        let max_val = self.quantize_memory_clock(clock);
+        match max_val {
+            0 => "0\n".to_owned(),
+            max_val => {
+                use std::fmt::Write;
+                let mut payload = String::from("0");
+                for i in 1..max_val {
+                    write!(payload, " {}", i).expect("Failed to write to memory payload (should be infallible!?)");
+                }
+                write!(payload, " {}\n", max_val).expect("Failed to write to memory payload (should be infallible!?)");
+                payload
+            }
+        }
+    }
+
     fn set_clocks(&mut self) -> Result<(), Vec<SettingError>> {
         let mut errors = Vec::new();
         if let Some(clock_limits) = &self.clock_limits {
@@ -130,7 +189,7 @@ impl Gpu {
             || POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual()
         {
             self.state.clock_limits_set = false;
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(self.slow_memory);
+            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(!self.is_memory_clock_maxed());
             if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
                 POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs_card)?;
                 // disable manual clock limits
@@ -155,47 +214,36 @@ impl Gpu {
         }
     }
 
-    fn set_slow_memory(&self, slow: bool) -> Result<(), SettingError> {
+    fn set_memory_speed(&self, clock: u64) -> Result<(), SettingError> {
         let path = GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.path(&self.sysfs_card);
-        if slow {
-            self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), slow as u8).map_err(|e| {
-                SettingError {
-                    msg: format!("Failed to write to `{}`: {}", path.display(), e),
-                    setting: crate::settings::SettingVariant::Gpu,
-                }
-            })
-        } else {
-            // NOTE: there is a GPU driver/hardware bug that prevents this from working
-            self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), "0 1\n").map_err(|e| {
-                SettingError {
-                    msg: format!("Failed to write to `{}`: {}", path.display(), e),
-                    setting: crate::settings::SettingVariant::Gpu,
-                }
-            })
-        }
+        let payload = self.build_memory_clock_payload(clock);
+        log::debug!("Generated payload for gpu fclk (memory): `{}` (is maxed? {})", payload, self.is_memory_clock_maxed());
+        self.sysfs_card.set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), payload).map_err(|e| {
+            SettingError {
+                msg: format!("Failed to write to `{}`: {}", path.display(), e),
+                setting: crate::settings::SettingVariant::Gpu,
+            }
+        })
     }
 
     fn set_force_performance_related(&mut self) -> Result<(), Vec<SettingError>> {
         let mut errors = Vec::new();
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(!self.is_memory_clock_maxed() || self.clock_limits.is_some());
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
+                .enforce_level(&self.sysfs_card)
+                .unwrap_or_else(|mut e| errors.append(&mut e));
         // enable/disable downclock of GPU memory (to 400Mhz?)
-        if self.slow_memory {
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(true);
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
-                .enforce_level(&self.sysfs_card)
-                .unwrap_or_else(|mut e| errors.append(&mut e));
-            self.set_slow_memory(self.slow_memory).unwrap_or_else(|e| errors.push(e));
-        } else if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
-            self.set_slow_memory(self.slow_memory).unwrap_or_else(|e| errors.push(e));
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(self.clock_limits.is_some());
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
-                .enforce_level(&self.sysfs_card)
-                .unwrap_or_else(|mut e| errors.append(&mut e));
-        }
+        self.set_memory_speed(
+            self.memory_clock
+                .or_else(|| self.limits.memory_clock
+                    .map(|lim| lim.max.unwrap_or(MAX_MEMORY_CLOCK))
+            ).unwrap_or(MAX_MEMORY_CLOCK)
+        ).unwrap_or_else(|e| errors.push(e));
         self.set_clocks()
             .unwrap_or_else(|mut e| errors.append(&mut e));
         // commit changes (if no errors have already occured)
         if errors.is_empty() {
-            if self.slow_memory || self.clock_limits.is_some() {
+            if !self.is_memory_clock_maxed() || self.clock_limits.is_some() {
                 self.set_confirm().map_err(|e| {
                     errors.push(e);
                     errors
@@ -294,6 +342,9 @@ impl Gpu {
                     Some(max.clamp(self.limits.clock_max.and_then(|lim| lim.min).unwrap_or(MIN_CLOCK), self.limits.clock_max.and_then(|lim| lim.max).unwrap_or(MAX_CLOCK)));
             }
         }
+        if let Some(mem_clock) = self.memory_clock {
+            self.memory_clock = Some(mem_clock.clamp(self.limits.memory_clock.and_then(|lim| lim.min).unwrap_or(MIN_MEMORY_CLOCK), self.limits.memory_clock.and_then(|lim| lim.max).unwrap_or(MAX_MEMORY_CLOCK)));
+        }
     }
 }
 
@@ -306,7 +357,7 @@ impl Into<GpuJson> for Gpu {
             tdp: None,
             tdp_boost: None,
             clock_limits: self.clock_limits.map(|x| x.into()),
-            slow_memory: self.slow_memory,
+            memory_clock: self.memory_clock,
             root: self.sysfs_card.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|r| r.to_owned()))
         }
     }
@@ -319,7 +370,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
                 fast_ppt: persistent.fast_ppt,
                 slow_ppt: persistent.slow_ppt,
                 clock_limits: persistent.clock_limits.map(|x| min_max_from_json(x, version)),
-                slow_memory: persistent.slow_memory,
+                memory_clock: persistent.memory_clock,
                 limits: limits,
                 state: crate::state::steam_deck::Gpu::default(),
                 sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
@@ -329,7 +380,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
                 fast_ppt: persistent.fast_ppt,
                 slow_ppt: persistent.slow_ppt,
                 clock_limits: persistent.clock_limits.map(|x| min_max_from_json(x, version)),
-                slow_memory: persistent.slow_memory,
+                memory_clock: persistent.memory_clock,
                 limits: limits,
                 state: crate::state::steam_deck::Gpu::default(),
                 sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
@@ -343,7 +394,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
             fast_ppt: None,
             slow_ppt: None,
             clock_limits: None,
-            slow_memory: false,
+            memory_clock: None,
             limits: limits,
             state: crate::state::steam_deck::Gpu::default(),
             sysfs_card: Self::find_card_sysfs(None::<&'static str>),
@@ -393,7 +444,11 @@ impl TGpu for Gpu {
                 max: super::util::range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK),
             }),
             clock_step: self.limits.clock_step.unwrap_or(100),
-            memory_control_capable: true,
+            memory_control: Some(RangeLimit {
+                min: super::util::range_min_or_fallback(&self.limits.memory_clock, MIN_MEMORY_CLOCK),
+                max: super::util::range_max_or_fallback(&self.limits.memory_clock, MAX_MEMORY_CLOCK),
+            }),
+            memory_step: self.limits.memory_clock_step.unwrap_or(400),
         }
     }
 
@@ -421,11 +476,35 @@ impl TGpu for Gpu {
         self.clock_limits.as_ref()
     }
 
-    fn slow_memory(&mut self) -> &mut bool {
-        &mut self.slow_memory
+    fn memory_clock(&mut self, speed: Option<u64>) {
+        self.memory_clock = speed;
+    }
+
+    fn get_memory_clock(&self) -> Option<u64> {
+        self.memory_clock
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
         crate::persist::DriverJson::SteamDeck
     }
+}
+
+fn parse_pp_dpm_fclk(s: &str) -> Vec<(usize, usize)> { // (value, MHz)
+    let mut result = Vec::new();
+    for line in s.split('\n') {
+        if !line.is_empty() {
+            if let Some((val, freq_mess)) = line.split_once(':') {
+                if let Ok(val) = val.parse::<usize>() {
+                    if let Some((freq, _unit)) = freq_mess.trim().split_once(|c: char| !c.is_digit(10)) {
+                        if let Ok(freq) = freq.parse::<usize>() {
+                            result.push((val, freq));
+                        }
+                    }
+                }
+            }
+        } else {
+            break;
+        }
+    }
+    result
 }
