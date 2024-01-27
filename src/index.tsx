@@ -15,6 +15,7 @@ import {
   Field,
   Dropdown,
   SingleDropdownOption,
+  Navigation,
   //NotchLabel
   //gamepadDialogClasses,
   //joinClassNames,
@@ -22,6 +23,7 @@ import {
 import { VFC, useState } from "react";
 import { GiDrill, GiTimeBomb, GiTimeTrap, GiDynamite } from "react-icons/gi";
 import { HiRefresh, HiTrash, HiPlus, HiUpload } from "react-icons/hi";
+import { TbWorldPlus } from "react-icons/tb";
 
 //import * as python from "./python";
 import * as backend from "./backend";
@@ -63,6 +65,12 @@ import {
 
   MESSAGE_LIST,
 
+  INTERNAL_STEAM_ID,
+  INTERNAL_STEAM_USERNAME,
+
+  STORE_RESULTS,
+  STORE_RESULTS_URI,
+
   PERIODICAL_BACKEND_PERIOD,
   AUTOMATIC_REAPPLY_WAIT,
 } from "./consts";
@@ -73,10 +81,13 @@ import { Battery } from "./components/battery";
 import { Cpus } from "./components/cpus";
 import { DevMessages } from "./components/message";
 
+import { StoreResultsPage } from "./store/page";
+
 var periodicHook: NodeJS.Timeout | null = null;
 var lifetimeHook: any = null;
 var startHook: any = null;
 var endHook: any = null;
+var userHook: any = null;
 var usdplReady = false;
 
 var tryNotifyProfileChange = function() {};
@@ -117,6 +128,10 @@ const reload = function() {
     set_value(LIMITS_INFO, limits);
     console.debug("POWERTOOLS: got limits ", limits);
   });
+
+  if (!get_value(STORE_RESULTS)) {
+    backend.resolve(backend.searchStoreByAppId(0), (results) => set_value(STORE_RESULTS, results));
+  }
 
   backend.resolve(backend.getBatteryCurrent(), (rate: number) => { set_value(CURRENT_BATT, rate) });
   backend.resolve_nullable(backend.getBatteryChargeRate(), (rate: number | null) => { set_value(CHARGE_RATE_BATT, rate) });
@@ -175,6 +190,7 @@ const clearHooks = function() {
   lifetimeHook?.unregister();
   startHook?.unregister();
   endHook?.unregister();
+  userHook?.unregister();
 
   backend.log(backend.LogLevel.Info, "Unregistered PowerTools callbacks, so long and thanks for all the fish.");
 };
@@ -209,7 +225,6 @@ const registerCallbacks = function(autoclear: boolean) {
       let appId = gameInfo.appid.toString();
 
       backend.log(backend.LogLevel.Info, "RegisterForGameActionStart callback(" + actionType + ", " + id + ")");
-      // don't use gameInfo.appid, haha
       backend.resolve(
         backend.loadGeneralSettings(appId, gameInfo.display_name, "0", undefined),
         (ok: boolean) => {
@@ -219,6 +234,12 @@ const registerCallbacks = function(autoclear: boolean) {
             backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to new game launch");
             tryNotifyProfileChange();
           });
+        }
+      );
+      backend.resolve(
+        backend.searchStoreByAppId(appId),
+        (results: backend.StoreMetadata[]) => {
+          set_value(STORE_RESULTS, results);
         }
       );
   });
@@ -234,6 +255,20 @@ const registerCallbacks = function(autoclear: boolean) {
       }
       backend.log(backend.LogLevel.Info, "RegisterForGameActionEnd callback(" + actionType + ")");
       setTimeout(() => backend.forceApplySettings(), AUTOMATIC_REAPPLY_WAIT);
+  });
+
+  //@ts-ignore
+  userHook = SteamClient.User.RegisterForCurrentUserChanges((data) => {
+      const accountName = data.strAccountName;
+      const steamId = data.strSteamID;
+      SteamClient.User.GetLoginUsers().then((users: any) => {
+          users.forEach((user: any) => {
+              if (user && user.accountName == accountName) {
+                  set_value(INTERNAL_STEAM_ID, steamId);
+                  set_value(INTERNAL_STEAM_USERNAME, user.personaName ? user.personaName : accountName);
+              }
+          });
+      });
   });
 
   backend.log(backend.LogLevel.Debug, "Registered PowerTools callbacks, hello!");
@@ -373,7 +408,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
       }}>
         <DialogButton
           style={{
-            maxWidth: "45%",
+            maxWidth: "30%",
             minWidth: "auto",
           }}
           //layout="below"
@@ -396,15 +431,34 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
         </DialogButton>
         <DialogButton
           style={{
-            maxWidth: "45%",
+            maxWidth: "30%",
             minWidth: "auto",
           }}
           //layout="below"
           onClick={(_: MouseEvent) => {
-            backend.log(backend.LogLevel.Debug, "Clicked on unimplemented upload button");
+            const steamId = get_value(INTERNAL_STEAM_ID);
+            const steamName = get_value(INTERNAL_STEAM_USERNAME);
+            if (steamId && steamName) {
+                backend.storeUpload(steamId, steamName);
+            } else {
+                backend.log(backend.LogLevel.Warn, "Cannot upload with null steamID (is null: " + !steamId + ") and/or username (is null: " + !steamName + ")");
+            }
           }}
         >
           <HiUpload/>
+        </DialogButton>
+        <DialogButton
+          style={{
+            maxWidth: "30%",
+            minWidth: "auto",
+          }}
+          //layout="below"
+          onClick={(_: MouseEvent) => {
+            Navigation.Navigate(STORE_RESULTS_URI);
+            Navigation.CloseSideMenus();
+          }}
+        >
+          <TbWorldPlus />
         </DialogButton>
       </PanelSectionRow>
 
@@ -453,6 +507,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
   }
   //registerCallbacks(false);
+  serverApi.routerHook.addRoute(STORE_RESULTS_URI, StoreResultsPage);
   return {
     title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,

@@ -62,6 +62,7 @@ pub fn auto_detect_provider() -> DriverJson {
     let provider = auto_detect0(
         None,
         crate::utility::settings_dir().join("autodetect.json"),
+        0,
         "".to_owned(),
         0,
         crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
@@ -76,6 +77,7 @@ pub fn auto_detect_provider() -> DriverJson {
 pub fn auto_detect0(
     settings_opt: Option<&SettingsJson>,
     json_path: std::path::PathBuf,
+    app_id: u64,
     name: String,
     variant_id: u64,
     variant_name: String,
@@ -83,6 +85,7 @@ pub fn auto_detect0(
     let mut general_driver = Box::new(General {
         persistent: false,
         path: json_path,
+        app_id,
         name,
         variant_id,
         variant_name,

@@ -28,6 +28,7 @@ pub enum ApiMessage {
     LoadSystemSettings,
     GetLimits(Callback<super::SettingsLimits>),
     GetProvider(String, Callback<crate::persist::DriverJson>),
+    UploadCurrentVariant(String, String), // SteamID, Steam username
 }
 
 pub enum BatteryMessage {
@@ -251,7 +252,7 @@ impl GeneralMessage {
                     cb(Vec::with_capacity(0))
                 },
             },
-            Self::ApplyNow => {}
+            Self::ApplyNow => {},
         }
         dirty
     }
@@ -304,7 +305,7 @@ impl ApiMessageHandler {
                 if is_persistent {
                     let settings_clone = settings.json();
                     let save_json: SettingsJson = settings_clone.into();
-                    if let Err(e) = crate::persist::FileJson::update_variant_or_create(&save_path, save_json, settings.general.get_name().to_owned()) {
+                    if let Err(e) = crate::persist::FileJson::update_variant_or_create(&save_path, settings.general.get_app_id(), save_json, settings.general.get_name().to_owned()) {
                         log::error!("Failed to create/update settings file {}: {}", save_path.display(), e);
                     }
                     //unwrap_maybe_fatal(save_json.save(&save_path), "Failed to save settings");
@@ -383,7 +384,7 @@ impl ApiMessageHandler {
             }
             ApiMessage::LoadSettings(id, name, variant_id, variant_name) => {
                 let path = format!("{}.ron", id);
-                match settings.load_file(path.into(), name, variant_id, variant_name, false) {
+                match settings.load_file(path.into(), id, name, variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
@@ -391,7 +392,8 @@ impl ApiMessageHandler {
             }
             ApiMessage::LoadVariant(variant_id, variant_name) => {
                 let path = settings.general.get_path();
-                match settings.load_file(path.into(), settings.general.get_name().to_owned(), variant_id, variant_name, false) {
+                let app_id = settings.general.get_app_id();
+                match settings.load_file(path.into(), app_id, settings.general.get_name().to_owned(), variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
@@ -400,6 +402,7 @@ impl ApiMessageHandler {
             ApiMessage::LoadMainSettings => {
                 match settings.load_file(
                     crate::consts::DEFAULT_SETTINGS_FILE.into(),
+                    0,
                     crate::consts::DEFAULT_SETTINGS_NAME.to_owned(),
                     0,
                     crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
@@ -431,7 +434,13 @@ impl ApiMessageHandler {
                     _ => settings.general.provider(),
                 });
                 false
-            }
+            },
+            ApiMessage::UploadCurrentVariant(steam_id, steam_username) => {
+                //TODO
+                let steam_app_id = settings.general.get_app_id();
+                super::web::upload_settings(steam_app_id, steam_id, steam_username, settings.json());
+                false
+            },
         }
     }
 

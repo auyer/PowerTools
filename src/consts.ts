@@ -35,6 +35,13 @@ export const CURRENT_VARIANT_GEN = "GENERAL_current_variant";
 
 export const MESSAGE_LIST = "MESSAGE_messages";
 
+export const INTERNAL_STEAM_ID = "INTERNAL_steam_id";
+export const INTERNAL_STEAM_USERNAME = "INTERNAL_stream_username";
+
+export const STORE_RESULTS = "INTERNAL_store_results";
+
 export const PERIODICAL_BACKEND_PERIOD = 5000; // milliseconds
 export const AUTOMATIC_REAPPLY_WAIT = 2000; // milliseconds
+
+export const STORE_RESULTS_URI = "/plugins/PowerTools/settings_store";
 

@@ -9,6 +9,7 @@ use super::SettingsJson;
 pub struct FileJson {
     pub version: u64,
     pub name: String,
+    pub app_id: u64,
     pub variants: HashMap<u64, SettingsJson>,
 }
 
@@ -44,7 +45,7 @@ impl FileJson {
             .unwrap_or(0)
     }
 
-    pub fn update_variant_or_create<P: AsRef<std::path::Path>>(path: P, mut setting: SettingsJson, given_name: String) -> Result<Self, SerdeError> {
+    pub fn update_variant_or_create<P: AsRef<std::path::Path>>(path: P, app_id: u64, mut setting: SettingsJson, given_name: String) -> Result<Self, SerdeError> {
         if !setting.persistent {
             return Self::open(path)
         }
@@ -62,6 +63,7 @@ impl FileJson {
             setting_variants.insert(setting.variant, setting);
             Self {
                 version: 0,
+                app_id: app_id,
                 name: given_name,
                 variants: setting_variants,
             }

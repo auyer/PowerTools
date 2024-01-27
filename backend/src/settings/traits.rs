@@ -105,6 +105,10 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
 
     fn path(&mut self, path: std::path::PathBuf);
 
+    fn app_id(&mut self) -> &'_ mut u64;
+
+    fn get_app_id(&self) -> u64;
+
     fn get_name(&self) -> &'_ str;
 
     fn name(&mut self, name: String);

@@ -383,6 +383,10 @@ export async function storeDownloadById(id: string): Promise<VariantInfo[]> {
     return (await call_backend("WEB_download_new", [id]));
 }
 
+export async function storeUpload(steam_id: string, steam_username: string): Promise<VariantInfo[]> {
+    return (await call_backend("WEB_upload_new", [steam_id, steam_username]));
+}
+
 export async function getAllSettingVariants(): Promise<VariantInfo[]> {
     console.log("GENERAL_get_all_variants");
     return (await call_backend("GENERAL_get_all_variants", []));

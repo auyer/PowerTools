@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import {Component} from "react";
+import { Component } from "react";
 import {
   ToggleField,
   SliderField,

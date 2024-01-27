@@ -77,15 +77,17 @@ fn main() -> Result<(), ()> {
     let mut loaded_settings =
         persist::FileJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
             .map(|mut file| file.variants.remove(&0)
-                .map(|settings| settings::Settings::from_json(DEFAULT_SETTINGS_NAME.into(), settings, DEFAULT_SETTINGS_FILE.into()))
+                .map(|settings| settings::Settings::from_json(DEFAULT_SETTINGS_NAME.into(), settings, DEFAULT_SETTINGS_FILE.into(), 0))
                 .unwrap_or_else(|| settings::Settings::system_default(
                     DEFAULT_SETTINGS_FILE.into(),
+                    0,
                     DEFAULT_SETTINGS_NAME.into(),
                     0,
                     DEFAULT_SETTINGS_VARIANT_NAME.into())))
             .unwrap_or_else(|_| {
                 settings::Settings::system_default(
                     DEFAULT_SETTINGS_FILE.into(),
+                    0,
                     DEFAULT_SETTINGS_NAME.into(),
                     0,
                     DEFAULT_SETTINGS_VARIANT_NAME.into(),
@@ -320,6 +322,10 @@ fn main() -> Result<(), ()> {
         .register_async(
             "WEB_download_new",
             api::web::download_new_config(api_sender.clone())
+        )
+        .register_async(
+            "WEB_upload_new",
+            api::web::upload_current_variant(api_sender.clone())
         );
 
     utility::ioperm_power_ec();

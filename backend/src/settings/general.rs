@@ -32,6 +32,7 @@ impl std::fmt::Display for SettingVariant {
 pub struct General {
     pub persistent: bool,
     pub path: PathBuf,
+    pub app_id: u64,
     pub name: String,
     pub variant_id: u64,
     pub variant_name: String,
@@ -73,6 +74,14 @@ impl TGeneral for General {
         self.path = path;
     }
 
+    fn app_id(&mut self) -> &'_ mut u64 {
+        &mut self.app_id
+    }
+
+    fn get_app_id(&self) -> u64 {
+        self.app_id
+    }
+
     fn get_name(&self) -> &'_ str {
         &self.name
     }
@@ -108,7 +117,7 @@ impl TGeneral for General {
 
     fn add_variant(&self, variant: crate::persist::SettingsJson) -> Result<Vec<crate::api::VariantInfo>, SettingError> {
         let variant_name = variant.name.clone();
-        crate::persist::FileJson::update_variant_or_create(self.get_path(), variant, variant_name)
+        crate::persist::FileJson::update_variant_or_create(self.get_path(), self.get_app_id(), variant, variant_name)
             .map_err(|e| SettingError {
                 msg: format!("failed to add variant: {}", e),
                 setting: SettingVariant::General,
@@ -173,8 +182,8 @@ impl OnSet for Settings {
 
 impl Settings {
     #[inline]
-    pub fn from_json(name: String, other: SettingsJson, json_path: PathBuf) -> Self {
-        let x = super::Driver::init(name, &other, json_path.clone());
+    pub fn from_json(name: String, other: SettingsJson, json_path: PathBuf, app_id: u64) -> Self {
+        let x = super::Driver::init(name, &other, json_path.clone(), app_id);
         log::info!(
             "Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}",
             x.general.provider(),
@@ -190,8 +199,8 @@ impl Settings {
         }
     }
 
-    pub fn system_default(json_path: PathBuf, name: String, variant_id: u64, variant_name: String) -> Self {
-        let driver = super::Driver::system_default(json_path, name, variant_id, variant_name);
+    pub fn system_default(json_path: PathBuf, app_id: u64, name: String, variant_id: u64, variant_name: String) -> Self {
+        let driver = super::Driver::system_default(json_path, app_id, name, variant_id, variant_name);
         Self {
             general: driver.general,
             cpus: driver.cpus,
@@ -201,7 +210,7 @@ impl Settings {
     }
 
     pub fn load_system_default(&mut self, name: String, variant_id: u64, variant_name: String) {
-        let driver = super::Driver::system_default(self.general.get_path().to_owned(), name, variant_id, variant_name);
+        let driver = super::Driver::system_default(self.general.get_path().to_owned(), self.general.get_app_id(), name, variant_id, variant_name);
         self.cpus = driver.cpus;
         self.gpu = driver.gpu;
         self.battery = driver.battery;
@@ -222,6 +231,7 @@ impl Settings {
     pub fn load_file(
         &mut self,
         filename: PathBuf,
+        app_id: u64,
         name: String,
         variant: u64,
         variant_name: String,
@@ -231,7 +241,7 @@ impl Settings {
         if json_path.exists() {
             if variant == u64::MAX {
                 *self.general.persistent() = true;
-                let file_json = FileJson::update_variant_or_create(&json_path, self.json(), variant_name.clone()).map_err(|e| SettingError {
+                let file_json = FileJson::update_variant_or_create(&json_path, app_id, self.json(), variant_name.clone()).map_err(|e| SettingError {
                     msg: format!("Failed to open settings {}: {}", json_path.display(), e),
                     setting: SettingVariant::General,
                 })?;
@@ -252,7 +262,7 @@ impl Settings {
                     *self.general.persistent() = false;
                     self.general.name(name);
                 } else {
-                    let x = super::Driver::init(name, settings_json, json_path.clone());
+                    let x = super::Driver::init(name, settings_json, json_path.clone(), app_id);
                     log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
                     self.general = x.general;
                     self.cpus = x.cpus;
@@ -270,6 +280,7 @@ impl Settings {
             }
             *self.general.persistent() = false;
         }
+        *self.general.app_id() = app_id;
         self.general.path(filename);
         self.general.variant_id(variant);
         Ok(*self.general.persistent())

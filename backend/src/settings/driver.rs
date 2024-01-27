@@ -13,14 +13,15 @@ impl Driver {
         name: String,
         settings: &SettingsJson,
         json_path: std::path::PathBuf,
+        app_id: u64,
     ) -> Self {
         let name_bup = settings.name.clone();
         let id_bup = settings.variant;
-        auto_detect0(Some(settings), json_path, name, id_bup, name_bup)
+        auto_detect0(Some(settings), json_path, app_id, name, id_bup, name_bup)
     }
 
-    pub fn system_default(json_path: std::path::PathBuf, name: String, variant_id: u64, variant_name: String) -> Self {
-        auto_detect0(None, json_path, name, variant_id, variant_name)
+    pub fn system_default(json_path: std::path::PathBuf, app_id: u64, name: String, variant_id: u64, variant_name: String) -> Self {
+        auto_detect0(None, json_path, app_id, name, variant_id, variant_name)
     }
 }
 

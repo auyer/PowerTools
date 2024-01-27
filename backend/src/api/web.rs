@@ -87,34 +87,104 @@ fn web_config_to_settings_json(meta: community_settings_core::v1::Metadata) -> c
     }
 }
 
+fn download_config(id: u128) -> std::io::Result<community_settings_core::v1::Metadata> {
+    let req_url = format!("{}/api/setting/by_id/{}", BASE_URL, id);
+    let response = ureq::get(&req_url).call()
+        .map_err(|e| {
+            log::warn!("GET to {} failed: {}", req_url, e);
+            std::io::Error::new(std::io::ErrorKind::ConnectionAborted, e)
+        })?;
+    response.into_json()
+}
+
+pub fn upload_settings(id: u64, user_id: String, username: String, settings: crate::persist::SettingsJson) {
+    log::info!("Uploading settings {} by {} ({})", settings.name, username, user_id);
+    let user_id: u64 = match user_id.parse() {
+        Ok(id) => id,
+        Err(e) => {
+            log::error!("Failed to parse `{}` as u64: {} (aborted upload_settings very early)", user_id, e);
+            return;
+        }
+    };
+    let meta = settings_to_web_config(id as _, user_id, username, settings);
+    if let Err(e) = upload_config(meta) {
+        log::error!("Failed to upload settings: {}", e);
+    }
+}
+
+fn settings_to_web_config(app_id: u32, user_id: u64, username: String, settings: crate::persist::SettingsJson) -> community_settings_core::v1::Metadata {
+    community_settings_core::v1::Metadata {
+        name: settings.name,
+        steam_app_id: app_id,
+        steam_user_id: user_id,
+        steam_username: username,
+        tags: vec!["wip".to_owned()],
+        id: "".to_owned(),
+        config: community_settings_core::v1::Config {
+            cpus: settings.cpus.into_iter().map(|cpu| community_settings_core::v1::Cpu {
+                online: cpu.online,
+                clock_limits: cpu.clock_limits.map(|lim| community_settings_core::v1::MinMax {
+                    min: lim.min,
+                    max: lim.max,
+                }),
+                governor: cpu.governor,
+            }).collect(),
+            gpu: community_settings_core::v1::Gpu {
+                fast_ppt: settings.gpu.fast_ppt,
+                slow_ppt: settings.gpu.slow_ppt,
+                tdp: settings.gpu.tdp,
+                tdp_boost: settings.gpu.tdp_boost,
+                clock_limits: settings.gpu.clock_limits.map(|lim| community_settings_core::v1::MinMax {
+                    min: lim.min,
+                    max: lim.max,
+                }),
+                slow_memory: settings.gpu.slow_memory,
+            },
+            battery: community_settings_core::v1::Battery {
+                charge_rate: settings.battery.charge_rate,
+                charge_mode: settings.battery.charge_mode,
+                events: settings.battery.events.into_iter().map(|batt_ev| community_settings_core::v1::BatteryEvent {
+                    trigger: batt_ev.trigger,
+                    charge_rate: batt_ev.charge_rate,
+                    charge_mode: batt_ev.charge_mode,
+                }).collect(),
+            },
+        },
+    }
+}
+
+fn upload_config(config: community_settings_core::v1::Metadata) -> std::io::Result<()> {
+    let req_url = format!("{}/api/setting", BASE_URL);
+    ureq::post(&req_url)
+        .send_json(&config)
+        .map_err(|e| {
+            log::warn!("POST to {} failed: {}", req_url, e);
+            std::io::Error::new(std::io::ErrorKind::ConnectionAborted, e)
+        })
+        .map(|_| ())
+}
+
 /// Download config web method
 pub fn download_new_config(sender: Sender<ApiMessage>) -> impl AsyncCallable {
     let sender = Arc::new(Mutex::new(sender)); // Sender is not Sync; this is required for safety
     let getter = move || {
         let sender2 = sender.clone();
         move |id: u128| {
-            let req_url = format!("{}/api/setting/by_id/{}", BASE_URL, id);
-            match ureq::get(&req_url).call() {
-                Ok(response) => {
-                    let json_res: std::io::Result<community_settings_core::v1::Metadata> = response.into_json();
-                    match json_res {
-                        Ok(meta) => {
-                            let (tx, rx) = mpsc::channel();
-                            let callback =
-                                move |values: Vec<super::VariantInfo>| tx.send(values).expect("download_new_config callback send failed");
-                            sender2
-                                .lock()
-                                .unwrap()
-                                .send(ApiMessage::General(GeneralMessage::AddVariant(web_config_to_settings_json(meta), Box::new(callback))))
-                                .expect("download_new_config send failed");
-                            return rx.recv().expect("download_new_config callback recv failed");
-                        }
-                        Err(e) => {
-                            log::error!("Cannot parse response from `{}`: {}", req_url, e)
-                        }
-                    }
+            match download_config(id) {
+                Ok(meta) => {
+                    let (tx, rx) = mpsc::channel();
+                    let callback =
+                        move |values: Vec<super::VariantInfo>| tx.send(values).expect("download_new_config callback send failed");
+                    sender2
+                        .lock()
+                        .unwrap()
+                        .send(ApiMessage::General(GeneralMessage::AddVariant(web_config_to_settings_json(meta), Box::new(callback))))
+                        .expect("download_new_config send failed");
+                    return rx.recv().expect("download_new_config callback recv failed");
+                },
+                Err(e) => {
+                    log::error!("Invalid response from download: {}", e);
                 }
-                Err(e) => log::warn!("Cannot get setting result from `{}`: {}", req_url, e),
             }
             vec![]
         }
@@ -137,6 +207,39 @@ pub fn download_new_config(sender: Sender<ApiMessage>) -> impl AsyncCallable {
                 output.push(Primitive::Json(serde_json::to_string(status).expect("Failed to serialize variant info to JSON")));
             }
             output
+        },
+    }
+}
+
+/// Upload currently-loaded variant
+pub fn upload_current_variant(sender: Sender<ApiMessage>) -> impl AsyncCallable {
+    let sender = Arc::new(Mutex::new(sender)); // Sender is not Sync; this is required for safety
+    let getter = move || {
+        let sender2 = sender.clone();
+        move |(steam_id, steam_username): (String, String)| {
+            sender2
+                .lock()
+                .unwrap()
+                .send(ApiMessage::UploadCurrentVariant(steam_id, steam_username))
+                .expect("upload_current_variant send failed");
+            true
+        }
+    };
+    super::async_utils::AsyncIsh {
+        trans_setter: |params| {
+            if let Some(Primitive::String(steam_id)) = params.get(0) {
+                if let Some(Primitive::String(steam_username)) = params.get(1) {
+                    Ok((steam_id.to_owned(), steam_username.to_owned()))
+                } else {
+                    Err("upload_current_variant missing/invalid parameter 1".to_owned())
+                }
+            } else {
+                Err("upload_current_variant missing/invalid parameter 0".to_owned())
+            }
+        },
+        set_get: getter,
+        trans_getter: |result| {
+            vec![result.into()]
         },
     }
 }
