@@ -66,7 +66,7 @@ impl BatteryMessage {
 
     /// Message instructs the driver to modify settings
     fn is_modify(&self) -> bool {
-        matches!(self, Self::SetChargeRate(_) | Self::SetChargeMode(_))
+        matches!(self, Self::SetChargeRate(_) | Self::SetChargeMode(_) | Self::SetChargeLimit(_))
     }
 }
 

@@ -16,6 +16,7 @@ use crate::settings::{OnPowerEvent, OnResume, OnSet, PowerMode, SettingError};
 pub struct Battery {
     pub charge_rate: Option<u64>,
     pub charge_mode: Option<ChargeMode>,
+    pub charge_limit: Option<f64>,
     events: Vec<EventInstruction>,
     limits: GenericBatteryLimit,
     state: crate::state::steam_deck::Battery,
@@ -93,6 +94,7 @@ impl EventInstruction {
         match mode {
             EventTrigger::PluggedIn => "plug-in".to_owned(),
             EventTrigger::PluggedOut => "plug-out".to_owned(),
+            // EventInstruction uses 1.0 to represent full, but Strings use 100.0
             EventTrigger::BatteryAbove(x) => format!(">{:#0.2}", x * 100.0),
             EventTrigger::BatteryBelow(x) => format!("<{:#0.2}", x * 100.0),
             EventTrigger::Ignored => "/shrug".to_owned(),
@@ -146,14 +148,9 @@ impl EventInstruction {
 
     fn set_charge_rate(&self) -> Result<(), SettingError> {
         if let Some(charge_rate) = self.charge_rate {
-            let attr = if MAX_BATTERY_CHARGE_RATE_ATTR.exists(&*self.sysfs_hwmon) {
-                MAX_BATTERY_CHARGE_RATE_ATTR
-            } else {
-                MAXIMUM_BATTERY_CHARGE_RATE_ATTR
-            };
-            self.sysfs_hwmon.set(attr, charge_rate).map_err(
+            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate).map_err(
                 |e| SettingError {
-                    msg: format!("Failed to write to `{:?}`: {}", attr, e),
+                    msg: format!("Failed to write to `{:?}`: {}", MAX_BATTERY_CHARGE_RATE_ATTR, e),
                     setting: crate::settings::SettingVariant::Battery,
                 },
             )
@@ -215,7 +212,6 @@ const HWMON_NEEDS: &[HwMonAttribute] = &[
     //HwMonAttribute::custom("maximum_battery_charge_rate"), // NOTE: Cannot filter by custom capabilities
 ];
 
-const MAXIMUM_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute = HwMonAttribute::custom("maximum_battery_charge_rate");
 const MAX_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute = HwMonAttribute::custom("maximum_battery_charge_rate");
 const MAX_BATTERY_CHARGE_LEVEL_ATTR: HwMonAttribute = HwMonAttribute::custom("max_battery_charge_level");
 
@@ -297,13 +293,8 @@ impl Battery {
     fn set_charge_rate(&mut self) -> Result<(), SettingError> {
         if let Some(charge_rate) = self.charge_rate {
             self.state.charge_rate_set = true;
-            let attr = if MAX_BATTERY_CHARGE_RATE_ATTR.exists(&*self.sysfs_hwmon) {
-                MAX_BATTERY_CHARGE_RATE_ATTR
-            } else {
-                MAXIMUM_BATTERY_CHARGE_RATE_ATTR
-            };
-            let path = attr.path(&*self.sysfs_hwmon);
-            self.sysfs_hwmon.set(attr, charge_rate).map_err(
+            let path = MAX_BATTERY_CHARGE_RATE_ATTR.path(&*self.sysfs_hwmon);
+            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate).map_err(
                 |e| SettingError {
                     msg: format!("Failed to write to `{}`: {}", path.display(), e),
                     setting: crate::settings::SettingVariant::Battery,
@@ -311,13 +302,8 @@ impl Battery {
             )
         } else if self.state.charge_rate_set {
             self.state.charge_rate_set = false;
-            let attr = if MAX_BATTERY_CHARGE_RATE_ATTR.exists(&*self.sysfs_hwmon) {
-                MAX_BATTERY_CHARGE_RATE_ATTR
-            } else {
-                MAXIMUM_BATTERY_CHARGE_RATE_ATTR
-            };
-            let path = attr.path(&*self.sysfs_hwmon);
-            self.sysfs_hwmon.set(attr, self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(2500)).map_err(
+            let path = MAX_BATTERY_CHARGE_RATE_ATTR.path(&*self.sysfs_hwmon);
+            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(2500)).map_err(
                 |e| SettingError {
                     msg: format!("Failed to write to `{}`: {}", path.display(), e),
                     setting: crate::settings::SettingVariant::Battery,
@@ -348,10 +334,35 @@ impl Battery {
         }
     }
 
+    fn set_charge_limit(&mut self) -> Result<(), SettingError> {
+        let attr_exists = MAX_BATTERY_CHARGE_LEVEL_ATTR.exists(&*self.sysfs_hwmon);
+        log::debug!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
+        if let Some(charge_limit) = self.charge_limit {
+            self.state.charge_limit_set = true;
+            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, (charge_limit * 100.0).round() as u64)
+                .map_err(|e| SettingError {
+                        msg: format!("Failed to write to {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
+                        setting: crate::settings::SettingVariant::Battery,
+                    }
+                )
+        } else if self.state.charge_limit_set {
+            self.state.charge_limit_set = false;
+            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 0)
+                .map_err(|e| SettingError {
+                        msg: format!("Failed to reset (write to) {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
+                        setting: crate::settings::SettingVariant::Battery,
+                    }
+                )
+        } else {
+            Ok(())
+        }
+    }
+
     fn set_all(&mut self) -> Result<(), Vec<SettingError>> {
         let mut errors = Vec::new();
         self.set_charge_rate().unwrap_or_else(|e| errors.push(e));
         self.set_charge_mode().unwrap_or_else(|e| errors.push(e));
+        self.set_charge_limit().unwrap_or_else(|e| errors.push(e));
         if errors.is_empty() {
             Ok(())
         } else {
@@ -471,15 +482,76 @@ impl Battery {
         }
         None
     }
+
+    fn remove_charge_limit_instructions(mut self) -> Self {
+        if let Some(lim_ev) = self.find_limit_event() {
+            log::debug!("Found limit event @ {}", lim_ev);
+            if let Some(unlim_ev) = self.find_unlimit_event() {
+                log::debug!("Found unlimit event @ {}", unlim_ev);
+                self.charge_limit = match &self.events[lim_ev].trigger {
+                    EventTrigger::BatteryAbove(x) => Some(*x),
+                    _ => panic!("Got limit event with wrong event trigger variant"),
+                };
+                log::debug!("Charge limit detected as {}", self.charge_limit.unwrap());
+                if lim_ev > unlim_ev {
+                    self.events.remove(lim_ev);
+                    self.events.remove(unlim_ev);
+                } else {
+                    self.events.remove(unlim_ev);
+                    self.events.remove(lim_ev);
+                }
+            }
+        }
+        self
+    }
+
+    fn with_charge_limit_instructions(&self) -> Vec<EventInstruction> {
+        if let Some(limit) = self.charge_limit {
+            log::debug!("Adding charge limit event instructions for limit {}", limit);
+            let mut events = self.events.clone();
+            // upper limit
+            log::info!(
+                "Creating Steam Deck charge limit event instruction of >{}",
+                limit
+            );
+            events.push(EventInstruction {
+                trigger: EventTrigger::BatteryAbove(limit),
+                charge_rate: None,
+                charge_mode: Some(ChargeMode::Idle),
+                is_triggered: false,
+                sysfs_hwmon: self.sysfs_hwmon.clone(),
+                bat_ec: self.bat_ec.clone(),
+            });
+            // lower limit
+            let limit = (limit - 0.10).clamp(0.0, 1.0);
+            log::info!(
+                "Creating Steam Deck charge limit event instruction of <{}",
+                limit
+            );
+            events.push(EventInstruction {
+                trigger: EventTrigger::BatteryBelow(limit),
+                charge_rate: None,
+                charge_mode: Some(ChargeMode::Normal),
+                is_triggered: false,
+                sysfs_hwmon: self.sysfs_hwmon.clone(),
+                bat_ec: self.bat_ec.clone(),
+            });
+            events
+        } else {
+            log::debug!("No charge limit set, skipping add of event instructions");
+            self.events.clone()
+        }
+    }
 }
 
 impl Into<BatteryJson> for Battery {
     #[inline]
     fn into(self) -> BatteryJson {
+        let events = self.with_charge_limit_instructions();
         BatteryJson {
             charge_rate: self.charge_rate,
             charge_mode: self.charge_mode.map(Self::charge_mode_to_str),
-            events: self.events.into_iter().map(|x| x.into()).collect(),
+            events: events.into_iter().map(|x| x.into()).collect(),
             root: self.sysfs_bat.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|x| x.to_owned()))
         }
     }
@@ -496,6 +568,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                     .charge_mode
                     .map(|x| Self::str_to_charge_mode(&x))
                     .flatten(),
+                charge_limit: None,
                 events: persistent
                     .events
                     .into_iter()
@@ -506,13 +579,14 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
-            },
+            }.remove_charge_limit_instructions(),
             _ => Self {
                 charge_rate: persistent.charge_rate,
                 charge_mode: persistent
                     .charge_mode
                     .map(|x| Self::str_to_charge_mode(&x))
                     .flatten(),
+                    charge_limit: None,
                 events: persistent
                     .events
                     .into_iter()
@@ -523,7 +597,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
-            },
+            }.remove_charge_limit_instructions(),
         }
     }
 
@@ -531,13 +605,14 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
         Self {
             charge_rate: None,
             charge_mode: None,
+            charge_limit: None,
             events: Vec::new(),
             limits: limits,
             state: crate::state::steam_deck::Battery::default(),
             sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
             sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
             bat_ec: Arc::new(Mutex::new(UnnamedPowerEC::new())),
-        }
+        }.remove_charge_limit_instructions()
     }
 }
 
@@ -575,40 +650,9 @@ impl OnPowerEvent for Battery {
             PowerMode::BatteryCharge(_) => Ok(()),
         }
         .unwrap_or_else(|mut e| errors.append(&mut e));
-        let attr_exists = MAX_BATTERY_CHARGE_LEVEL_ATTR.exists(&*self.sysfs_hwmon);
-        log::debug!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
-        let mut charge_limit_set_now = false;
         for ev in &mut self.events {
-            if attr_exists {
-                if let EventTrigger::BatteryAbove(level) = ev.trigger {
-                    if let Some(ChargeMode::Idle) = ev.charge_mode {
-                        self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, (level * 100.0).round() as u64)
-                            .unwrap_or_else(|e| errors.push(
-                                SettingError {
-                                    msg: format!("Failed to write to {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
-                                    setting: crate::settings::SettingVariant::Battery,
-                                }
-                            ));
-                        self.state.charge_limit_set = true;
-                        charge_limit_set_now = true;
-                    }
-                }
-            }
             ev.on_power_event(new_mode)
                 .unwrap_or_else(|mut e| errors.append(&mut e));
-        }
-        if self.state.charge_limit_set != charge_limit_set_now {
-            // only true when charge_limit_set is false and self.state.charge_limit_set is true
-            self.state.charge_limit_set = false;
-            if attr_exists {
-                self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 0)
-                    .unwrap_or_else(|e| errors.push(
-                        SettingError {
-                            msg: format!("Failed to reset (write to) {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
-                            setting: crate::settings::SettingVariant::Battery,
-                        }
-                    ));
-            }
         }
         if errors.is_empty() {
             Ok(())
@@ -718,88 +762,11 @@ impl TBattery for Battery {
     }
 
     fn charge_limit(&mut self, limit: Option<f64>) {
-        // upper limit
-        let index = self.find_limit_event();
-        if let Some(index) = index {
-            if let Some(limit) = limit {
-                log::info!(
-                    "Updating Steam Deck charge limit event instruction to >{}",
-                    limit
-                );
-                self.events[index] = EventInstruction {
-                    trigger: EventTrigger::BatteryAbove(limit / 100.0),
-                    charge_rate: None,
-                    charge_mode: Some(ChargeMode::Idle),
-                    is_triggered: false,
-                    sysfs_hwmon: self.sysfs_hwmon.clone(),
-                    bat_ec: self.bat_ec.clone(),
-                };
-            } else {
-                self.events.remove(index);
-            }
-        } else if let Some(limit) = limit {
-            log::info!(
-                "Creating Steam Deck charge limit event instruction of >{}",
-                limit
-            );
-            self.events.push(EventInstruction {
-                trigger: EventTrigger::BatteryAbove(limit / 100.0),
-                charge_rate: None,
-                charge_mode: Some(ChargeMode::Idle),
-                is_triggered: false,
-                sysfs_hwmon: self.sysfs_hwmon.clone(),
-                bat_ec: self.bat_ec.clone(),
-            });
-        }
-        // lower limit
-        let index = self.find_unlimit_event();
-        if let Some(index) = index {
-            if let Some(limit) = limit {
-                let limit = (limit - 10.0).clamp(0.0, 100.0);
-                log::info!(
-                    "Updating Steam Deck charge limit event instruction to <{}",
-                    limit
-                );
-                self.events[index] = EventInstruction {
-                    trigger: EventTrigger::BatteryBelow(limit / 100.0),
-                    charge_rate: None,
-                    charge_mode: Some(ChargeMode::Normal),
-                    is_triggered: false,
-                    sysfs_hwmon: self.sysfs_hwmon.clone(),
-                    bat_ec: self.bat_ec.clone(),
-                };
-            } else {
-                self.events.remove(index);
-            }
-        } else if let Some(limit) = limit {
-            let limit = (limit - 10.0).clamp(0.0, 100.0);
-            log::info!(
-                "Creating Steam Deck charge limit event instruction of <{}",
-                limit
-            );
-            self.events.push(EventInstruction {
-                trigger: EventTrigger::BatteryBelow(limit / 100.0),
-                charge_rate: None,
-                charge_mode: Some(ChargeMode::Normal),
-                is_triggered: false,
-                sysfs_hwmon: self.sysfs_hwmon.clone(),
-                bat_ec: self.bat_ec.clone(),
-            });
-        }
+        self.charge_limit = limit.map(|lim| lim / 100.0);
     }
 
     fn get_charge_limit(&self) -> Option<f64> {
-        let index = self.find_limit_event();
-        if let Some(index) = index {
-            if let EventTrigger::BatteryAbove(limit) = self.events[index].trigger {
-                Some(limit * 100.0)
-            } else {
-                log::error!("Got index {} for battery charge limit which does not have expected event trigger: {:?}", index, &self.events);
-                None
-            }
-        } else {
-            None
-        }
+        self.charge_limit.map(|lim| lim * 100.0)
     }
 
     fn check_power(&mut self) -> Result<Vec<PowerMode>, Vec<SettingError>> {
