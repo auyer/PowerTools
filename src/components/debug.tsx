@@ -22,11 +22,16 @@ let isSpecialDay = now.getDate() == 1 && now.getMonth() == 3;
 
 export class Debug extends Component<backend.IdcProps> {
     render() {
-        return buildDebug();
+        const reloadGUI = (x: string) => this.setState((_state) => {
+            return {
+                reloadThingy: x,
+            };
+        });
+        return buildDebug(reloadGUI);
     }
 }
 
-function buildDebug() {
+function buildDebug(reloadGUI: (x: string) => void) {
   return (<Fragment>{/* Version Info */}
       <div className={staticClasses.PanelSectionTitle}>
         {eggCount % 10 == 9 ? "Ha! Nerd" : tr("Debug")}
@@ -41,6 +46,7 @@ function buildDebug() {
               Navigation.NavigateToExternalWeb("https://git.ngni.us/NG-SD-Plugins/PowerTools/releases");
             }
             eggCount++;
+            reloadGUI("BackendInfo");
           }}>
           {eggCount % 10 == 9 ? "by NGnius" : get_value(BACKEND_INFO)}
         </Field>
@@ -48,14 +54,14 @@ function buildDebug() {
       <PanelSectionRow>
         <Field
           label={tr("Framework")}
-          onClick={()=> eggCount++}>
+          onClick={() => {eggCount++; reloadGUI("FrameworkInfo");}}>
           {eggCount % 10 == 9 ? "<3 <3 <3" : target_usdpl()}
         </Field>
       </PanelSectionRow>
       <PanelSectionRow>
         <Field
           label={ eggCount % 10 == 9 && tr("Driver") == "Driver" ? "Drive" : tr("Driver")}
-          onClick={()=> eggCount++}>
+          onClick={() => {eggCount++; reloadGUI("DriverInfo");}}>
           {eggCount % 10 == 9 ? "Ryan Gosling" : get_value(DRIVER_INFO)}
         </Field>
       </PanelSectionRow>
@@ -69,6 +75,7 @@ function buildDebug() {
               Navigation.NavigateToExternalWeb("https://git.ngni.us/NG-SD-Plugins/usdpl-rs");
             }
             eggCount++;
+            reloadGUI("USDPLInfo");
           }}>
           v{version_usdpl()}
         </Field>
