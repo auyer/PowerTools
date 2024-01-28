@@ -2,6 +2,9 @@ mod battery;
 mod cpu;
 mod gpu;
 mod power_dpm_force;
+#[cfg(debug_assertions)]
+pub mod util;
+#[cfg(not(debug_assertions))]
 mod util;
 
 pub use battery::Battery;

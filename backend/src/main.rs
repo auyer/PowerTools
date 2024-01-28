@@ -334,6 +334,12 @@ fn main() -> Result<(), ()> {
 
     utility::ioperm_power_ec();
 
+    #[cfg(debug_assertions)]
+    std::thread::spawn(|| {
+        utility::ioperm_power_ec();
+        settings::steam_deck::util::flash_led();
+    });
+
     if let Err(e) = loaded_settings.on_set() {
         e.iter()
             .for_each(|e| log::error!("Startup Settings.on_set() error: {}", e));
