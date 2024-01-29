@@ -29,7 +29,7 @@ impl Driver {
 #[inline]
 pub fn maybe_do_button() {
     match super::auto_detect_provider() {
-        DriverJson::SteamDeck | DriverJson::SteamDeckAdvance => {
+        DriverJson::SteamDeck | DriverJson::SteamDeckOLED => {
             crate::settings::steam_deck::flash_led();
         }
         DriverJson::Generic | DriverJson::GenericAMD => {

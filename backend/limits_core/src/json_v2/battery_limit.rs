@@ -6,8 +6,8 @@ use super::RangeLimit;
 pub enum BatteryLimitType {
     #[serde(rename = "GabeBoy", alias = "SteamDeck")]
     SteamDeck,
-    #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
-    SteamDeckAdvance,
+    #[serde(rename = "GabeBoySP", alias = "SteamDeckOLED")]
+    SteamDeckOLED,
     Generic,
     Unknown,
     DevMode,
@@ -25,7 +25,7 @@ pub struct GenericBatteryLimit {
 impl GenericBatteryLimit {
     pub fn default_for(t: BatteryLimitType) -> Self {
         match t {
-            BatteryLimitType::SteamDeck | BatteryLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            BatteryLimitType::SteamDeck | BatteryLimitType::SteamDeckOLED => Self::default_steam_deck(),
             BatteryLimitType::DevMode => Self::default_dev_mode(),
             _t => Self::default(),
         }

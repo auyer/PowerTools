@@ -156,14 +156,14 @@ pub fn auto_detect0(
                             settings.cpus.clone(),
                             settings.version,
                             relevant_limits.cpu.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::LCD))
                     }
-                    CpuLimitType::SteamDeckAdvance => {
+                    CpuLimitType::SteamDeckOLED => {
                         Box::new(crate::settings::steam_deck::Cpus::from_json_and_limits(
                             settings.cpus.clone(),
                             settings.version,
                             relevant_limits.cpu.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::OLED))
                     }
                     CpuLimitType::Generic => Box::new(crate::settings::generic::Cpus::<
                         crate::settings::generic::Cpu,
@@ -201,21 +201,14 @@ pub fn auto_detect0(
                             settings.gpu.clone(),
                             settings.version,
                             relevant_limits.gpu.limits,
-                        ))
-                    }
-                    GpuLimitType::SteamDeckAdvance => {
-                        Box::new(crate::settings::steam_deck::Gpu::from_json_and_limits(
-                            settings.gpu.clone(),
-                            settings.version,
-                            relevant_limits.gpu.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::LCD))
                     }
                     GpuLimitType::SteamDeckOLED => {
                         Box::new(crate::settings::steam_deck::Gpu::from_json_and_limits(
                             settings.gpu.clone(),
                             settings.version,
                             relevant_limits.gpu.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::OLED))
                     }
                     GpuLimitType::Generic => {
                         Box::new(crate::settings::generic::Gpu::from_json_and_limits(
@@ -252,14 +245,14 @@ pub fn auto_detect0(
                             settings.battery.clone(),
                             settings.version,
                             relevant_limits.battery.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::LCD))
                     }
-                    BatteryLimitType::SteamDeckAdvance => {
+                    BatteryLimitType::SteamDeckOLED => {
                         Box::new(crate::settings::steam_deck::Battery::from_json_and_limits(
                             settings.battery.clone(),
                             settings.version,
                             relevant_limits.battery.limits,
-                        ))
+                        ).variant(super::super::steam_deck::Model::OLED))
                     }
                     BatteryLimitType::Generic => Box::new(
                         crate::settings::generic::Battery::from_json_and_limits(
@@ -293,10 +286,10 @@ pub fn auto_detect0(
             } else {
                 let cpu_driver: Box<dyn TCpus> = match relevant_limits.cpu.provider {
                     CpuLimitType::SteamDeck => {
-                        Box::new(crate::settings::steam_deck::Cpus::from_limits(relevant_limits.cpu.limits))
+                        Box::new(crate::settings::steam_deck::Cpus::from_limits(relevant_limits.cpu.limits).variant(super::super::steam_deck::Model::LCD))
                     }
-                    CpuLimitType::SteamDeckAdvance => {
-                        Box::new(crate::settings::steam_deck::Cpus::from_limits(relevant_limits.cpu.limits))
+                    CpuLimitType::SteamDeckOLED => {
+                        Box::new(crate::settings::steam_deck::Cpus::from_limits(relevant_limits.cpu.limits).variant(super::super::steam_deck::Model::OLED))
                     }
                     CpuLimitType::Generic => {
                         Box::new(crate::settings::generic::Cpus::<
@@ -315,13 +308,10 @@ pub fn auto_detect0(
                 };
                 let gpu_driver: Box<dyn TGpu> = match relevant_limits.gpu.provider {
                     GpuLimitType::SteamDeck => {
-                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
-                    }
-                    GpuLimitType::SteamDeckAdvance => {
-                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
+                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits).variant(super::super::steam_deck::Model::LCD))
                     }
                     GpuLimitType::SteamDeckOLED => {
-                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits))
+                        Box::new(crate::settings::steam_deck::Gpu::from_limits(relevant_limits.gpu.limits).variant(super::super::steam_deck::Model::OLED))
                     }
                     GpuLimitType::Generic => {
                         Box::new(crate::settings::generic::Gpu::from_limits(relevant_limits.gpu.limits))
@@ -338,10 +328,10 @@ pub fn auto_detect0(
                 };
                 let battery_driver: Box<dyn TBattery> = match relevant_limits.battery.provider {
                     BatteryLimitType::SteamDeck => {
-                        Box::new(crate::settings::steam_deck::Battery::from_limits(relevant_limits.battery.limits))
+                        Box::new(crate::settings::steam_deck::Battery::from_limits(relevant_limits.battery.limits).variant(super::super::steam_deck::Model::LCD))
                     }
-                    BatteryLimitType::SteamDeckAdvance => {
-                        Box::new(crate::settings::steam_deck::Battery::from_limits(relevant_limits.battery.limits))
+                    BatteryLimitType::SteamDeckOLED => {
+                        Box::new(crate::settings::steam_deck::Battery::from_limits(relevant_limits.battery.limits).variant(super::super::steam_deck::Model::OLED))
                     }
                     BatteryLimitType::Generic => {
                         Box::new(crate::settings::generic::Battery::from_limits(relevant_limits.battery.limits))

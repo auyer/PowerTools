@@ -6,8 +6,6 @@ use super::RangeLimit;
 pub enum GpuLimitType {
     #[serde(rename = "GabeBoy", alias = "SteamDeck")]
     SteamDeck,
-    #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
-    SteamDeckAdvance,
     #[serde(rename = "GabeBoySP", alias = "SteamDeckOLED")]
     SteamDeckOLED,
     Generic,
@@ -40,7 +38,7 @@ pub struct GenericGpuLimit {
 impl GenericGpuLimit {
     pub fn default_for(t: GpuLimitType) -> Self {
         match t {
-            GpuLimitType::SteamDeck | GpuLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            GpuLimitType::SteamDeck => Self::default_steam_deck(),
             GpuLimitType::SteamDeckOLED => Self::default_steam_deck_oled(),
             GpuLimitType::DevMode => Self::default_dev_mode(),
             _t => Self::default(),

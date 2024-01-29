@@ -30,6 +30,7 @@ pub struct Cpus {
     pub smt: bool,
     pub smt_capable: bool,
     pub(super) limits: GenericCpusLimit,
+    variant: super::Model,
 }
 
 impl OnSet for Cpus {
@@ -100,6 +101,11 @@ impl Cpus {
             Err(_) => (false, false),
         }
     }
+
+    pub fn variant(mut self, model: super::Model) -> Self {
+        self.variant = model;
+        self
+    }
 }
 
 impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
@@ -144,6 +150,7 @@ impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
             smt: smt_guess,
             smt_capable: can_smt,
             limits: limits,
+            variant: super::Model::LCD,
         }
     }
 
@@ -168,6 +175,7 @@ impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
                 smt: true,
                 smt_capable: can_smt,
                 limits: limits,
+                variant: super::Model::LCD,
             }
         } else {
             Self {
@@ -175,6 +183,7 @@ impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
                 smt: false,
                 smt_capable: false,
                 limits: limits,
+                variant: super::Model::LCD,
             }
         }
     }
@@ -218,7 +227,10 @@ impl TCpus for Cpus {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        crate::persist::DriverJson::SteamDeck
+        match self.variant {
+            super::Model::LCD => crate::persist::DriverJson::SteamDeck,
+            super::Model::OLED => crate::persist::DriverJson::SteamDeckOLED,
+        }
     }
 }
 

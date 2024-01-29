@@ -7,8 +7,8 @@ use super::RangeLimit;
 pub enum CpuLimitType {
     #[serde(rename = "GabeBoy", alias = "SteamDeck")]
     SteamDeck,
-    #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
-    SteamDeckAdvance,
+    #[serde(rename = "GabeBoySP", alias = "SteamDeckOLED")]
+    SteamDeckOLED,
     Generic,
     GenericAMD,
     Unknown,
@@ -25,7 +25,7 @@ pub struct GenericCpusLimit {
 impl GenericCpusLimit {
     pub fn default_for(t: CpuLimitType) -> Self {
         match t {
-            CpuLimitType::SteamDeck | CpuLimitType::SteamDeckAdvance => {
+            CpuLimitType::SteamDeck | CpuLimitType::SteamDeckOLED => {
                 Self {
                     cpus: [(); 8].iter().enumerate().map(|(i, _)| GenericCpuLimit::default_for(&t, i)).collect(),
                     global_governors: true,
@@ -96,7 +96,7 @@ pub struct GenericCpuLimit {
 impl GenericCpuLimit {
     pub fn default_for(t: &CpuLimitType, _index: usize) -> Self {
         match t {
-            CpuLimitType::SteamDeck | CpuLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            CpuLimitType::SteamDeck | CpuLimitType::SteamDeckOLED => Self::default_steam_deck(),
             CpuLimitType::DevMode => Self {
                 clock_min: Some(RangeLimit { min: Some(100), max: Some(5000) }),
                 clock_max: Some(RangeLimit { min: Some(100), max: Some(4800) }),

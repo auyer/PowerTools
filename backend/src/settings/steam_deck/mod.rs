@@ -2,15 +2,18 @@ mod battery;
 mod cpu;
 mod gpu;
 mod power_dpm_force;
-#[cfg(debug_assertions)]
-pub mod util;
-#[cfg(not(debug_assertions))]
 mod util;
 
 pub use battery::Battery;
 pub use cpu::Cpus;
 pub use gpu::Gpu;
 pub(self) use power_dpm_force::{POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT, DPM_FORCE_LIMITS_ATTRIBUTE};
+
+#[derive(Debug, Clone, Copy)]
+pub enum Model {
+    LCD,
+    OLED,
+}
 
 pub use util::flash_led;
 

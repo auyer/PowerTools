@@ -337,7 +337,7 @@ fn main() -> Result<(), ()> {
     #[cfg(debug_assertions)]
     std::thread::spawn(|| {
         utility::ioperm_power_ec();
-        settings::steam_deck::util::flash_led();
+        settings::steam_deck::flash_led();
     });
 
     if let Err(e) = loaded_settings.on_set() {

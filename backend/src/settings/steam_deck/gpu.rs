@@ -24,7 +24,8 @@ pub struct Gpu {
     limits: GenericGpuLimit,
     state: crate::state::steam_deck::Gpu,
     sysfs_card: BasicEntityPath,
-    sysfs_hwmon: HwMonPath
+    sysfs_hwmon: HwMonPath,
+    variant: super::Model,
 }
 
 // same as CPU
@@ -346,6 +347,11 @@ impl Gpu {
             self.memory_clock = Some(mem_clock.clamp(self.limits.memory_clock.and_then(|lim| lim.min).unwrap_or(MIN_MEMORY_CLOCK), self.limits.memory_clock.and_then(|lim| lim.max).unwrap_or(MAX_MEMORY_CLOCK)));
         }
     }
+
+    pub fn variant(mut self, model: super::Model) -> Self {
+        self.variant = model;
+        self
+    }
 }
 
 impl Into<GpuJson> for Gpu {
@@ -375,6 +381,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
                 state: crate::state::steam_deck::Gpu::default(),
                 sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
                 sysfs_hwmon: Self::find_hwmon_sysfs(persistent.root),
+                variant: super::Model::LCD,
             },
             _ => Self {
                 fast_ppt: persistent.fast_ppt,
@@ -385,6 +392,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
                 state: crate::state::steam_deck::Gpu::default(),
                 sysfs_card: Self::find_card_sysfs(persistent.root.clone()),
                 sysfs_hwmon: Self::find_hwmon_sysfs(persistent.root),
+                variant: super::Model::LCD,
             },
         }
     }
@@ -399,6 +407,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
             state: crate::state::steam_deck::Gpu::default(),
             sysfs_card: Self::find_card_sysfs(None::<&'static str>),
             sysfs_hwmon: Self::find_hwmon_sysfs(None::<&'static str>),
+            variant: super::Model::LCD,
         }
     }
 }
@@ -485,7 +494,10 @@ impl TGpu for Gpu {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        crate::persist::DriverJson::SteamDeck
+        match self.variant {
+            super::Model::LCD => crate::persist::DriverJson::SteamDeck,
+            super::Model::OLED => crate::persist::DriverJson::SteamDeckOLED,
+        }
     }
 }
 

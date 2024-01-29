@@ -23,6 +23,7 @@ pub struct Battery {
     sysfs_bat: PowerSupplyPath,
     sysfs_hwmon: Arc<HwMonPath>,
     bat_ec: Arc<Mutex<UnnamedPowerEC>>,
+    variant: super::Model,
 }
 
 #[derive(Debug, Clone)]
@@ -542,6 +543,11 @@ impl Battery {
             self.events.clone()
         }
     }
+
+    pub fn variant(mut self, model: super::Model) -> Self {
+        self.variant = model;
+        self
+    }
 }
 
 impl Into<BatteryJson> for Battery {
@@ -579,6 +585,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
+                variant: super::Model::LCD,
             }.remove_charge_limit_instructions(),
             _ => Self {
                 charge_rate: persistent.charge_rate,
@@ -597,6 +604,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
+                variant: super::Model::LCD,
             }.remove_charge_limit_instructions(),
         }
     }
@@ -612,6 +620,7 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
             sysfs_bat: Self::find_battery_sysfs(None::<&'static str>),
             sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
             bat_ec: Arc::new(Mutex::new(UnnamedPowerEC::new())),
+            variant: super::Model::LCD,
         }.remove_charge_limit_instructions()
     }
 }
@@ -806,6 +815,9 @@ impl TBattery for Battery {
     }
 
     fn provider(&self) -> crate::persist::DriverJson {
-        crate::persist::DriverJson::SteamDeck
+        match self.variant {
+            super::Model::LCD => crate::persist::DriverJson::SteamDeck,
+            super::Model::OLED => crate::persist::DriverJson::SteamDeckOLED,
+        }
     }
 }

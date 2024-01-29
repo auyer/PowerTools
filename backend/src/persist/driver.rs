@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 pub enum DriverJson {
     #[serde(rename = "steam-deck", alias = "gabe-boy")]
     SteamDeck,
-    #[serde(rename = "steam-deck-oc", alias = "gabe-boy-advance")]
-    SteamDeckAdvance,
+    #[serde(rename = "steam-deck-oled", alias = "gabe-boy-sp")]
+    SteamDeckOLED,
     #[serde(rename = "generic")]
     Generic,
     #[serde(rename = "generic-amd")]
