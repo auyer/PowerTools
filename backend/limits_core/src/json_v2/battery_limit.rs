@@ -10,6 +10,7 @@ pub enum BatteryLimitType {
     SteamDeckAdvance,
     Generic,
     Unknown,
+    DevMode,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -18,12 +19,14 @@ pub struct GenericBatteryLimit {
     pub charge_modes: Vec<String>,
     pub charge_limit: Option<RangeLimit<f64>>, // battery charge %
     pub extra_readouts: bool,
+    pub experiments: bool,
 }
 
 impl GenericBatteryLimit {
     pub fn default_for(t: BatteryLimitType) -> Self {
         match t {
             BatteryLimitType::SteamDeck | BatteryLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            BatteryLimitType::DevMode => Self::default_dev_mode(),
             _t => Self::default(),
         }
     }
@@ -44,6 +47,27 @@ impl GenericBatteryLimit {
                 max: Some(90.0),
             }),
             extra_readouts: false,
+            experiments: false,
+        }
+    }
+
+    fn default_dev_mode() -> Self {
+        Self {
+            charge_rate: Some(RangeLimit {
+                min: Some(0),
+                max: Some(1_000),
+            }),
+            charge_modes: vec![
+                "normal".to_owned(),
+                "discharge".to_owned(),
+                "idle".to_owned(),
+            ],
+            charge_limit: Some(RangeLimit {
+                min: Some(1.0),
+                max: Some(99.0),
+            }),
+            extra_readouts: true,
+            experiments: true,
         }
     }
 
@@ -67,5 +91,6 @@ impl GenericBatteryLimit {
             }
         }
         self.extra_readouts = limit_override.extra_readouts;
+        self.experiments = limit_override.experiments;
     }
 }

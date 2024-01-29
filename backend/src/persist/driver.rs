@@ -17,4 +17,6 @@ pub enum DriverJson {
     #[default]
     #[serde(rename = "auto")]
     AutoDetect,
+    #[serde(rename = "indev")]
+    DevMode,
 }

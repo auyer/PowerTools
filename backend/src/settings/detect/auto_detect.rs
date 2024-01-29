@@ -185,6 +185,13 @@ pub fn auto_detect0(
                             settings.version,
                             relevant_limits.cpu.limits,
                         ))
+                    },
+                    CpuLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Cpus::from_json_and_limits(
+                            settings.cpus.clone(),
+                            settings.version,
+                            relevant_limits.cpu.limits,
+                        ))
                     }
                 };
 
@@ -230,6 +237,13 @@ pub fn auto_detect0(
                             settings.version,
                             relevant_limits.gpu.limits,
                         ))
+                    },
+                    GpuLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Gpu::from_json_and_limits(
+                            settings.gpu.clone(),
+                            settings.version,
+                            relevant_limits.gpu.limits,
+                        ))
                     }
                 };
                 let battery_driver: Box<dyn TBattery> = match relevant_limits.battery.provider {
@@ -256,6 +270,13 @@ pub fn auto_detect0(
                     ),
                     BatteryLimitType::Unknown => {
                         Box::new(crate::settings::unknown::Battery::from_json_and_limits(
+                            settings.battery.clone(),
+                            settings.version,
+                            relevant_limits.battery.limits,
+                        ))
+                    },
+                    BatteryLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Battery::from_json_and_limits(
                             settings.battery.clone(),
                             settings.version,
                             relevant_limits.battery.limits,
@@ -288,6 +309,9 @@ pub fn auto_detect0(
                     CpuLimitType::Unknown => {
                         Box::new(crate::settings::unknown::Cpus::from_limits(relevant_limits.cpu.limits))
                     }
+                    CpuLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Cpus::from_limits(relevant_limits.cpu.limits))
+                    }
                 };
                 let gpu_driver: Box<dyn TGpu> = match relevant_limits.gpu.provider {
                     GpuLimitType::SteamDeck => {
@@ -308,6 +332,9 @@ pub fn auto_detect0(
                     GpuLimitType::Unknown => {
                         Box::new(crate::settings::unknown::Gpu::from_limits(relevant_limits.gpu.limits))
                     }
+                    GpuLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Gpu::from_limits(relevant_limits.gpu.limits))
+                    }
                 };
                 let battery_driver: Box<dyn TBattery> = match relevant_limits.battery.provider {
                     BatteryLimitType::SteamDeck => {
@@ -321,6 +348,9 @@ pub fn auto_detect0(
                     }
                     BatteryLimitType::Unknown => {
                         Box::new(crate::settings::unknown::Battery::from_limits(relevant_limits.battery.limits))
+                    }
+                    BatteryLimitType::DevMode => {
+                        Box::new(crate::settings::dev_mode::Battery::from_limits(relevant_limits.battery.limits))
                     }
                 };
                 return Driver {

@@ -8,11 +8,12 @@ pub enum GpuLimitType {
     SteamDeck,
     #[serde(rename = "GabeBoyAdvance", alias = "SteamDeckAdvance")]
     SteamDeckAdvance,
-    #[serde(rename = "GabeBoy101", alias = "SteamDeckOLED")]
+    #[serde(rename = "GabeBoySP", alias = "SteamDeckOLED")]
     SteamDeckOLED,
     Generic,
     GenericAMD,
     Unknown,
+    DevMode,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -25,6 +26,7 @@ pub struct GenericGpuLimit {
     pub ppt_step: Option<u64>,
     pub tdp: Option<RangeLimit<u64>>,
     pub tdp_boost: Option<RangeLimit<u64>>,
+    pub tdp_divisor: Option<u64>,
     pub tdp_step: Option<u64>,
     pub clock_min: Option<RangeLimit<u64>>,
     pub clock_max: Option<RangeLimit<u64>>,
@@ -32,6 +34,7 @@ pub struct GenericGpuLimit {
     pub memory_clock: Option<RangeLimit<u64>>,
     pub memory_clock_step: Option<u64>,
     pub skip_resume_reclock: bool,
+    pub experiments: bool,
 }
 
 impl GenericGpuLimit {
@@ -39,6 +42,7 @@ impl GenericGpuLimit {
         match t {
             GpuLimitType::SteamDeck | GpuLimitType::SteamDeckAdvance => Self::default_steam_deck(),
             GpuLimitType::SteamDeckOLED => Self::default_steam_deck_oled(),
+            GpuLimitType::DevMode => Self::default_dev_mode(),
             _t => Self::default(),
         }
     }
@@ -59,6 +63,7 @@ impl GenericGpuLimit {
             ppt_step: Some(1),
             tdp: None,
             tdp_boost: None,
+            tdp_divisor: None,
             tdp_step: None,
             clock_min: Some(RangeLimit {
                 min: Some(400),
@@ -78,6 +83,7 @@ impl GenericGpuLimit {
             memory_clock: None,
             memory_clock_step: None,
             skip_resume_reclock: false,
+            experiments: false,
         }
     }
 
@@ -85,6 +91,43 @@ impl GenericGpuLimit {
         let mut sd = Self::default_steam_deck();
         sd.memory_clock_step = Some(200);
         sd
+    }
+
+    fn default_dev_mode() -> Self {
+        Self {
+            fast_ppt: Some(RangeLimit {
+                min: Some(3_000_000),
+                max: Some(11_000_000),
+            }),
+            fast_ppt_default: Some(10_000_000),
+            slow_ppt: Some(RangeLimit {
+                min: Some(7_000_000),
+                max: Some(11_000_000),
+            }),
+            slow_ppt_default: Some(10_000_000),
+            ppt_divisor: Some(1_000_000),
+            ppt_step: Some(1),
+            tdp: Some(RangeLimit { min: Some(1_000_000), max: Some(100_000_000) }),
+            tdp_boost: Some(RangeLimit { min: Some(1_000_000), max: Some(110_000_000) }),
+            tdp_divisor: Some(1_000_000),
+            tdp_step: Some(1),
+            clock_min: Some(RangeLimit {
+                min: Some(100),
+                max: Some(1000),
+            }),
+            clock_max: Some(RangeLimit {
+                min: Some(100),
+                max: Some(1100),
+            }),
+            clock_step: Some(100),
+            memory_clock: Some(RangeLimit {
+                min: Some(100),
+                max: Some(1100),
+            }),
+            memory_clock_step: Some(100),
+            skip_resume_reclock: false,
+            experiments: true,
+        }
     }
 
     pub fn apply_override(&mut self, limit_override: Self) {
@@ -149,5 +192,6 @@ impl GenericGpuLimit {
             self.clock_step = Some(val);
         }
         self.skip_resume_reclock = limit_override.skip_resume_reclock;
+        self.experiments = limit_override.experiments;
     }
 }

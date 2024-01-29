@@ -37,5 +37,6 @@ pub fn maybe_do_button() {
         }
         DriverJson::Unknown => log::warn!("Can't do button activities on unknown platform"),
         DriverJson::AutoDetect => log::warn!("WTF, why is auto_detect detecting AutoDetect???"),
+        DriverJson::DevMode => log::error!("Hello dev world!"),
     }
 }

@@ -12,12 +12,14 @@ pub enum CpuLimitType {
     Generic,
     GenericAMD,
     Unknown,
+    DevMode,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct GenericCpusLimit {
     pub cpus: Vec<GenericCpuLimit>,
     pub global_governors: bool,
+    pub experiments: bool,
 }
 
 impl GenericCpusLimit {
@@ -27,6 +29,14 @@ impl GenericCpusLimit {
                 Self {
                     cpus: [(); 8].iter().enumerate().map(|(i, _)| GenericCpuLimit::default_for(&t, i)).collect(),
                     global_governors: true,
+                    experiments: false,
+                }
+            },
+            CpuLimitType::DevMode => {
+                Self {
+                    cpus: [(); 11].iter().enumerate().map(|(i, _)| GenericCpuLimit::default_for(&t, i)).collect(),
+                    global_governors: true,
+                    experiments: true,
                 }
             },
             t => {
@@ -38,6 +48,7 @@ impl GenericCpusLimit {
                 Self {
                     cpus,
                     global_governors: true,
+                    experiments: false,
                 }
             }
         }
@@ -65,6 +76,7 @@ impl GenericCpusLimit {
                 .for_each(|(cpu, limit_override)| cpu.apply_override(limit_override));
         }
         self.global_governors = limit_override.global_governors;
+        self.experiments = limit_override.experiments;
     }
 }
 
@@ -73,18 +85,39 @@ pub struct GenericCpuLimit {
     pub clock_min: Option<RangeLimit<u64>>,
     pub clock_max: Option<RangeLimit<u64>>,
     pub clock_step: Option<u64>,
+    pub tdp: Option<RangeLimit<u64>>,
+    pub tdp_boost: Option<RangeLimit<u64>>,
+    pub tdp_divisor: Option<u64>,
+    pub tdp_step: Option<u64>,
     pub skip_resume_reclock: bool,
+    pub experiments: bool,
 }
 
 impl GenericCpuLimit {
     pub fn default_for(t: &CpuLimitType, _index: usize) -> Self {
         match t {
             CpuLimitType::SteamDeck | CpuLimitType::SteamDeckAdvance => Self::default_steam_deck(),
+            CpuLimitType::DevMode => Self {
+                clock_min: Some(RangeLimit { min: Some(100), max: Some(5000) }),
+                clock_max: Some(RangeLimit { min: Some(100), max: Some(4800) }),
+                clock_step: Some(100),
+                tdp: Some(RangeLimit { min: Some(1_000_000), max: Some(100_000_000) }),
+                tdp_boost: Some(RangeLimit { min: Some(1_000_000), max: Some(110_000_000) }),
+                tdp_divisor: Some(1_000_000),
+                tdp_step: Some(1),
+                skip_resume_reclock: false,
+                experiments: true,
+            },
             _ => Self {
                 clock_min: None,
                 clock_max: None,
                 clock_step: Some(100),
+                tdp: None,
+                tdp_boost: None,
+                tdp_divisor: None,
+                tdp_step: None,
                 skip_resume_reclock: false,
+                experiments: false,
             },
         }
     }
@@ -100,7 +133,12 @@ impl GenericCpuLimit {
                 max: Some(3500),
             }),
             clock_step: Some(100),
+            tdp: None,
+            tdp_boost: None,
+            tdp_divisor: None,
+            tdp_step: None,
             skip_resume_reclock: false,
+            experiments: false,
         }
     }
 
@@ -124,5 +162,6 @@ impl GenericCpuLimit {
         }
         self.clock_step = limit_override.clock_step;
         self.skip_resume_reclock = limit_override.skip_resume_reclock;
+        self.experiments = limit_override.experiments;
     }
 }

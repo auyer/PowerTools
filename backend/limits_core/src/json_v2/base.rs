@@ -17,6 +17,30 @@ impl Default for Base {
         Base {
             configs: vec![
                 super::Config {
+                    name: "Devs mode best mode".to_owned(),
+                    conditions: super::Conditions {
+                        dmi: None,
+                        cpuinfo: None,
+                        os: None,
+                        command: None,
+                        file_exists: Some("/etc/powertools_dev_mode".into()),
+                    },
+                    limits: super::Limits {
+                        cpu: super::Limit {
+                            provider: super::CpuLimitType::DevMode,
+                            limits: super::GenericCpusLimit::default_for(super::CpuLimitType::DevMode),
+                        },
+                        gpu: super::Limit {
+                            provider: super::GpuLimitType::DevMode,
+                            limits: super::GenericGpuLimit::default_for(super::GpuLimitType::DevMode),
+                        },
+                        battery: super::Limit {
+                            provider: super::BatteryLimitType::DevMode,
+                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::DevMode),
+                        },
+                    }
+                },
+                super::Config {
                     name: "Steam Deck".to_owned(),
                     conditions: super::Conditions {
                         dmi: None,
@@ -83,8 +107,10 @@ impl Default for Base {
                                         clock_max: Some(super::RangeLimit { min: Some(1000), max: Some(3700) }),
                                         clock_step: Some(100),
                                         skip_resume_reclock: false,
+                                        ..Default::default()
                                     }; 4],
                                 global_governors: true,
+                                experiments: false,
                             }
                         },
                         gpu: super::GpuLimit {
@@ -125,8 +151,10 @@ impl Default for Base {
                                         clock_max: Some(super::RangeLimit { min: Some(1000), max: Some(4000) }),
                                         clock_step: Some(100),
                                         skip_resume_reclock: false,
+                                        ..Default::default()
                                     }; 12], // 6 cores with SMTx2
                                 global_governors: true,
+                                experiments: false,
                             }
                         },
                         gpu: super::GpuLimit {
@@ -167,8 +195,10 @@ impl Default for Base {
                                         clock_max: Some(super::RangeLimit { min: Some(1000), max: Some(4500) }),
                                         clock_step: Some(100),
                                         skip_resume_reclock: false,
+                                        ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
+                                experiments: false,
                             }
                         },
                         gpu: super::GpuLimit {
@@ -209,8 +239,10 @@ impl Default for Base {
                                         clock_max: Some(super::RangeLimit { min: Some(1000), max: Some(4700) }),
                                         clock_step: Some(100),
                                         skip_resume_reclock: false,
+                                        ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
+                                experiments: false,
                             }
                         },
                         gpu: super::GpuLimit {
@@ -251,8 +283,10 @@ impl Default for Base {
                                         clock_max: Some(super::RangeLimit { min: Some(400), max: Some(5100) }),
                                         clock_step: Some(100),
                                         skip_resume_reclock: false,
+                                        ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
+                                experiments: false,
                             }
                         },
                         gpu: super::GpuLimit {
