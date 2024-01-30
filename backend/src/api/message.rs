@@ -1,14 +1,17 @@
-use std::sync::{atomic::{AtomicU64, Ordering}, Arc};
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 
 use serde::{Deserialize, Serialize};
 
-use usdpl_back::AsyncCallable;
 use usdpl_back::core::serdes::Primitive;
+use usdpl_back::AsyncCallable;
 
 use limits_core::json::DeveloperMessage;
 
-use crate::MESSAGE_SEEN_ID_FILE;
 use crate::utility::settings_dir;
+use crate::MESSAGE_SEEN_ID_FILE;
 
 #[derive(Serialize, Deserialize)]
 pub struct ApiMessage {
@@ -34,7 +37,10 @@ impl std::convert::From<DeveloperMessage> for ApiMessage {
 }
 
 fn get_dev_messages() -> Vec<ApiMessage> {
-    crate::settings::get_dev_messages().drain(..).map(|msg| ApiMessage::from(msg)).collect()
+    crate::settings::get_dev_messages()
+        .drain(..)
+        .map(|msg| ApiMessage::from(msg))
+        .collect()
 }
 
 pub struct MessageHandler {
@@ -43,8 +49,12 @@ pub struct MessageHandler {
 
 impl MessageHandler {
     pub fn new() -> Self {
-        let last_seen_id = if let Ok(last_seen_id_bytes) = std::fs::read(settings_dir().join(MESSAGE_SEEN_ID_FILE)) {
-            if last_seen_id_bytes.len() >= 8 /* bytes in u64 */ {
+        let last_seen_id = if let Ok(last_seen_id_bytes) =
+            std::fs::read(settings_dir().join(MESSAGE_SEEN_ID_FILE))
+        {
+            if last_seen_id_bytes.len() >= 8
+            /* bytes in u64 */
+            {
                 u64::from_le_bytes([
                     last_seen_id_bytes[0],
                     last_seen_id_bytes[1],
@@ -73,7 +83,7 @@ impl MessageHandler {
             },
             AsyncMessageDismisser {
                 seen: self.seen.clone(),
-            }
+            },
         )
     }
 }
@@ -83,8 +93,17 @@ pub struct AsyncMessageGetter {
 }
 
 impl AsyncMessageGetter {
-    fn remove_before_id(id: u64, messages: impl Iterator<Item=ApiMessage>) -> impl Iterator<Item=ApiMessage> {
-        messages.skip_while(move |msg| if let Some(msg_id) = msg.id { msg_id <= id } else { true })
+    fn remove_before_id(
+        id: u64,
+        messages: impl Iterator<Item = ApiMessage>,
+    ) -> impl Iterator<Item = ApiMessage> {
+        messages.skip_while(move |msg| {
+            if let Some(msg_id) = msg.id {
+                msg_id <= id
+            } else {
+                true
+            }
+        })
     }
 }
 

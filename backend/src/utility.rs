@@ -120,51 +120,66 @@ mod generate {
         let limits = limits_core::json_v2::Limits {
             cpu: limits_core::json_v2::Limit {
                 provider: limits_core::json_v2::CpuLimitType::SteamDeck,
-                limits: limits_core::json_v2::GenericCpusLimit::default_for(limits_core::json_v2::CpuLimitType::SteamDeck),
+                limits: limits_core::json_v2::GenericCpusLimit::default_for(
+                    limits_core::json_v2::CpuLimitType::SteamDeck,
+                ),
             },
             gpu: limits_core::json_v2::Limit {
                 provider: limits_core::json_v2::GpuLimitType::SteamDeck,
-                limits: limits_core::json_v2::GenericGpuLimit::default_for(limits_core::json_v2::GpuLimitType::SteamDeck),
+                limits: limits_core::json_v2::GenericGpuLimit::default_for(
+                    limits_core::json_v2::GpuLimitType::SteamDeck,
+                ),
             },
             battery: limits_core::json_v2::Limit {
                 provider: limits_core::json_v2::BatteryLimitType::SteamDeck,
-                limits: limits_core::json_v2::GenericBatteryLimit::default_for(limits_core::json_v2::BatteryLimitType::SteamDeck),
+                limits: limits_core::json_v2::GenericBatteryLimit::default_for(
+                    limits_core::json_v2::BatteryLimitType::SteamDeck,
+                ),
             },
         };
-        let output_file = std::fs::File::create(format!("../{}", crate::consts::LIMITS_OVERRIDE_FILE)).unwrap();
-        ron::ser::to_writer_pretty(output_file, &limits, crate::utility::ron_pretty_config()).unwrap();
+        let output_file =
+            std::fs::File::create(format!("../{}", crate::consts::LIMITS_OVERRIDE_FILE)).unwrap();
+        ron::ser::to_writer_pretty(output_file, &limits, crate::utility::ron_pretty_config())
+            .unwrap();
     }
 
     #[test]
     fn generate_default_minimal_save_file() {
         let mut mini_variants = std::collections::HashMap::with_capacity(2);
-        mini_variants.insert(0, crate::persist::SettingsJson {
-            version: 0,
-            name: crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
-            variant: 0,
-            persistent: false,
-            cpus: vec![crate::persist::CpuJson::default(); 8],
-            gpu: crate::persist::GpuJson::default(),
-            battery: crate::persist::BatteryJson::default(),
-            provider: None,
-        });
-        mini_variants.insert(42, crate::persist::SettingsJson {
-            version: 0,
-            name: "FortySecondary".to_owned(),
-            variant: 42,
-            persistent: false,
-            cpus: vec![crate::persist::CpuJson::default(); 8],
-            gpu: crate::persist::GpuJson::default(),
-            battery: crate::persist::BatteryJson::default(),
-            provider: None,
-        });
+        mini_variants.insert(
+            0,
+            crate::persist::SettingsJson {
+                version: 0,
+                name: crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned(),
+                variant: 0,
+                persistent: false,
+                cpus: vec![crate::persist::CpuJson::default(); 8],
+                gpu: crate::persist::GpuJson::default(),
+                battery: crate::persist::BatteryJson::default(),
+                provider: None,
+            },
+        );
+        mini_variants.insert(
+            42,
+            crate::persist::SettingsJson {
+                version: 0,
+                name: "FortySecondary".to_owned(),
+                variant: 42,
+                persistent: false,
+                cpus: vec![crate::persist::CpuJson::default(); 8],
+                gpu: crate::persist::GpuJson::default(),
+                battery: crate::persist::BatteryJson::default(),
+                provider: None,
+            },
+        );
         let savefile = crate::persist::FileJson {
             version: 0,
             name: crate::consts::DEFAULT_SETTINGS_NAME.to_owned(),
             variants: mini_variants,
         };
-        let output_file = std::fs::File::create(format!("../{}", crate::consts::DEFAULT_SETTINGS_FILE)).unwrap();
-        ron::ser::to_writer_pretty(output_file, &savefile, crate::utility::ron_pretty_config()).unwrap();
+        let output_file =
+            std::fs::File::create(format!("../{}", crate::consts::DEFAULT_SETTINGS_FILE)).unwrap();
+        ron::ser::to_writer_pretty(output_file, &savefile, crate::utility::ron_pretty_config())
+            .unwrap();
     }
 }
-

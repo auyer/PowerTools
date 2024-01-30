@@ -67,4 +67,5 @@ pub struct GpuLimits {
 pub struct VariantInfo {
     pub id: String,
     pub name: String,
+    pub id_num: u64,
 }

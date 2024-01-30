@@ -4,7 +4,7 @@ use std::path::PathBuf;
 //use super::{Battery, Cpus, Gpu};
 use super::{OnResume, OnSet, SettingError};
 use super::{TBattery, TCpus, TGeneral, TGpu};
-use crate::persist::{SettingsJson, FileJson};
+use crate::persist::{FileJson, SettingsJson};
 //use crate::utility::unwrap_lock;
 
 const LATEST_VERSION: u64 = 0;
@@ -103,11 +103,14 @@ impl TGeneral for General {
     }
 
     fn get_variants(&self) -> Vec<crate::api::VariantInfo> {
-        if let Ok(file) = crate::persist::FileJson::open(self.get_path()) {
-            file.variants.into_iter()
+        let json_path = crate::utility::settings_dir().join(self.get_path());
+        if let Ok(file) = crate::persist::FileJson::open(json_path) {
+            file.variants
+                .into_iter()
                 .map(|(id, conf)| crate::api::VariantInfo {
                     id: id.to_string(),
                     name: conf.name,
+                    id_num: id,
                 })
                 .collect()
         } else {
@@ -115,25 +118,40 @@ impl TGeneral for General {
         }
     }
 
-    fn add_variant(&self, variant: crate::persist::SettingsJson) -> Result<Vec<crate::api::VariantInfo>, SettingError> {
+    fn add_variant(
+        &self,
+        variant: crate::persist::SettingsJson,
+    ) -> Result<Vec<crate::api::VariantInfo>, SettingError> {
         let variant_name = variant.name.clone();
-        crate::persist::FileJson::update_variant_or_create(self.get_path(), self.get_app_id(), variant, variant_name)
-            .map_err(|e| SettingError {
-                msg: format!("failed to add variant: {}", e),
-                setting: SettingVariant::General,
-            })
-            .map(|file| file.variants.into_iter()
+        let json_path = crate::utility::settings_dir().join(self.get_path());
+        crate::persist::FileJson::update_variant_or_create(
+            json_path,
+            self.get_app_id(),
+            variant,
+            variant_name,
+        )
+        .map_err(|e| SettingError {
+            msg: format!("failed to add variant: {}", e),
+            setting: SettingVariant::General,
+        })
+        .map(|file| {
+            file.0.variants
+                .into_iter()
                 .map(|(id, conf)| crate::api::VariantInfo {
                     id: id.to_string(),
                     name: conf.name,
+                    id_num: id,
                 })
-                .collect())
+                .collect()
+        })
     }
 
     fn get_variant_info(&self) -> crate::api::VariantInfo {
+        log::debug!("Current variant `{}` ({})", self.variant_name, self.variant_id);
         crate::api::VariantInfo {
             id: self.variant_id.to_string(),
             name: self.variant_name.clone(),
+            id_num: self.variant_id,
         }
     }
 
@@ -199,8 +217,15 @@ impl Settings {
         }
     }
 
-    pub fn system_default(json_path: PathBuf, app_id: u64, name: String, variant_id: u64, variant_name: String) -> Self {
-        let driver = super::Driver::system_default(json_path, app_id, name, variant_id, variant_name);
+    pub fn system_default(
+        json_path: PathBuf,
+        app_id: u64,
+        name: String,
+        variant_id: u64,
+        variant_name: String,
+    ) -> Self {
+        let driver =
+            super::Driver::system_default(json_path, app_id, name, variant_id, variant_name);
         Self {
             general: driver.general,
             cpus: driver.cpus,
@@ -210,19 +235,47 @@ impl Settings {
     }
 
     pub fn load_system_default(&mut self, name: String, variant_id: u64, variant_name: String) {
-        let driver = super::Driver::system_default(self.general.get_path().to_owned(), self.general.get_app_id(), name, variant_id, variant_name);
+        let driver = super::Driver::system_default(
+            self.general.get_path().to_owned(),
+            self.general.get_app_id(),
+            name,
+            variant_id,
+            variant_name,
+        );
         self.cpus = driver.cpus;
         self.gpu = driver.gpu;
         self.battery = driver.battery;
         self.general = driver.general;
     }
 
-    pub fn get_variant<'a>(settings_file: &'a FileJson, variant_id: u64, variant_name: String) -> Result<&'a SettingsJson, SettingError> {
+    pub fn get_variant<'a>(
+        settings_file: &'a FileJson,
+        variant_id: u64,
+        variant_name: String,
+    ) -> Result<&'a SettingsJson, SettingError> {
         if let Some(variant) = settings_file.variants.get(&variant_id) {
             Ok(variant)
+        } else if variant_id == 0 {
+            // special case: requesting primary variant for settings with non-persistent primary
+            let mut valid_ids: Vec<&u64> = settings_file.variants.keys().collect();
+            valid_ids.sort();
+            if let Some(id) = valid_ids.get(0) {
+                Ok(settings_file.variants.get(id).expect("variant id key magically disappeared"))
+            } else {
+                Err(SettingError {
+                    msg: format!(
+                        "Cannot get variant `{}` (id:{}) from empty settings file",
+                        variant_name, variant_id
+                    ),
+                    setting: SettingVariant::General,
+                })
+            }
         } else {
             Err(SettingError {
-                msg: format!("Cannot get non-existent variant `{}` (id:{})", variant_name, variant_id),
+                msg: format!(
+                    "Cannot get non-existent variant `{}` (id:{})",
+                    variant_name, variant_id
+                ),
                 setting: SettingVariant::General,
             })
         }
@@ -240,13 +293,8 @@ impl Settings {
         let json_path = crate::utility::settings_dir().join(&filename);
         if json_path.exists() {
             if variant == u64::MAX {
-                *self.general.persistent() = true;
-                let file_json = FileJson::update_variant_or_create(&json_path, app_id, self.json(), variant_name.clone()).map_err(|e| SettingError {
-                    msg: format!("Failed to open settings {}: {}", json_path.display(), e),
-                    setting: SettingVariant::General,
-                })?;
-                self.general.variant_id(file_json.variants.iter().find(|(_key, val)| val.name == variant_name).map(|(key, _val)| *key).expect("Setting variant was not added properly"));
-                self.general.variant_name(variant_name);
+                log::debug!("Creating new variant `{}` in existing settings file {}", variant_name, json_path.display());
+                self.create_and_load_variant(&json_path, app_id, variant_name)?;
             } else {
                 let file_json = FileJson::open(&json_path).map_err(|e| SettingError {
                     msg: format!("Failed to open settings {}: {}", json_path.display(), e),
@@ -261,29 +309,59 @@ impl Settings {
                     );
                     *self.general.persistent() = false;
                     self.general.name(name);
+                    self.general.variant_name(settings_json.name.clone());
+                    self.general.variant_id(settings_json.variant);
                 } else {
                     let x = super::Driver::init(name, settings_json, json_path.clone(), app_id);
-                    log::info!("Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}", x.general.provider(), x.cpus.provider(), x.gpu.provider(), x.battery.provider());
+                    log::info!(
+                        "Loaded settings with drivers general:{:?},cpus:{:?},gpu:{:?},battery:{:?}",
+                        x.general.provider(),
+                        x.cpus.provider(),
+                        x.gpu.provider(),
+                        x.battery.provider()
+                    );
                     self.general = x.general;
                     self.cpus = x.cpus;
                     self.gpu = x.gpu;
                     self.battery = x.battery;
                 }
             }
-
         } else {
             if system_defaults {
-                self.load_system_default(name, variant, variant_name);
+                self.load_system_default(name, variant, variant_name.clone());
             } else {
                 self.general.name(name);
-                self.general.variant_name(variant_name);
+                self.general.variant_name(variant_name.clone());
+                self.general.variant_id(variant);
             }
             *self.general.persistent() = false;
+            if variant == u64::MAX {
+                log::debug!("Creating new variant `{}` in new settings file {}", variant_name, json_path.display());
+                self.create_and_load_variant(&json_path, app_id, variant_name)?;
+            }
         }
         *self.general.app_id() = app_id;
         self.general.path(filename);
-        self.general.variant_id(variant);
         Ok(*self.general.persistent())
+    }
+
+    fn create_and_load_variant(&mut self, json_path: &PathBuf, app_id: u64, variant_name: String) -> Result<(), SettingError> {
+        *self.general.persistent() = true;
+        self.general.variant_id(u64::MAX);
+        self.general.variant_name(variant_name.clone());
+        let (_file_json, new_variant) = FileJson::update_variant_or_create(
+            json_path,
+            app_id,
+            self.json(),
+            self.general.get_name().to_owned(),
+        )
+        .map_err(|e| SettingError {
+            msg: format!("Failed to open settings {}: {}", json_path.display(), e),
+            setting: SettingVariant::General,
+        })?;
+        self.general.variant_id(new_variant.variant);
+        self.general.variant_name(new_variant.name);
+        Ok(())
     }
 
     /*

@@ -1,4 +1,4 @@
-use limits_core::json::{DeveloperMessage, Base};
+use limits_core::json::{Base, DeveloperMessage};
 
 pub fn limits_path() -> std::path::PathBuf {
     crate::utility::settings_dir().join(crate::consts::LIMITS_FILE)

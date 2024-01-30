@@ -18,10 +18,7 @@ pub fn always_satisfied<'a, X>(_: &'a X) -> bool {
     true
 }
 
-pub const CARD_NEEDS: &[&'static str] = &[
-    "dev",
-    "uevent"
-];
+pub const CARD_NEEDS: &[&'static str] = &["dev", "uevent"];
 
 #[cfg(test)]
 mod test {

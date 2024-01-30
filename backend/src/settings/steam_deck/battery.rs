@@ -1,16 +1,22 @@
 use std::convert::Into;
 use std::sync::{Arc, Mutex};
 
-use sysfuss::{PowerSupplyAttribute, PowerSupplyPath, HwMonAttribute, HwMonAttributeItem, HwMonAttributeType, HwMonPath, SysEntity, SysEntityAttributesExt, SysAttribute};
 use sysfuss::capability::attributes;
+use sysfuss::{
+    HwMonAttribute, HwMonAttributeItem, HwMonAttributeType, HwMonPath, PowerSupplyAttribute,
+    PowerSupplyPath, SysAttribute, SysEntity, SysEntityAttributesExt,
+};
 
 use limits_core::json_v2::GenericBatteryLimit;
 
-use smokepatio::ec::{ControllerSet, unnamed_power::{UnnamedPowerEC, ChargeMode}};
 use crate::api::RangeLimit;
 use crate::persist::{BatteryEventJson, BatteryJson};
-use crate::settings::{TBattery, ProviderBuilder};
 use crate::settings::{OnPowerEvent, OnResume, OnSet, PowerMode, SettingError};
+use crate::settings::{ProviderBuilder, TBattery};
+use smokepatio::ec::{
+    unnamed_power::{ChargeMode, UnnamedPowerEC},
+    ControllerSet,
+};
 
 #[derive(Debug, Clone)]
 pub struct Battery {
@@ -121,7 +127,12 @@ impl EventInstruction {
         }
     }
 
-    fn from_json(other: BatteryEventJson, _version: u64, hwmon: Arc<HwMonPath>, ec: Arc<Mutex<UnnamedPowerEC>>) -> Self {
+    fn from_json(
+        other: BatteryEventJson,
+        _version: u64,
+        hwmon: Arc<HwMonPath>,
+        ec: Arc<Mutex<UnnamedPowerEC>>,
+    ) -> Self {
         Self {
             trigger: Self::str_to_trigger(&other.trigger).unwrap_or(EventTrigger::Ignored),
             charge_rate: other.charge_rate,
@@ -137,7 +148,10 @@ impl EventInstruction {
 
     fn set_charge_mode(&self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
-            let mut lock = self.bat_ec.lock().expect("failed to lock battery controller");
+            let mut lock = self
+                .bat_ec
+                .lock()
+                .expect("failed to lock battery controller");
             lock.set(charge_mode).map_err(|_| SettingError {
                 msg: format!("Failed to set charge mode"),
                 setting: crate::settings::SettingVariant::Battery,
@@ -149,12 +163,15 @@ impl EventInstruction {
 
     fn set_charge_rate(&self) -> Result<(), SettingError> {
         if let Some(charge_rate) = self.charge_rate {
-            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate).map_err(
-                |e| SettingError {
-                    msg: format!("Failed to write to `{:?}`: {}", MAX_BATTERY_CHARGE_RATE_ATTR, e),
+            self.sysfs_hwmon
+                .set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate)
+                .map_err(|e| SettingError {
+                    msg: format!(
+                        "Failed to write to `{:?}`: {}",
+                        MAX_BATTERY_CHARGE_RATE_ATTR, e
+                    ),
                     setting: crate::settings::SettingVariant::Battery,
-                },
-            )
+                })
         } else {
             Ok(())
         }
@@ -194,7 +211,6 @@ const BATTERY_CHARGE_DESIGN_PATH: &str = "/sys/class/power_supply/BAT1/charge_fu
 const USB_PD_IN_MVOLTAGE_PATH: &str = "/sys/class/hwmon/hwmon5/in0_input"; // read-only
 const USB_PD_IN_CURRENT_PATH: &str = "/sys/class/hwmon/hwmon5/curr1_input"; // read-only*/
 
-
 const BATTERY_NEEDS: &[PowerSupplyAttribute] = &[
     PowerSupplyAttribute::Type,
     PowerSupplyAttribute::CurrentNow,
@@ -213,8 +229,10 @@ const HWMON_NEEDS: &[HwMonAttribute] = &[
     //HwMonAttribute::custom("maximum_battery_charge_rate"), // NOTE: Cannot filter by custom capabilities
 ];
 
-const MAX_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute = HwMonAttribute::custom("maximum_battery_charge_rate");
-const MAX_BATTERY_CHARGE_LEVEL_ATTR: HwMonAttribute = HwMonAttribute::custom("max_battery_charge_level");
+const MAX_BATTERY_CHARGE_RATE_ATTR: HwMonAttribute =
+    HwMonAttribute::custom("maximum_battery_charge_rate");
+const MAX_BATTERY_CHARGE_LEVEL_ATTR: HwMonAttribute =
+    HwMonAttribute::custom("max_battery_charge_level");
 
 const MAX_CHARGE_RATE: u64 = 2500;
 const MIN_CHARGE_RATE: u64 = 250;
@@ -229,9 +247,12 @@ impl Battery {
                         log::error!("Failed to find SteamDeck battery power_supply in sysfs (no results), using naive fallback");
                         root.power_supply_by_name("BAT1")
                     });
-                log::info!("Found SteamDeck battery power_supply in sysfs: {}", psu.as_ref().display());
+                log::info!(
+                    "Found SteamDeck battery power_supply in sysfs: {}",
+                    psu.as_ref().display()
+                );
                 psu
-            },
+            }
             Err(e) => {
                 log::error!("Failed to find SteamDeck battery power_supply in sysfs ({}), using naive fallback", e);
                 root.power_supply_by_name("BAT1")
@@ -245,11 +266,15 @@ impl Battery {
             Ok(hwmon) => {
                 if !hwmon.capable(attributes(HWMON_NEEDS.into_iter().copied())) {
                     log::warn!("Found incapable SteamDeck battery hwmon in sysfs (hwmon by name {} exists but missing attributes), persevering because ignorance is bliss", super::util::JUPITER_HWMON_NAME);
-                }   else {
-                    log::info!("Found SteamDeck battery hwmon {} in sysfs: {}", super::util::JUPITER_HWMON_NAME, hwmon.as_ref().display());
+                } else {
+                    log::info!(
+                        "Found SteamDeck battery hwmon {} in sysfs: {}",
+                        super::util::JUPITER_HWMON_NAME,
+                        hwmon.as_ref().display()
+                    );
                 }
                 hwmon
-            },
+            }
             Err(e) => {
                 log::warn!("Failed to find SteamDeck battery hwmon {} in sysfs ({}), trying alternate name",
                            super::util::JUPITER_HWMON_NAME, e);
@@ -258,10 +283,14 @@ impl Battery {
                         if !hwmon.capable(attributes(HWMON_NEEDS.into_iter().copied())) {
                             log::warn!("Found incapable SteamDeck battery hwmon in sysfs (hwmon by name {} exists but missing attributes), persevering because ignorance is bliss", super::util::STEAMDECK_HWMON_NAME);
                         } else {
-                            log::info!("Found SteamDeck battery hwmon {} in sysfs: {}", super::util::STEAMDECK_HWMON_NAME, hwmon.as_ref().display());
+                            log::info!(
+                                "Found SteamDeck battery hwmon {} in sysfs: {}",
+                                super::util::STEAMDECK_HWMON_NAME,
+                                hwmon.as_ref().display()
+                            );
                         }
                         hwmon
-                    },
+                    }
                     Err(e) => {
                         log::error!("Failed to find SteamDeck battery hwmon {} in sysfs ({}), using naive fallback", super::util::STEAMDECK_HWMON_NAME, e);
                         root.hwmon_by_index(5)
@@ -295,21 +324,27 @@ impl Battery {
         if let Some(charge_rate) = self.charge_rate {
             self.state.charge_rate_set = true;
             let path = MAX_BATTERY_CHARGE_RATE_ATTR.path(&*self.sysfs_hwmon);
-            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate).map_err(
-                |e| SettingError {
+            self.sysfs_hwmon
+                .set(MAX_BATTERY_CHARGE_RATE_ATTR, charge_rate)
+                .map_err(|e| SettingError {
                     msg: format!("Failed to write to `{}`: {}", path.display(), e),
                     setting: crate::settings::SettingVariant::Battery,
-                },
-            )
+                })
         } else if self.state.charge_rate_set {
             self.state.charge_rate_set = false;
             let path = MAX_BATTERY_CHARGE_RATE_ATTR.path(&*self.sysfs_hwmon);
-            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_RATE_ATTR, self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(2500)).map_err(
-                |e| SettingError {
+            self.sysfs_hwmon
+                .set(
+                    MAX_BATTERY_CHARGE_RATE_ATTR,
+                    self.limits
+                        .charge_rate
+                        .and_then(|lim| lim.max)
+                        .unwrap_or(2500),
+                )
+                .map_err(|e| SettingError {
                     msg: format!("Failed to write to `{}`: {}", path.display(), e),
                     setting: crate::settings::SettingVariant::Battery,
-                },
-            )
+                })
         } else {
             Ok(())
         }
@@ -318,14 +353,20 @@ impl Battery {
     fn set_charge_mode(&mut self) -> Result<(), SettingError> {
         if let Some(charge_mode) = self.charge_mode {
             self.state.charge_mode_set = true;
-            let mut lock = self.bat_ec.lock().expect("Failed to lock battery controller");
+            let mut lock = self
+                .bat_ec
+                .lock()
+                .expect("Failed to lock battery controller");
             lock.set(charge_mode).map_err(|_| SettingError {
                 msg: format!("Failed to set charge mode"),
                 setting: crate::settings::SettingVariant::Battery,
             })
         } else if self.state.charge_mode_set {
             self.state.charge_mode_set = false;
-            let mut lock = self.bat_ec.lock().expect("Failed to lock battery controller");
+            let mut lock = self
+                .bat_ec
+                .lock()
+                .expect("Failed to lock battery controller");
             lock.set(ChargeMode::Normal).map_err(|_| SettingError {
                 msg: format!("Failed to set charge mode"),
                 setting: crate::settings::SettingVariant::Battery,
@@ -337,23 +378,35 @@ impl Battery {
 
     fn set_charge_limit(&mut self) -> Result<(), SettingError> {
         let attr_exists = MAX_BATTERY_CHARGE_LEVEL_ATTR.exists(&*self.sysfs_hwmon);
-        log::debug!("Does battery limit attribute (max_battery_charge_level) exist? {}", attr_exists);
+        log::debug!(
+            "Does battery limit attribute (max_battery_charge_level) exist? {}",
+            attr_exists
+        );
         if let Some(charge_limit) = self.charge_limit {
             self.state.charge_limit_set = true;
-            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, (charge_limit * 100.0).round() as u64)
-                .map_err(|e| SettingError {
-                        msg: format!("Failed to write to {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
-                        setting: crate::settings::SettingVariant::Battery,
-                    }
+            self.sysfs_hwmon
+                .set(
+                    MAX_BATTERY_CHARGE_LEVEL_ATTR,
+                    (charge_limit * 100.0).round() as u64,
                 )
+                .map_err(|e| SettingError {
+                    msg: format!(
+                        "Failed to write to {:?}: {}",
+                        MAX_BATTERY_CHARGE_LEVEL_ATTR, e
+                    ),
+                    setting: crate::settings::SettingVariant::Battery,
+                })
         } else if self.state.charge_limit_set {
             self.state.charge_limit_set = false;
-            self.sysfs_hwmon.set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 0)
+            self.sysfs_hwmon
+                .set(MAX_BATTERY_CHARGE_LEVEL_ATTR, 0)
                 .map_err(|e| SettingError {
-                        msg: format!("Failed to reset (write to) {:?}: {}", MAX_BATTERY_CHARGE_LEVEL_ATTR, e),
-                        setting: crate::settings::SettingVariant::Battery,
-                    }
-                )
+                    msg: format!(
+                        "Failed to reset (write to) {:?}: {}",
+                        MAX_BATTERY_CHARGE_LEVEL_ATTR, e
+                    ),
+                    setting: crate::settings::SettingVariant::Battery,
+                })
         } else {
             Ok(())
         }
@@ -373,8 +426,16 @@ impl Battery {
 
     fn clamp_all(&mut self) {
         if let Some(charge_rate) = &mut self.charge_rate {
-            *charge_rate =
-                (*charge_rate).clamp(self.limits.charge_rate.and_then(|lim| lim.min).unwrap_or(MIN_CHARGE_RATE), self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(MAX_CHARGE_RATE));
+            *charge_rate = (*charge_rate).clamp(
+                self.limits
+                    .charge_rate
+                    .and_then(|lim| lim.min)
+                    .unwrap_or(MIN_CHARGE_RATE),
+                self.limits
+                    .charge_rate
+                    .and_then(|lim| lim.max)
+                    .unwrap_or(MAX_CHARGE_RATE),
+            );
         }
     }
 
@@ -558,13 +619,21 @@ impl Into<BatteryJson> for Battery {
             charge_rate: self.charge_rate,
             charge_mode: self.charge_mode.map(Self::charge_mode_to_str),
             events: events.into_iter().map(|x| x.into()).collect(),
-            root: self.sysfs_bat.root().or(self.sysfs_hwmon.root()).and_then(|p| p.as_ref().to_str().map(|x| x.to_owned()))
+            root: self
+                .sysfs_bat
+                .root()
+                .or(self.sysfs_hwmon.root())
+                .and_then(|p| p.as_ref().to_str().map(|x| x.to_owned())),
         }
     }
 }
 
 impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
-    fn from_json_and_limits(persistent: BatteryJson, version: u64, limits: GenericBatteryLimit) -> Self {
+    fn from_json_and_limits(
+        persistent: BatteryJson,
+        version: u64,
+        limits: GenericBatteryLimit,
+    ) -> Self {
         let hwmon_sys = Arc::new(Self::find_hwmon_sysfs(None::<&'static str>));
         let ec = Arc::new(Mutex::new(UnnamedPowerEC::new()));
         match version {
@@ -586,14 +655,15 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
                 variant: super::Model::LCD,
-            }.remove_charge_limit_instructions(),
+            }
+            .remove_charge_limit_instructions(),
             _ => Self {
                 charge_rate: persistent.charge_rate,
                 charge_mode: persistent
                     .charge_mode
                     .map(|x| Self::str_to_charge_mode(&x))
                     .flatten(),
-                    charge_limit: None,
+                charge_limit: None,
                 events: persistent
                     .events
                     .into_iter()
@@ -605,7 +675,8 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
                 sysfs_hwmon: hwmon_sys,
                 bat_ec: ec,
                 variant: super::Model::LCD,
-            }.remove_charge_limit_instructions(),
+            }
+            .remove_charge_limit_instructions(),
         }
     }
 
@@ -621,7 +692,8 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
             sysfs_hwmon: Arc::new(Self::find_hwmon_sysfs(None::<&'static str>)),
             bat_ec: Arc::new(Mutex::new(UnnamedPowerEC::new())),
             variant: super::Model::LCD,
-        }.remove_charge_limit_instructions()
+        }
+        .remove_charge_limit_instructions()
     }
 }
 
@@ -675,8 +747,16 @@ impl TBattery for Battery {
     fn limits(&self) -> crate::api::BatteryLimits {
         crate::api::BatteryLimits {
             charge_current: Some(RangeLimit {
-                min: self.limits.charge_rate.and_then(|lim| lim.min).unwrap_or(MIN_CHARGE_RATE),
-                max: self.limits.charge_rate.and_then(|lim| lim.max).unwrap_or(MAX_CHARGE_RATE),
+                min: self
+                    .limits
+                    .charge_rate
+                    .and_then(|lim| lim.min)
+                    .unwrap_or(MIN_CHARGE_RATE),
+                max: self
+                    .limits
+                    .charge_rate
+                    .and_then(|lim| lim.max)
+                    .unwrap_or(MAX_CHARGE_RATE),
             }),
             charge_current_step: 50,
             charge_modes: vec![

@@ -2,7 +2,7 @@ use crate::persist::CpuJson;
 use crate::settings::generic::{Cpu as GenericCpu, Cpus as GenericCpus, FromGenericCpuInfo};
 use crate::settings::MinMax;
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus, ProviderBuilder};
+use crate::settings::{ProviderBuilder, TCpu, TCpus};
 
 #[derive(Debug)]
 pub struct Cpus {

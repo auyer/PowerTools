@@ -3,8 +3,8 @@ use std::convert::Into;
 use limits_core::json_v2::GenericBatteryLimit;
 
 use crate::persist::BatteryJson;
-use crate::settings::{TBattery, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
+use crate::settings::{ProviderBuilder, TBattery};
 
 #[derive(Clone)]
 pub struct Battery {
@@ -32,7 +32,11 @@ impl Into<BatteryJson> for Battery {
 }
 
 impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
-    fn from_json_and_limits(persist: BatteryJson, version: u64, limits: GenericBatteryLimit) -> Self {
+    fn from_json_and_limits(
+        persist: BatteryJson,
+        version: u64,
+        limits: GenericBatteryLimit,
+    ) -> Self {
         Battery {
             persist,
             version,
@@ -43,7 +47,12 @@ impl ProviderBuilder<BatteryJson, GenericBatteryLimit> for Battery {
 
     fn from_limits(limits: GenericBatteryLimit) -> Self {
         Battery {
-            persist: BatteryJson { charge_rate: None, charge_mode: None, events: vec![], root: None },
+            persist: BatteryJson {
+                charge_rate: None,
+                charge_mode: None,
+                events: vec![],
+                root: None,
+            },
             version: 0,
             limits,
             charge_limit: None,
@@ -71,10 +80,16 @@ impl TBattery for Battery {
     fn limits(&self) -> crate::api::BatteryLimits {
         log::debug!("dev_mode_Battery::limits(self) -> {{...}}");
         crate::api::BatteryLimits {
-            charge_current: self.limits.charge_rate.map(|lim| crate::api::RangeLimit { min: lim.min.unwrap_or(11), max: lim.max.unwrap_or(1111) }),
+            charge_current: self.limits.charge_rate.map(|lim| crate::api::RangeLimit {
+                min: lim.min.unwrap_or(11),
+                max: lim.max.unwrap_or(1111),
+            }),
             charge_current_step: 10,
             charge_modes: self.limits.charge_modes.clone(),
-            charge_limit: self.limits.charge_limit.map(|lim| crate::api::RangeLimit { min: lim.min.unwrap_or(2.0), max: lim.max.unwrap_or(98.0) }),
+            charge_limit: self.limits.charge_limit.map(|lim| crate::api::RangeLimit {
+                min: lim.min.unwrap_or(2.0),
+                max: lim.max.unwrap_or(98.0),
+            }),
             charge_limit_step: 1.0,
         }
     }
@@ -90,7 +105,10 @@ impl TBattery for Battery {
     }
 
     fn get_charge_rate(&self) -> Option<u64> {
-        log::debug!("dev_mode_Battery::get_charge_rate(self) -> {:?}", self.persist.charge_rate);
+        log::debug!(
+            "dev_mode_Battery::get_charge_rate(self) -> {:?}",
+            self.persist.charge_rate
+        );
         self.persist.charge_rate
     }
 
@@ -100,7 +118,10 @@ impl TBattery for Battery {
     }
 
     fn get_charge_mode(&self) -> Option<String> {
-        log::debug!("dev_mode_Battery::get_charge_mode(self) -> {:?}", self.persist.charge_mode);
+        log::debug!(
+            "dev_mode_Battery::get_charge_mode(self) -> {:?}",
+            self.persist.charge_mode
+        );
         self.persist.charge_mode.clone()
     }
 
@@ -135,7 +156,10 @@ impl TBattery for Battery {
     }
 
     fn get_charge_limit(&self) -> Option<f64> {
-        log::debug!("dev_mode_Battery::get_charge_limit(self) -> {:?}", self.charge_limit);
+        log::debug!(
+            "dev_mode_Battery::get_charge_limit(self) -> {:?}",
+            self.charge_limit
+        );
         self.charge_limit
     }
 

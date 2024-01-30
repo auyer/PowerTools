@@ -76,14 +76,29 @@ fn main() -> Result<(), ()> {
 
     let mut loaded_settings =
         persist::FileJson::open(utility::settings_dir().join(DEFAULT_SETTINGS_FILE))
-            .map(|mut file| file.variants.remove(&0)
-                .map(|settings| settings::Settings::from_json(DEFAULT_SETTINGS_NAME.into(), settings, DEFAULT_SETTINGS_FILE.into(), 0))
-                .unwrap_or_else(|| settings::Settings::system_default(
-                    DEFAULT_SETTINGS_FILE.into(),
-                    0,
-                    DEFAULT_SETTINGS_NAME.into(),
-                    0,
-                    DEFAULT_SETTINGS_VARIANT_NAME.into())))
+            .map(|mut file| {
+                let mut keys: Vec<u64> = file.variants.keys().map(|x| *x).collect();
+                keys.sort();
+                keys.get(0)
+                    .and_then(|id| file.variants.remove(id))
+                    .map(|settings| {
+                        settings::Settings::from_json(
+                            DEFAULT_SETTINGS_NAME.into(),
+                            settings,
+                            DEFAULT_SETTINGS_FILE.into(),
+                            0,
+                        )
+                    })
+                    .unwrap_or_else(|| {
+                        settings::Settings::system_default(
+                            DEFAULT_SETTINGS_FILE.into(),
+                            0,
+                            DEFAULT_SETTINGS_NAME.into(),
+                            0,
+                            DEFAULT_SETTINGS_VARIANT_NAME.into(),
+                        )
+                    })
+            })
             .unwrap_or_else(|_| {
                 settings::Settings::system_default(
                     DEFAULT_SETTINGS_FILE.into(),
@@ -96,7 +111,8 @@ fn main() -> Result<(), ()> {
 
     log::info!(
         "Detected device automatically {:?}, using driver: {:?} (This can be overriden)",
-        crate::settings::auto_detect_provider(), loaded_settings.cpus.provider()
+        crate::settings::auto_detect_provider(),
+        loaded_settings.cpus.provider()
     );
 
     log::debug!("Settings: {:?}", loaded_settings);
@@ -307,29 +323,26 @@ fn main() -> Result<(), ()> {
         )
         .register_async(
             "GENERAL_get_periodicals",
-            api::general::get_periodicals(api_sender.clone())
+            api::general::get_periodicals(api_sender.clone()),
         )
         .register_async(
             "GENERAL_get_all_variants",
-            api::general::get_all_variants(api_sender.clone())
+            api::general::get_all_variants(api_sender.clone()),
         )
         .register_async(
             "GENERAL_get_current_variant",
-            api::general::get_current_variant(api_sender.clone())
+            api::general::get_current_variant(api_sender.clone()),
         )
         .register_async("MESSAGE_get", message_getter)
         .register_async("MESSAGE_dismiss", message_dismisser)
-        .register_async(
-            "WEB_search_by_app",
-            api::web::search_by_app_id()
-        )
+        .register_async("WEB_search_by_app", api::web::search_by_app_id())
         .register_async(
             "WEB_download_new",
-            api::web::download_new_config(api_sender.clone())
+            api::web::download_new_config(api_sender.clone()),
         )
         .register_async(
             "WEB_upload_new",
-            api::web::upload_current_variant(api_sender.clone())
+            api::web::upload_current_variant(api_sender.clone()),
         );
 
     utility::ioperm_power_ec();

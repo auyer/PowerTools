@@ -5,7 +5,7 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use sysfuss::{BasicEntityPath, SysEntityAttributesExt, SysAttribute};
+use sysfuss::{BasicEntityPath, SysAttribute, SysEntityAttributesExt};
 
 use crate::settings::SettingError;
 
@@ -63,7 +63,8 @@ impl PDFPLManager {
         let needs = self.needs_manual();
         let mut errors = Vec::new();
         let path = DPM_FORCE_LIMITS_ATTRIBUTE.path(entity);
-        let mode: String = entity.attribute(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned())
+        let mode: String = entity
+            .attribute(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned())
             .map_err(|e| {
                 vec![SettingError {
                     msg: format!("Failed to read `{}`: {}", path.display(), e),
@@ -73,7 +74,8 @@ impl PDFPLManager {
         if mode != "manual" && needs {
             log::info!("Setting `{}` to manual", path.display());
             // set manual control
-            entity.set(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned(), "manual")
+            entity
+                .set(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned(), "manual")
                 .map_err(|e| {
                     errors.push(SettingError {
                         msg: format!("Failed to write `manual` to `{}`: {}", path.display(), e),
@@ -84,7 +86,8 @@ impl PDFPLManager {
         } else if mode != "auto" && !needs {
             log::info!("Setting `{}` to auto", path.display());
             // unset manual control
-            entity.set(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned(), "auto")
+            entity
+                .set(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned(), "auto")
                 .map_err(|e| {
                     errors.push(SettingError {
                         msg: format!("Failed to write `auto` to `{}`: {}", path.display(), e),
@@ -93,10 +96,13 @@ impl PDFPLManager {
                 })
                 .unwrap_or(());
         }
-        if let Ok(mode_now) =
-            entity.attribute::<String, _>(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned())
-        {
-            log::debug!("Mode for `{}` is now `{}` ({:#b})", path.display(), mode_now, self.get());
+        if let Ok(mode_now) = entity.attribute::<String, _>(DPM_FORCE_LIMITS_ATTRIBUTE.to_owned()) {
+            log::debug!(
+                "Mode for `{}` is now `{}` ({:#b})",
+                path.display(),
+                mode_now,
+                self.get()
+            );
         } else {
             log::debug!("Error getting new mode for debugging purposes");
         }

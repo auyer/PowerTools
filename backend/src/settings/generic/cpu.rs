@@ -1,13 +1,13 @@
 use std::convert::{AsMut, AsRef, Into};
 
-use limits_core::json_v2::{GenericCpusLimit, GenericCpuLimit};
+use limits_core::json_v2::{GenericCpuLimit, GenericCpusLimit};
 
 use super::FromGenericCpuInfo;
 use crate::api::RangeLimit;
 use crate::persist::CpuJson;
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus, ProviderBuilder};
+use crate::settings::{ProviderBuilder, TCpu, TCpus};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
@@ -89,8 +89,14 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> Cpus<C> {
     }
 }
 
-impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus<C> {
-    fn from_json_and_limits(mut other: Vec<CpuJson>, version: u64, limits: GenericCpusLimit) -> Self {
+impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo>
+    ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus<C>
+{
+    fn from_json_and_limits(
+        mut other: Vec<CpuJson>,
+        version: u64,
+        limits: GenericCpusLimit,
+    ) -> Self {
         let (_, can_smt) = Self::system_smt_capabilities();
         let mut result = Vec::with_capacity(other.len());
         let max_cpus = Self::cpu_count();
@@ -103,9 +109,12 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> ProviderBuilder<Vec
                     break;
                 }
             }
-            let cpu_limit = limits.cpus.get(i)
+            let cpu_limit = limits
+                .cpus
+                .get(i)
                 .or_else(|| limits.cpus.get(0))
-                .unwrap_or_else(|| &fallback_cpu_limit).clone();
+                .unwrap_or_else(|| &fallback_cpu_limit)
+                .clone();
             let new_cpu = C::from_json_and_limits(cpu, version, i, cpu_limit);
             result.push(new_cpu);
         }
@@ -130,9 +139,12 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + FromGenericCpuInfo> ProviderBuilder<Vec
         let mut new_cpus = Vec::with_capacity(cpu_count);
         let fallback_cpu_limit = GenericCpuLimit::default();
         for i in 0..cpu_count {
-            let cpu_limit = limits.cpus.get(i)
+            let cpu_limit = limits
+                .cpus
+                .get(i)
                 .or_else(|| limits.cpus.get(0))
-                .unwrap_or_else(|| &fallback_cpu_limit).clone();
+                .unwrap_or_else(|| &fallback_cpu_limit)
+                .clone();
             let new_cpu = C::from_limits(i, cpu_limit);
             new_cpus.push(new_cpu);
         }
@@ -221,7 +233,8 @@ pub struct Cpu {
 impl Cpu {
     #[inline]
     fn current_governor(index: usize) -> String {
-        usdpl_back::api::files::read_single(cpu_governor_path(index)).unwrap_or_else(|_| "schedutil".to_owned())
+        usdpl_back::api::files::read_single(cpu_governor_path(index))
+            .unwrap_or_else(|_| "schedutil".to_owned())
     }
 }
 

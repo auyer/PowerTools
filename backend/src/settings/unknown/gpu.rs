@@ -4,15 +4,15 @@ use limits_core::json_v2::GenericGpuLimit;
 
 use crate::persist::GpuJson;
 use crate::settings::MinMax;
-use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError};
+use crate::settings::{ProviderBuilder, TGpu};
 
 #[derive(Debug, Clone)]
 pub struct Gpu {}
 
 impl Gpu {
     pub fn system_default() -> Self {
-        Self { }
+        Self {}
     }
 }
 

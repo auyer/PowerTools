@@ -20,7 +20,13 @@ impl Driver {
         auto_detect0(Some(settings), json_path, app_id, name, id_bup, name_bup)
     }
 
-    pub fn system_default(json_path: std::path::PathBuf, app_id: u64, name: String, variant_id: u64, variant_name: String) -> Self {
+    pub fn system_default(
+        json_path: std::path::PathBuf,
+        app_id: u64,
+        name: String,
+        variant_id: u64,
+        variant_name: String,
+    ) -> Self {
         auto_detect0(None, json_path, app_id, name, variant_id, variant_name)
     }
 }

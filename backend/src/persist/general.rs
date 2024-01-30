@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{BatteryJson, CpuJson, DriverJson, GpuJson};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SettingsJson {
     pub version: u64,
     pub name: String,

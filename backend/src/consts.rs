@@ -10,5 +10,4 @@ pub const DEFAULT_SETTINGS_VARIANT_NAME: &str = "Primary";
 pub const LIMITS_FILE: &str = "limits_cache.ron";
 pub const LIMITS_OVERRIDE_FILE: &str = "limits_override.ron";
 
-
 pub const MESSAGE_SEEN_ID_FILE: &str = "seen_message.bin";

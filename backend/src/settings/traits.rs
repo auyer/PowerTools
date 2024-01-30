@@ -125,7 +125,10 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
 
     fn get_variant_info(&self) -> crate::api::VariantInfo;
 
-    fn add_variant(&self, variant: crate::persist::SettingsJson) -> Result<Vec<crate::api::VariantInfo>, SettingError>;
+    fn add_variant(
+        &self,
+        variant: crate::persist::SettingsJson,
+    ) -> Result<Vec<crate::api::VariantInfo>, SettingError>;
 
     fn provider(&self) -> crate::persist::DriverJson;
 }

@@ -1,11 +1,11 @@
 use std::convert::Into;
 
-use limits_core::json_v2::{GenericCpusLimit, GenericCpuLimit};
+use limits_core::json_v2::{GenericCpuLimit, GenericCpusLimit};
 
 use crate::persist::CpuJson;
 use crate::settings::MinMax;
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus, ProviderBuilder};
+use crate::settings::{ProviderBuilder, TCpu, TCpus};
 
 #[derive(Debug, Clone)]
 pub struct Cpus {
@@ -40,13 +40,22 @@ impl OnResume for Cpus {
 impl crate::settings::OnPowerEvent for Cpus {}
 
 impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
-    fn from_json_and_limits(persistent: Vec<CpuJson>, version: u64, limits: GenericCpusLimit) -> Self {
+    fn from_json_and_limits(
+        persistent: Vec<CpuJson>,
+        version: u64,
+        limits: GenericCpusLimit,
+    ) -> Self {
         let mut cpus = Vec::with_capacity(persistent.len());
         for (i, cpu) in persistent.iter().enumerate() {
-            cpus.push(Cpu::from_json_and_limits(cpu.to_owned(), version, i, limits.cpus.get(i).map(|x| x.to_owned()).unwrap_or_else(|| {
-                log::warn!("No cpu limit for index {}, using default", i);
-                Default::default()
-            })));
+            cpus.push(Cpu::from_json_and_limits(
+                cpu.to_owned(),
+                version,
+                i,
+                limits.cpus.get(i).map(|x| x.to_owned()).unwrap_or_else(|| {
+                    log::warn!("No cpu limit for index {}, using default", i);
+                    Default::default()
+                }),
+            ));
         }
         let smt_guess = crate::settings::util::guess_smt(&persistent);
         Self {
@@ -78,7 +87,12 @@ impl TCpus for Cpus {
             cpus: self.cpus.iter().map(|x| x.limits()).collect(),
             count: self.cpus.len(),
             smt_capable: true,
-            governors: vec!["this".to_owned(), "is".to_owned(), "dev".to_owned(), "mode".to_owned()],
+            governors: vec![
+                "this".to_owned(),
+                "is".to_owned(),
+                "dev".to_owned(),
+                "mode".to_owned(),
+            ],
         }
     }
 
@@ -130,8 +144,16 @@ impl std::fmt::Debug for Cpu {
 
 impl Cpu {
     #[inline]
-    pub fn from_json_and_limits(other: CpuJson, version: u64, i: usize, limits: GenericCpuLimit) -> Self {
-        let clock_limits = other.clock_limits.clone().map(|lim| MinMax { min: lim.min, max: lim.max });
+    pub fn from_json_and_limits(
+        other: CpuJson,
+        version: u64,
+        i: usize,
+        limits: GenericCpuLimit,
+    ) -> Self {
+        let clock_limits = other.clock_limits.clone().map(|lim| MinMax {
+            min: lim.min,
+            max: lim.max,
+        });
         match version {
             0 => Self {
                 persist: other,
@@ -153,7 +175,12 @@ impl Cpu {
     #[inline]
     pub fn from_limits(i: usize, limits: GenericCpuLimit) -> Self {
         Self {
-            persist: CpuJson { online: true, clock_limits: None, governor: "".to_owned(), root: None },
+            persist: CpuJson {
+                online: true,
+                clock_limits: None,
+                governor: "".to_owned(),
+                root: None,
+            },
             version: 0,
             index: i,
             limits,
@@ -163,10 +190,21 @@ impl Cpu {
 
     fn limits(&self) -> crate::api::CpuLimits {
         crate::api::CpuLimits {
-            clock_min_limits: self.limits.clock_min.map(|lim| crate::api::RangeLimit { min: lim.min.unwrap_or(1100), max: lim.max.unwrap_or(6900) }),
-            clock_max_limits: self.limits.clock_max.map(|lim| crate::api::RangeLimit { min: lim.min.unwrap_or(4200), max: lim.max.unwrap_or(4300) }),
+            clock_min_limits: self.limits.clock_min.map(|lim| crate::api::RangeLimit {
+                min: lim.min.unwrap_or(1100),
+                max: lim.max.unwrap_or(6900),
+            }),
+            clock_max_limits: self.limits.clock_max.map(|lim| crate::api::RangeLimit {
+                min: lim.min.unwrap_or(4200),
+                max: lim.max.unwrap_or(4300),
+            }),
             clock_step: self.limits.clock_step.unwrap_or(11),
-            governors: vec!["this".to_owned(), "is".to_owned(), "dev".to_owned(), "mode".to_owned()],
+            governors: vec![
+                "this".to_owned(),
+                "is".to_owned(),
+                "dev".to_owned(),
+                "mode".to_owned(),
+            ],
         }
     }
 }
@@ -211,11 +249,20 @@ impl TCpu for Cpu {
     fn clock_limits(&mut self, limits: Option<MinMax<u64>>) {
         log::debug!("dev_mode_Cpu::clock_limits(self, {:?})", limits);
         self.clock_limits = limits;
-        self.persist.clock_limits = self.clock_limits.clone().map(|lim| crate::persist::MinMaxJson { max: lim.max, min: lim.min });
+        self.persist.clock_limits =
+            self.clock_limits
+                .clone()
+                .map(|lim| crate::persist::MinMaxJson {
+                    max: lim.max,
+                    min: lim.min,
+                });
     }
 
     fn get_clock_limits(&self) -> Option<&MinMax<u64>> {
-        log::debug!("dev_mode_Cpu::get_clock_limits(self) -> {:?}", self.clock_limits.as_ref());
+        log::debug!(
+            "dev_mode_Cpu::get_clock_limits(self) -> {:?}",
+            self.clock_limits.as_ref()
+        );
         self.clock_limits.as_ref()
     }
 }

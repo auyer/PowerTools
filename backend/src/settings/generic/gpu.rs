@@ -5,9 +5,9 @@ use sysfuss::{BasicEntityPath, SysEntity};
 
 use crate::api::RangeLimit;
 use crate::persist::GpuJson;
-use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{min_max_from_json, MinMax};
 use crate::settings::{OnResume, OnSet, SettingError};
+use crate::settings::{ProviderBuilder, TGpu};
 
 #[derive(Debug, Clone)]
 pub struct Gpu {
@@ -38,15 +38,17 @@ impl Gpu {
     fn find_card_sysfs(root: Option<impl AsRef<std::path::Path>>) -> BasicEntityPath {
         let root = crate::settings::util::root_or_default_sysfs(root);
         match root.class("drm", crate::settings::util::always_satisfied) {
-            Ok(mut iter) => {
-                iter.next()
-                    .unwrap_or_else(|| {
-                        log::error!("Failed to find generic gpu drm in sysfs (no results), using naive fallback");
-                        BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
-                    })
-            },
+            Ok(mut iter) => iter.next().unwrap_or_else(|| {
+                log::error!(
+                    "Failed to find generic gpu drm in sysfs (no results), using naive fallback"
+                );
+                BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
+            }),
             Err(e) => {
-                log::error!("Failed to find generic gpu drm in sysfs ({}), using naive fallback", e);
+                log::error!(
+                    "Failed to find generic gpu drm in sysfs ({}), using naive fallback",
+                    e
+                );
                 BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
             }
         }
@@ -56,7 +58,9 @@ impl Gpu {
 impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
     fn from_json_and_limits(persistent: GpuJson, version: u64, limits: GenericGpuLimit) -> Self {
         let clock_lims = if limits.clock_min.is_some() && limits.clock_max.is_some() {
-            persistent.clock_limits.map(|x| min_max_from_json(x, version))
+            persistent
+                .clock_limits
+                .map(|x| min_max_from_json(x, version))
         } else {
             None
         };
@@ -84,7 +88,7 @@ impl ProviderBuilder<GpuJson, GenericGpuLimit> for Gpu {
             },
             clock_limits: clock_lims,
             limits,
-            sysfs: Self::find_card_sysfs(persistent.root)
+            sysfs: Self::find_card_sysfs(persistent.root),
         }
     }
 
@@ -112,7 +116,10 @@ impl Into<GpuJson> for Gpu {
             tdp_boost: self.tdp_boost,
             clock_limits: self.clock_limits.map(|x| x.into()),
             memory_clock: None,
-            root: self.sysfs.root().and_then(|p| p.as_ref().to_str().map(|s| s.to_owned()))
+            root: self
+                .sysfs
+                .root()
+                .and_then(|p| p.as_ref().to_str().map(|s| s.to_owned())),
         }
     }
 }
@@ -139,21 +146,29 @@ impl TGpu for Gpu {
                 .fast_ppt
                 .clone()
                 .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15)))
-                .map(|mut x| if let Some(ppt_divisor) = self.limits.ppt_divisor {
-                    x.min /= ppt_divisor;
-                    x.max /= ppt_divisor;
-                    x
-                } else {x}),
+                .map(|mut x| {
+                    if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                        x.min /= ppt_divisor;
+                        x.max /= ppt_divisor;
+                        x
+                    } else {
+                        x
+                    }
+                }),
             slow_ppt_limits: self
                 .limits
                 .slow_ppt
                 .clone()
                 .map(|x| RangeLimit::new(x.min.unwrap_or(0), x.max.unwrap_or(15)))
-                .map(|mut x| if let Some(ppt_divisor) = self.limits.ppt_divisor {
-                    x.min /= ppt_divisor;
-                    x.max /= ppt_divisor;
-                    x
-                } else {x}),
+                .map(|mut x| {
+                    if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                        x.min /= ppt_divisor;
+                        x.max /= ppt_divisor;
+                        x
+                    } else {
+                        x
+                    }
+                }),
             ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: self
                 .limits
@@ -188,28 +203,56 @@ impl TGpu for Gpu {
 
     fn ppt(&mut self, fast: Option<u64>, slow: Option<u64>) {
         if let Some(fast_lims) = &self.limits.fast_ppt {
-            self.fast_ppt = fast.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x * ppt_divisor } else { x })
-            .map(|x| {
-                x.clamp(
-                    fast_lims.min.unwrap_or(0),
-                    fast_lims.max.unwrap_or(u64::MAX),
-                )
-            });
+            self.fast_ppt = fast
+                .map(|x| {
+                    if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                        x * ppt_divisor
+                    } else {
+                        x
+                    }
+                })
+                .map(|x| {
+                    x.clamp(
+                        fast_lims.min.unwrap_or(0),
+                        fast_lims.max.unwrap_or(u64::MAX),
+                    )
+                });
         }
         if let Some(slow_lims) = &self.limits.slow_ppt {
-            self.slow_ppt = slow.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x * ppt_divisor } else { x })
-            .map(|x| {
-                x.clamp(
-                    slow_lims.min.unwrap_or(0),
-                    slow_lims.max.unwrap_or(u64::MAX),
-                )
-            });
+            self.slow_ppt = slow
+                .map(|x| {
+                    if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                        x * ppt_divisor
+                    } else {
+                        x
+                    }
+                })
+                .map(|x| {
+                    x.clamp(
+                        slow_lims.min.unwrap_or(0),
+                        slow_lims.max.unwrap_or(u64::MAX),
+                    )
+                });
         }
     }
 
     fn get_ppt(&self) -> (Option<u64>, Option<u64>) {
-        (self.fast_ppt.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x / ppt_divisor } else { x }),
-         self.slow_ppt.map(|x| if let Some(ppt_divisor) = self.limits.ppt_divisor { x / ppt_divisor } else { x }))
+        (
+            self.fast_ppt.map(|x| {
+                if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    x / ppt_divisor
+                } else {
+                    x
+                }
+            }),
+            self.slow_ppt.map(|x| {
+                if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    x / ppt_divisor
+                } else {
+                    x
+                }
+            }),
+        )
     }
 
     fn clock_limits(&mut self, limits: Option<MinMax<u64>>) {

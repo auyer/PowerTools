@@ -93,14 +93,16 @@ pub fn get_limits_cached() -> Base {
 fn save_base(new_base: &Base, path: impl AsRef<std::path::Path>) {
     let limits_path = path.as_ref();
     match std::fs::File::create(&limits_path) {
-        Ok(f) => match ron::ser::to_writer_pretty(f, &new_base, crate::utility::ron_pretty_config()) {
-            Ok(_) => log::info!("Successfully saved new limits to {}", limits_path.display()),
-            Err(e) => log::error!(
-                "Failed to save limits json to file `{}`: {}",
-                limits_path.display(),
-                e
-            ),
-        },
+        Ok(f) => {
+            match ron::ser::to_writer_pretty(f, &new_base, crate::utility::ron_pretty_config()) {
+                Ok(_) => log::info!("Successfully saved new limits to {}", limits_path.display()),
+                Err(e) => log::error!(
+                    "Failed to save limits json to file `{}`: {}",
+                    limits_path.display(),
+                    e
+                ),
+            }
+        }
         Err(e) => log::error!("Cannot create {}: {}", limits_path.display(), e),
     }
 }

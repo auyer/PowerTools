@@ -5,7 +5,7 @@ use limits_core::json_v2::GenericCpusLimit;
 use crate::persist::CpuJson;
 use crate::settings::MinMax;
 use crate::settings::{OnResume, OnSet, SettingError};
-use crate::settings::{TCpu, TCpus, ProviderBuilder};
+use crate::settings::{ProviderBuilder, TCpu, TCpus};
 
 const CPU_PRESENT_PATH: &str = "/sys/devices/system/cpu/present";
 const CPU_SMT_PATH: &str = "/sys/devices/system/cpu/smt/control";
@@ -146,7 +146,11 @@ impl Cpus {
 }
 
 impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
-    fn from_json_and_limits(mut persistent: Vec<CpuJson>, version: u64, _limits: GenericCpusLimit) -> Self {
+    fn from_json_and_limits(
+        mut persistent: Vec<CpuJson>,
+        version: u64,
+        _limits: GenericCpusLimit,
+    ) -> Self {
         let (_, can_smt) = Self::system_smt_capabilities();
         let mut result = Vec::with_capacity(persistent.len());
         let max_cpus = Self::cpu_count();
@@ -284,7 +288,7 @@ impl Cpu {
                 .unwrap_or("schedutil".to_owned()),
             index: cpu_index,
             state: crate::state::steam_deck::Cpu::default(),
-            root: "/".into()
+            root: "/".into(),
         }
     }
 

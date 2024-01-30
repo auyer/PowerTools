@@ -59,7 +59,13 @@ pub fn load_settings(
         sender
             .lock()
             .unwrap()
-            .send(ApiMessage::LoadSettings(id, name, variant, variant_name.unwrap_or_else(|| crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned())))
+            .send(ApiMessage::LoadSettings(
+                id,
+                name,
+                variant,
+                variant_name
+                    .unwrap_or_else(|| crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned()),
+            ))
             .expect("load_settings send failed")
     };
     move |params_in: super::ApiParameterType| {
@@ -67,16 +73,20 @@ pub fn load_settings(
             if let Some(Primitive::String(name)) = params_in.get(1) {
                 if let Some(Primitive::String(variant_id)) = params_in.get(2) {
                     if let Some(Primitive::String(variant_name)) = params_in.get(3) {
-                        setter(id.parse().unwrap_or_default(),
-                               name.to_owned(),
-                               variant_id.parse().unwrap_or_default(),
-                               Some(variant_name.to_owned()));
+                        setter(
+                            id.parse().unwrap_or_default(),
+                            name.to_owned(),
+                            variant_id.parse().unwrap_or_default(),
+                            Some(variant_name.to_owned()),
+                        );
                         vec![true.into()]
                     } else {
-                        setter(id.parse().unwrap_or_default(),
-                               name.to_owned(),
-                               variant_id.parse().unwrap_or_default(),
-                               None);
+                        setter(
+                            id.parse().unwrap_or_default(),
+                            name.to_owned(),
+                            variant_id.parse().unwrap_or_default(),
+                            None,
+                        );
                         vec![true.into()]
                     }
                 } else {
@@ -101,26 +111,32 @@ pub fn load_variant(
 ) -> impl Fn(super::ApiParameterType) -> super::ApiParameterType {
     let sender = Mutex::new(sender); // Sender is not Sync; this is required for safety
     let setter = move |variant: u64, variant_name: Option<String>| {
+        log::debug!("load_variant(variant: {}, variant_name: {:?})", variant, variant_name);
         sender
             .lock()
             .unwrap()
-            .send(ApiMessage::LoadVariant(variant, variant_name.unwrap_or_else(|| crate::consts::DEFAULT_SETTINGS_VARIANT_NAME.to_owned())))
-            .expect("load_settings send failed")
+            .send(ApiMessage::LoadVariant(
+                variant,
+                variant_name
+                    .unwrap_or_else(|| "".to_owned()),
+            ))
+            .expect("load_variant send failed")
     };
     move |params_in: super::ApiParameterType| {
         if let Some(Primitive::String(variant_id)) = params_in.get(0) {
             if let Some(Primitive::String(variant_name)) = params_in.get(1) {
-                setter(variant_id.parse().unwrap_or(u64::MAX),
-                        Some(variant_name.to_owned()));
+                setter(
+                    variant_id.parse().unwrap_or(u64::MAX),
+                    Some(variant_name.to_owned()),
+                );
                 vec![true.into()]
             } else {
-                setter(variant_id.parse().unwrap_or_default(),
-                        None);
+                setter(variant_id.parse().unwrap_or(u64::MAX), None);
                 vec![true.into()]
             }
         } else {
-            log::warn!("load_settings missing variant id parameter");
-            vec!["load_settings missing variant id parameter".into()]
+            log::warn!("load_variant missing variant id parameter");
+            vec!["load_variant missing variant id parameter".into()]
         }
     }
 }
@@ -375,32 +391,60 @@ pub fn get_periodicals(sender: Sender<ApiMessage>) -> impl AsyncCallable {
         let sender2 = sender.clone();
         move || {
             let (rx_curr, callback_curr) = build_comms("battery current callback send failed");
-            let (rx_charge_now, callback_charge_now) = build_comms("battery charge now callback send failed");
-            let (rx_charge_full, callback_charge_full) = build_comms("battery charge full callback send failed");
-            let (rx_charge_power, callback_charge_power) = build_comms("battery charge power callback send failed");
+            let (rx_charge_now, callback_charge_now) =
+                build_comms("battery charge now callback send failed");
+            let (rx_charge_full, callback_charge_full) =
+                build_comms("battery charge full callback send failed");
+            let (rx_charge_power, callback_charge_power) =
+                build_comms("battery charge power callback send failed");
 
             let (rx_path, callback_path) = build_comms("general get path (periodical) send failed");
 
-            let sender_locked = sender2
-                .lock()
-                .unwrap();
-            let curr = wait_for_response(&*sender_locked, rx_curr,
-                    ApiMessage::Battery(super::handler::BatteryMessage::ReadCurrentNow(callback_curr)), "battery current");
-            let charge_now = wait_for_response(&*sender_locked, rx_charge_now,
-                    ApiMessage::Battery(super::handler::BatteryMessage::ReadChargeNow(callback_charge_now)), "battery charge now");
-            let charge_full = wait_for_response(&*sender_locked, rx_charge_full,
-                    ApiMessage::Battery(super::handler::BatteryMessage::ReadChargeFull(callback_charge_full)), "battery charge full");
-            let charge_power = wait_for_response(&*sender_locked, rx_charge_power,
-                    ApiMessage::Battery(super::handler::BatteryMessage::ReadChargePower(callback_charge_power)), "battery charge power");
+            let sender_locked = sender2.lock().unwrap();
+            let curr = wait_for_response(
+                &*sender_locked,
+                rx_curr,
+                ApiMessage::Battery(super::handler::BatteryMessage::ReadCurrentNow(
+                    callback_curr,
+                )),
+                "battery current",
+            );
+            let charge_now = wait_for_response(
+                &*sender_locked,
+                rx_charge_now,
+                ApiMessage::Battery(super::handler::BatteryMessage::ReadChargeNow(
+                    callback_charge_now,
+                )),
+                "battery charge now",
+            );
+            let charge_full = wait_for_response(
+                &*sender_locked,
+                rx_charge_full,
+                ApiMessage::Battery(super::handler::BatteryMessage::ReadChargeFull(
+                    callback_charge_full,
+                )),
+                "battery charge full",
+            );
+            let charge_power = wait_for_response(
+                &*sender_locked,
+                rx_charge_power,
+                ApiMessage::Battery(super::handler::BatteryMessage::ReadChargePower(
+                    callback_charge_power,
+                )),
+                "battery charge power",
+            );
 
-            let settings_path = wait_for_response(&*sender_locked, rx_path,
-                    ApiMessage::General(GeneralMessage::GetPath(callback_path)), "general get path");
+            let settings_path = wait_for_response(
+                &*sender_locked,
+                rx_path,
+                ApiMessage::General(GeneralMessage::GetPath(callback_path)),
+                "general get path",
+            );
             vec![
                 super::utility::map_optional(curr),
                 super::utility::map_optional(charge_now),
                 super::utility::map_optional(charge_full),
                 super::utility::map_optional(charge_power),
-
                 super::utility::map_optional(settings_path.to_str()),
             ]
         }
@@ -411,13 +455,20 @@ pub fn get_periodicals(sender: Sender<ApiMessage>) -> impl AsyncCallable {
     }
 }
 
-fn build_comms<'a, T: Send + 'a>(msg: &'static str) -> (mpsc::Receiver<T>, Box<dyn FnOnce(T) + Send + 'a>) {
+fn build_comms<'a, T: Send + 'a>(
+    msg: &'static str,
+) -> (mpsc::Receiver<T>, Box<dyn FnOnce(T) + Send + 'a>) {
     let (tx, rx) = mpsc::channel();
     let callback = move |t: T| tx.send(t).expect(msg);
     (rx, Box::new(callback))
 }
 
-fn wait_for_response<T>(sender: &Sender<ApiMessage>, rx: mpsc::Receiver<T>, api_msg: ApiMessage, op: &str) -> T {
+fn wait_for_response<T>(
+    sender: &Sender<ApiMessage>,
+    rx: mpsc::Receiver<T>,
+    api_msg: ApiMessage,
+    op: &str,
+) -> T {
     sender.send(api_msg).expect(&format!("{} send failed", op));
     rx.recv().expect(&format!("{} callback recv failed", op))
 }
@@ -429,8 +480,10 @@ pub fn get_all_variants(sender: Sender<ApiMessage>) -> impl AsyncCallable {
         let sender2 = sender.clone();
         move || {
             let (tx, rx) = mpsc::channel();
-            let callback =
-                move |variants: Vec<super::VariantInfo>| tx.send(variants).expect("get_all_variants callback send failed");
+            let callback = move |variants: Vec<super::VariantInfo>| {
+                tx.send(variants)
+                    .expect("get_all_variants callback send failed")
+            };
             sender2
                 .lock()
                 .unwrap()
@@ -438,7 +491,9 @@ pub fn get_all_variants(sender: Sender<ApiMessage>) -> impl AsyncCallable {
                     Box::new(callback),
                 )))
                 .expect("get_all_variants send failed");
-            rx.recv().expect("get_all_variants callback recv failed")
+            let mut results = rx.recv().expect("get_all_variants callback recv failed");
+            results.sort_by_key(|info| info.id_num); // sort by variant id
+            results
         }
     };
     super::async_utils::AsyncIshGetter {
@@ -446,7 +501,10 @@ pub fn get_all_variants(sender: Sender<ApiMessage>) -> impl AsyncCallable {
         trans_getter: |result| {
             let mut output = Vec::with_capacity(result.len());
             for status in result.iter() {
-                output.push(Primitive::Json(serde_json::to_string(status).expect("Failed to serialize variant info to JSON")));
+                output.push(Primitive::Json(
+                    serde_json::to_string(status)
+                        .expect("Failed to serialize variant info to JSON"),
+                ));
             }
             output
         },
@@ -460,8 +518,10 @@ pub fn get_current_variant(sender: Sender<ApiMessage>) -> impl AsyncCallable {
         let sender2 = sender.clone();
         move || {
             let (tx, rx) = mpsc::channel();
-            let callback =
-                move |variant: super::VariantInfo| tx.send(variant).expect("get_all_variants callback send failed");
+            let callback = move |variant: super::VariantInfo| {
+                tx.send(variant)
+                    .expect("get_all_variants callback send failed")
+            };
             sender2
                 .lock()
                 .unwrap()
@@ -475,7 +535,9 @@ pub fn get_current_variant(sender: Sender<ApiMessage>) -> impl AsyncCallable {
     super::async_utils::AsyncIshGetter {
         set_get: getter,
         trans_getter: |result| {
-            vec![Primitive::Json(serde_json::to_string(&result).expect("Failed to serialize variant info to JSON"))]
+            vec![Primitive::Json(
+                serde_json::to_string(&result).expect("Failed to serialize variant info to JSON"),
+            )]
         },
     }
 }

@@ -4,10 +4,14 @@ use std::sync::Mutex;
 use crate::persist::GpuJson;
 use crate::settings::generic::Gpu as GenericGpu;
 use crate::settings::MinMax;
-use crate::settings::{TGpu, ProviderBuilder};
 use crate::settings::{OnResume, OnSet, SettingError, SettingVariant};
+use crate::settings::{ProviderBuilder, TGpu};
 
-fn msg_or_err<D: std::fmt::Display, E: std::fmt::Display>(output: &mut String, msg: &str, result: Result<D, E>) {
+fn msg_or_err<D: std::fmt::Display, E: std::fmt::Display>(
+    output: &mut String,
+    msg: &str,
+    result: Result<D, E>,
+) {
     use std::fmt::Write;
     match result {
         Ok(val) => writeln!(output, "{}: {}", msg, val).unwrap(),
@@ -16,20 +20,41 @@ fn msg_or_err<D: std::fmt::Display, E: std::fmt::Display>(output: &mut String, m
 }
 
 fn log_capabilities(ryzenadj: &RyzenAdj) {
-    log::info!("RyzenAdj v{}.{}.{}", libryzenadj::libryzenadj_sys::RYZENADJ_REVISION_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MAJOR_VER, libryzenadj::libryzenadj_sys::RYZENADJ_MINIOR_VER);
+    log::info!(
+        "RyzenAdj v{}.{}.{}",
+        libryzenadj::libryzenadj_sys::RYZENADJ_REVISION_VER,
+        libryzenadj::libryzenadj_sys::RYZENADJ_MAJOR_VER,
+        libryzenadj::libryzenadj_sys::RYZENADJ_MINIOR_VER
+    );
     #[cfg(feature = "experimental")]
     if let Some(x) = ryzenadj.get_init_table_err() {
         log::warn!("RyzenAdj table init error: {}", x);
     }
     let mut log_msg = String::new();
     msg_or_err(&mut log_msg, "bios version", ryzenadj.get_bios_if_ver());
-    msg_or_err(&mut log_msg, "refresh", ryzenadj.refresh().map(|_| "success"));
-    msg_or_err(&mut log_msg, "CPU family", ryzenadj.get_cpu_family().map(|fam| {
-        let fam_dbg = format!("{:?}", fam);
-        format!("{} (#{})", fam_dbg, fam as i32)
-    }));
-    msg_or_err(&mut log_msg, "get_fast_value (PPT)", ryzenadj.get_fast_value());
-    msg_or_err(&mut log_msg, "get_slow_value (PPT)", ryzenadj.get_slow_value());
+    msg_or_err(
+        &mut log_msg,
+        "refresh",
+        ryzenadj.refresh().map(|_| "success"),
+    );
+    msg_or_err(
+        &mut log_msg,
+        "CPU family",
+        ryzenadj.get_cpu_family().map(|fam| {
+            let fam_dbg = format!("{:?}", fam);
+            format!("{} (#{})", fam_dbg, fam as i32)
+        }),
+    );
+    msg_or_err(
+        &mut log_msg,
+        "get_fast_value (PPT)",
+        ryzenadj.get_fast_value(),
+    );
+    msg_or_err(
+        &mut log_msg,
+        "get_slow_value (PPT)",
+        ryzenadj.get_slow_value(),
+    );
     msg_or_err(&mut log_msg, "get_gfx_clk", ryzenadj.get_gfx_clk());
     msg_or_err(&mut log_msg, "get_gfx_volt", ryzenadj.get_gfx_volt());
 
@@ -41,7 +66,7 @@ fn ryzen_adj_or_log() -> Option<Mutex<RyzenAdj>> {
         Ok(x) => {
             log_capabilities(&x);
             Some(Mutex::new(x))
-        },
+        }
         Err(e) => {
             log::error!("RyzenAdj init error: {}", e);
             None
@@ -90,7 +115,6 @@ impl ProviderBuilder<GpuJson, limits_core::json_v2::GenericGpuLimit> for Gpu {
 }
 
 impl Gpu {
-
     fn set_all(&mut self) -> Result<(), Vec<SettingError>> {
         let mutex = match &self.implementor {
             Some(x) => x,

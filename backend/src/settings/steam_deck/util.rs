@@ -4,16 +4,23 @@ pub const JUPITER_HWMON_NAME: &'static str = "jupiter";
 pub const STEAMDECK_HWMON_NAME: &'static str = "steamdeck_hwmon";
 pub const GPU_HWMON_NAME: &'static str = "amdgpu";
 
-pub fn range_min_or_fallback<I: Copy>(range: &Option<limits_core::json_v2::RangeLimit<I>>, fallback: I) -> I {
+pub fn range_min_or_fallback<I: Copy>(
+    range: &Option<limits_core::json_v2::RangeLimit<I>>,
+    fallback: I,
+) -> I {
     range.and_then(|lim| lim.min).unwrap_or(fallback)
 }
 
-pub fn range_max_or_fallback<I: Copy>(range: &Option<limits_core::json_v2::RangeLimit<I>>, fallback: I) -> I {
+pub fn range_max_or_fallback<I: Copy>(
+    range: &Option<limits_core::json_v2::RangeLimit<I>>,
+    fallback: I,
+) -> I {
     range.and_then(|lim| lim.max).unwrap_or(fallback)
 }
 
 pub fn card_also_has(card: &dyn sysfuss::SysEntity, extensions: &'static [&'static str]) -> bool {
-    extensions.iter()
+    extensions
+        .iter()
         .all(|ext| card.as_ref().join(ext).exists())
 }
 
@@ -31,7 +38,11 @@ pub fn flash_led() {
     let mut ec = smokepatio::ec::unnamed_power::UnnamedPowerEC::new();
     for &code in THINGS {
         let on = code != 0;
-        let colour = if on { smokepatio::ec::unnamed_power::StaticColour::Red } else { smokepatio::ec::unnamed_power::StaticColour::Off };
+        let colour = if on {
+            smokepatio::ec::unnamed_power::StaticColour::Red
+        } else {
+            smokepatio::ec::unnamed_power::StaticColour::Off
+        };
         if let Err(e) = ec.set(colour) {
             log::error!("Thing err: {}", e);
         }

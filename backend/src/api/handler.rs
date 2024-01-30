@@ -66,7 +66,10 @@ impl BatteryMessage {
 
     /// Message instructs the driver to modify settings
     fn is_modify(&self) -> bool {
-        matches!(self, Self::SetChargeRate(_) | Self::SetChargeMode(_) | Self::SetChargeLimit(_))
+        matches!(
+            self,
+            Self::SetChargeRate(_) | Self::SetChargeMode(_) | Self::SetChargeLimit(_)
+        )
     }
 }
 
@@ -231,7 +234,10 @@ pub enum GeneralMessage {
     GetPath(Callback<std::path::PathBuf>),
     GetCurrentVariant(Callback<super::VariantInfo>),
     GetAllVariants(Callback<Vec<super::VariantInfo>>),
-    AddVariant(crate::persist::SettingsJson, Callback<Vec<super::VariantInfo>>),
+    AddVariant(
+        crate::persist::SettingsJson,
+        Callback<Vec<super::VariantInfo>>,
+    ),
     ApplyNow,
 }
 
@@ -248,11 +254,14 @@ impl GeneralMessage {
             Self::AddVariant(variant, cb) => match settings.add_variant(variant) {
                 Ok(variants) => cb(variants),
                 Err(e) => {
-                    print_errors("GeneralMessage::AddVariant => TGeneral::add_variant", vec![e]);
+                    print_errors(
+                        "GeneralMessage::AddVariant => TGeneral::add_variant",
+                        vec![e],
+                    );
                     cb(Vec::with_capacity(0))
-                },
+                }
             },
-            Self::ApplyNow => {},
+            Self::ApplyNow => {}
         }
         dirty
     }
@@ -300,13 +309,21 @@ impl ApiMessageHandler {
                 // save
                 log::debug!("api_worker is saving...");
                 let is_persistent = *settings.general.persistent();
-                let save_path =
-                    crate::utility::settings_dir().join(settings.general.get_path());
+                let save_path = crate::utility::settings_dir().join(settings.general.get_path());
                 if is_persistent {
                     let settings_clone = settings.json();
                     let save_json: SettingsJson = settings_clone.into();
-                    if let Err(e) = crate::persist::FileJson::update_variant_or_create(&save_path, settings.general.get_app_id(), save_json, settings.general.get_name().to_owned()) {
-                        log::error!("Failed to create/update settings file {}: {}", save_path.display(), e);
+                    if let Err(e) = crate::persist::FileJson::update_variant_or_create(
+                        &save_path,
+                        settings.general.get_app_id(),
+                        save_json,
+                        settings.general.get_name().to_owned(),
+                    ) {
+                        log::error!(
+                            "Failed to create/update settings file {}: {}",
+                            save_path.display(),
+                            e
+                        );
                     }
                     //unwrap_maybe_fatal(save_json.save(&save_path), "Failed to save settings");
                     log::debug!("Saved settings to {}", save_path.display());
@@ -393,8 +410,15 @@ impl ApiMessageHandler {
             ApiMessage::LoadVariant(variant_id, variant_name) => {
                 let path = settings.general.get_path();
                 let app_id = settings.general.get_app_id();
-                match settings.load_file(path.into(), app_id, settings.general.get_name().to_owned(), variant_id, variant_name, false) {
-                    Ok(success) => log::info!("Loaded settings file? {}", success),
+                match settings.load_file(
+                    path.into(),
+                    app_id,
+                    settings.general.get_name().to_owned(),
+                    variant_id,
+                    variant_name,
+                    false,
+                ) {
+                    Ok(success) => log::info!("Loaded variant settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
                 true
@@ -414,7 +438,11 @@ impl ApiMessageHandler {
                 true
             }
             ApiMessage::LoadSystemSettings => {
-                settings.load_system_default(settings.general.get_name().to_owned(), settings.general.get_variant_id(), settings.general.get_variant_info().name);
+                settings.load_system_default(
+                    settings.general.get_name().to_owned(),
+                    settings.general.get_variant_id(),
+                    settings.general.get_variant_info().name,
+                );
                 true
             }
             ApiMessage::GetLimits(cb) => {
@@ -434,13 +462,18 @@ impl ApiMessageHandler {
                     _ => settings.general.provider(),
                 });
                 false
-            },
+            }
             ApiMessage::UploadCurrentVariant(steam_id, steam_username) => {
                 //TODO
                 let steam_app_id = settings.general.get_app_id();
-                super::web::upload_settings(steam_app_id, steam_id, steam_username, settings.json());
+                super::web::upload_settings(
+                    steam_app_id,
+                    steam_id,
+                    steam_username,
+                    settings.json(),
+                );
                 false
-            },
+            }
         }
     }
 
