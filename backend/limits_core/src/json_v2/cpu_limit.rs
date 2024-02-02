@@ -19,7 +19,7 @@ pub enum CpuLimitType {
 pub struct GenericCpusLimit {
     pub cpus: Vec<GenericCpuLimit>,
     pub global_governors: bool,
-    pub experiments: bool,
+    pub extras: super::LimitExtras,
 }
 
 impl GenericCpusLimit {
@@ -29,14 +29,17 @@ impl GenericCpusLimit {
                 Self {
                     cpus: [(); 8].iter().enumerate().map(|(i, _)| GenericCpuLimit::default_for(&t, i)).collect(),
                     global_governors: true,
-                    experiments: false,
+                    extras: Default::default(),
                 }
             },
             CpuLimitType::DevMode => {
                 Self {
                     cpus: [(); 11].iter().enumerate().map(|(i, _)| GenericCpuLimit::default_for(&t, i)).collect(),
                     global_governors: true,
-                    experiments: true,
+                    extras: super::LimitExtras {
+                        experiments: true,
+                        quirks: vec!["".to_owned()].into_iter().collect(),
+                    },
                 }
             },
             t => {
@@ -48,7 +51,7 @@ impl GenericCpusLimit {
                 Self {
                     cpus,
                     global_governors: true,
-                    experiments: false,
+                    extras: Default::default(),
                 }
             }
         }
@@ -76,7 +79,7 @@ impl GenericCpusLimit {
                 .for_each(|(cpu, limit_override)| cpu.apply_override(limit_override));
         }
         self.global_governors = limit_override.global_governors;
-        self.experiments = limit_override.experiments;
+        self.extras = limit_override.extras;
     }
 }
 

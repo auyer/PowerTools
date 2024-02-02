@@ -192,18 +192,50 @@ impl Gpu {
 
     fn build_memory_clock_payload(&self, clock: u64) -> String {
         let max_val = self.quantize_memory_clock(clock);
-        match max_val {
-            0 => "0\n".to_owned(),
-            max_val => {
-                use std::fmt::Write;
-                let mut payload = String::from("0");
-                for i in 1..max_val {
-                    write!(payload, " {}", i)
+        let is_oled = matches!(self.variant, super::Model::OLED);
+        let is_lcd = matches!(self.variant, super::Model::LCD);
+        let is_lock_feature_enabled = self.limits.extras.quirks.contains("pp_dpm_fclk-static");
+
+        if (is_oled && self.limits.extras.quirks.contains("pp_dpm_fclk-reversed-on-OLED"))
+            || (is_lcd && self.limits.extras.quirks.contains("pp_dpm_fclk-reversed-on-LCD"))
+            || self.limits.extras.quirks.contains("pp_dpm_fclk-reversed") {
+            let options_count = self
+                .sysfs_card
+                .read_value(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned())
+                .map(|b| parse_pp_dpm_fclk(&String::from_utf8_lossy(&b)).len())
+                .unwrap_or_else(|_| if is_oled { 4 } else { 2 });
+            let modifier = (options_count - 1) as u64;
+            if is_lock_feature_enabled {
+                format!("{}\n", modifier - max_val)
+            } else {
+                if max_val == 0 as u64  {
+                    format!("{}\n", modifier)
+                } else {
+                    use std::fmt::Write;
+                    let mut payload = format!("{}", modifier - max_val);
+                    for i in (0..max_val).rev(/* rev() isn't necessary but it creates a nicer (ascending) order */) {
+                        write!(payload, " {}", modifier - i)
+                            .expect("Failed to write to memory payload (should be infallible!?)");
+                    }
+                    write!(payload, "\n")
                         .expect("Failed to write to memory payload (should be infallible!?)");
+                    payload
                 }
-                write!(payload, " {}\n", max_val)
-                    .expect("Failed to write to memory payload (should be infallible!?)");
-                payload
+            }
+        } else {
+            match max_val {
+                0 => "0\n".to_owned(),
+                max_val => {
+                    use std::fmt::Write;
+                    let mut payload = String::from("0");
+                    for i in 1..max_val {
+                        write!(payload, " {}", i)
+                            .expect("Failed to write to memory payload (should be infallible!?)");
+                    }
+                    write!(payload, " {}\n", max_val)
+                        .expect("Failed to write to memory payload (should be infallible!?)");
+                    payload
+                }
             }
         }
     }

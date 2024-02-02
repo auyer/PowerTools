@@ -32,7 +32,7 @@ pub struct GenericGpuLimit {
     pub memory_clock: Option<RangeLimit<u64>>,
     pub memory_clock_step: Option<u64>,
     pub skip_resume_reclock: bool,
-    pub experiments: bool,
+    pub extras: super::LimitExtras,
 }
 
 impl GenericGpuLimit {
@@ -72,16 +72,21 @@ impl GenericGpuLimit {
                 max: Some(1600),
             }),
             clock_step: Some(100),
-            // Disabled for now since LCD version is a bit broken on sysfs right now
-            /*memory_clock: Some(RangeLimit {
+            // LCD version is a bit broken on sysfs, but it's ok
+            memory_clock: Some(RangeLimit {
                 min: Some(400),
                 max: Some(800),
             }),
-            memory_clock_step: Some(400),*/
-            memory_clock: None,
-            memory_clock_step: None,
+            memory_clock_step: Some(400),
             skip_resume_reclock: false,
-            experiments: false,
+            extras: super::LimitExtras {
+                experiments: false,
+                quirks: vec![
+                    "pp_dpm_fclk-reversed".to_owned(),
+                    "pp_dpm_fclk-not-updated-on-LCD".to_owned(),
+                    //"pp_dpm_fclk-static".to_owned(),
+                ].into_iter().collect(),
+            }
         }
     }
 
@@ -124,7 +129,10 @@ impl GenericGpuLimit {
             }),
             memory_clock_step: Some(100),
             skip_resume_reclock: false,
-            experiments: true,
+            extras: super::LimitExtras {
+                experiments: true,
+                quirks: vec!["dev".to_owned()].into_iter().collect(),
+            },
         }
     }
 
@@ -190,6 +198,6 @@ impl GenericGpuLimit {
             self.clock_step = Some(val);
         }
         self.skip_resume_reclock = limit_override.skip_resume_reclock;
-        self.experiments = limit_override.experiments;
+        self.extras = limit_override.extras;
     }
 }

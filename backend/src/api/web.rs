@@ -1,17 +1,40 @@
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
 use super::handler::{ApiMessage, GeneralMessage};
 
-const BASE_URL: &'static str = "http://powertools.ngni.us";
+const BASE_URL_FALLBACK: &'static str = "https://powertools.ngni.us";
+static BASE_URL: RwLock<Option<String>> = RwLock::new(None);
+
+pub fn set_base_url(base_url: String) {
+    *BASE_URL.write().expect("Failed to acquire write lock for store base url") = Some(base_url);
+}
+
+fn get_base_url() -> String {
+    BASE_URL.read().expect("Failed to acquire read lock for store base url")
+        .clone()
+        .unwrap_or_else(|| BASE_URL_FALLBACK.to_owned())
+}
+
+fn url_search_by_app_id(steam_app_id: u32) -> String {
+    format!("{}/api/setting/by_app_id/{}", get_base_url(), steam_app_id)
+}
+
+fn url_download_config_by_id(id: u128) -> String {
+    format!("{}/api/setting/by_id/{}", get_base_url(), id)
+}
+
+fn url_upload_config() -> String {
+    format!("{}/api/setting", get_base_url())
+}
 
 /// Get search results web method
 pub fn search_by_app_id() -> impl AsyncCallable {
     let getter = move || {
         move |steam_app_id: u32| {
-            let req_url = format!("{}/api/setting/by_app_id/{}", BASE_URL, steam_app_id);
+            let req_url = url_search_by_app_id(steam_app_id);
             match ureq::get(&req_url).call() {
                 Ok(response) => {
                     let json_res: std::io::Result<Vec<community_settings_core::v1::Metadata>> =
@@ -110,7 +133,7 @@ fn web_config_to_settings_json(
 }
 
 fn download_config(id: u128) -> std::io::Result<community_settings_core::v1::Metadata> {
-    let req_url = format!("{}/api/setting/by_id/{}", BASE_URL, id);
+    let req_url = url_download_config_by_id(id);
     let response = ureq::get(&req_url).call().map_err(|e| {
         log::warn!("GET to {} failed: {}", req_url, e);
         std::io::Error::new(std::io::ErrorKind::ConnectionAborted, e)
@@ -207,7 +230,7 @@ fn settings_to_web_config(
 }
 
 fn upload_config(config: community_settings_core::v1::Metadata) -> std::io::Result<()> {
-    let req_url = format!("{}/api/setting", BASE_URL);
+    let req_url = url_upload_config();
     ureq::post(&req_url)
         .send_json(&config)
         .map_err(|e| {

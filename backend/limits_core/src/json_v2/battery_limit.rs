@@ -19,7 +19,7 @@ pub struct GenericBatteryLimit {
     pub charge_modes: Vec<String>,
     pub charge_limit: Option<RangeLimit<f64>>, // battery charge %
     pub extra_readouts: bool,
-    pub experiments: bool,
+    pub extras: super::LimitExtras,
 }
 
 impl GenericBatteryLimit {
@@ -47,7 +47,7 @@ impl GenericBatteryLimit {
                 max: Some(90.0),
             }),
             extra_readouts: false,
-            experiments: false,
+            extras: Default::default(),
         }
     }
 
@@ -67,7 +67,10 @@ impl GenericBatteryLimit {
                 max: Some(99.0),
             }),
             extra_readouts: true,
-            experiments: true,
+            extras: super::LimitExtras {
+                experiments: true,
+                quirks: vec!["".to_owned()].into_iter().collect(),
+            },
         }
     }
 
@@ -91,6 +94,6 @@ impl GenericBatteryLimit {
             }
         }
         self.extra_readouts = limit_override.extra_readouts;
-        self.experiments = limit_override.experiments;
+        self.extras = limit_override.extras;
     }
 }

@@ -32,6 +32,7 @@ pub fn spawn() -> JoinHandle<()> {
                     save_base(&base, &limits_path);
                     base
                 };
+                crate::api::web::set_base_url(base.store);
                 if let Some(refresh) = &base.refresh {
                     // try to retrieve newer version
                     match ureq::get(refresh).call() {

@@ -8,6 +8,8 @@ pub struct Base {
     pub configs: Vec<super::Config>,
     /// Server messages
     pub messages: Vec<super::DeveloperMessage>,
+    /// Base URL for the config store
+    pub store: String,
     /// URL from which to grab the next update
     pub refresh: Option<String>,
 }
@@ -110,7 +112,7 @@ impl Default for Base {
                                         ..Default::default()
                                     }; 4],
                                 global_governors: true,
-                                experiments: false,
+                                ..Default::default()
                             }
                         },
                         gpu: super::GpuLimit {
@@ -154,7 +156,7 @@ impl Default for Base {
                                         ..Default::default()
                                     }; 12], // 6 cores with SMTx2
                                 global_governors: true,
-                                experiments: false,
+                                ..Default::default()
                             }
                         },
                         gpu: super::GpuLimit {
@@ -198,7 +200,7 @@ impl Default for Base {
                                         ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
-                                experiments: false,
+                                ..Default::default()
                             }
                         },
                         gpu: super::GpuLimit {
@@ -242,7 +244,7 @@ impl Default for Base {
                                         ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
-                                experiments: false,
+                                ..Default::default()
                             }
                         },
                         gpu: super::GpuLimit {
@@ -286,7 +288,7 @@ impl Default for Base {
                                         ..Default::default()
                                     }; 16], // 8 cores with SMTx2
                                 global_governors: true,
-                                experiments: false,
+                                ..Default::default()
                             }
                         },
                         gpu: super::GpuLimit {
@@ -341,6 +343,7 @@ impl Default for Base {
                     url: Some("https://git.ngni.us/NG-SD-Plugins/PowerTools/wiki".to_owned()),
                 }
             ],
+            store: "https://powertools.ngni.us".to_owned(),
             refresh: Some("http://limits.ngni.us:45000/powertools/v2".to_owned())
         }
     }

@@ -26,3 +26,9 @@ pub struct Limit<P, L> {
 pub type CpuLimit = Limit<super::CpuLimitType, super::GenericCpusLimit>;
 pub type GpuLimit = Limit<super::GpuLimitType, super::GenericGpuLimit>;
 pub type BatteryLimit = Limit<super::BatteryLimitType, super::GenericBatteryLimit>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct LimitExtras {
+    pub experiments: bool,
+    pub quirks: std::collections::HashSet<String>,
+}

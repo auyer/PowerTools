@@ -23,7 +23,7 @@ import {
   //joinClassNames,
 } from "decky-frontend-lib";
 import { VFC, useState } from "react";
-import { GiDrill, GiTimeBomb, GiTimeTrap, GiDynamite } from "react-icons/gi";
+import { GiDrill, GiFireExtinguisher, GiFireBomb, GiMineExplosion } from "react-icons/gi";
 import { HiRefresh, HiTrash, HiPlus, HiUpload } from "react-icons/hi";
 import { TbWorldPlus } from "react-icons/tb";
 
@@ -532,7 +532,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   let ico = <GiDrill />;
   let now = new Date();
   if (now.getDate() == 1 && now.getMonth() == 3) {
-    ico = <span><GiDynamite /><GiTimeTrap /><GiTimeBomb /></span>;
+    ico = <span><GiFireExtinguisher /><GiFireBomb /><GiMineExplosion /></span>;
   }
   //registerCallbacks(false);
   serverApi.routerHook.addRoute(STORE_RESULTS_URI, StoreResultsPage);

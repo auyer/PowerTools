@@ -16,6 +16,6 @@ pub use cpu_limit::{CpuLimitType, GenericCpusLimit, GenericCpuLimit};
 pub use devel_message::DeveloperMessage;
 pub use gpu_limit::{GpuLimitType, GenericGpuLimit};
 pub use config::Config;
-pub use limits::{Limits, Limit, CpuLimit, GpuLimit, BatteryLimit};
+pub use limits::{Limits, Limit, CpuLimit, GpuLimit, BatteryLimit, LimitExtras};
 pub use range::RangeLimit;
 pub use target::Target;
