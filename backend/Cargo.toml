@@ -37,6 +37,8 @@ libryzenadj = { version = "0.13" }
 # ureq's tls feature does not like musl targets
 ureq = { version = "2", features = ["json", "gzip", "brotli", "charset"], default-features = false, optional = true }
 
+clap = { version = "4.4", features = [ "derive" ] }
+
 [features]
 default = ["online", "decky"]
 decky = ["usdpl-back/decky"]

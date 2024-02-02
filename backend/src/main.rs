@@ -1,4 +1,5 @@
 mod api;
+mod cli;
 mod persist;
 mod settings;
 mod state;
@@ -19,13 +20,18 @@ use usdpl_back::core::serdes::Primitive;
 use usdpl_back::Instance;
 
 fn main() -> Result<(), ()> {
+    let args = cli::Args::load();
     #[cfg(debug_assertions)]
     let log_filepath = usdpl_back::api::dirs::home()
         .unwrap_or_else(|| "/tmp/".into())
         .join(PACKAGE_NAME.to_owned() + ".log");
     #[cfg(not(debug_assertions))]
     let log_filepath = std::path::Path::new("/tmp").join(format!("{}.log", PACKAGE_NAME));
+    let log_filepath = args.log.clone().unwrap_or(log_filepath);
     println!("Logging to: {:?}", log_filepath);
+    if !args.is_default() {
+        println!("CLI arguments, as parsed: {:?}", &args);
+    }
     #[cfg(debug_assertions)]
     let old_log_filepath = usdpl_back::api::dirs::home()
         .unwrap_or_else(|| "/tmp/".into())
@@ -44,7 +50,7 @@ fn main() -> Result<(), ()> {
         },
         #[cfg(not(debug_assertions))]
         {
-            LevelFilter::Info
+            if args.verbose { LevelFilter::Debug } else { LevelFilter::Info }
         },
         Default::default(),
         std::fs::File::create(&log_filepath).expect("Failed to create log file"),
@@ -52,6 +58,15 @@ fn main() -> Result<(), ()> {
     )
     .unwrap();
     log::debug!("Logging to: {:?}.", log_filepath);
+    log::info!("CLI arguments, as parsed: {:?}", &args);
+
+    // sepcial operation start-up
+    if let Some(op) = &args.op {
+        return cli::do_op(op);
+        // do not continue with regular startup
+    }
+
+    // regular start-up
     log::info!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
     println!("Starting back-end ({} v{})", PACKAGE_NAME, PACKAGE_VERSION);
     log::info!(
@@ -125,7 +140,7 @@ fn main() -> Result<(), ()> {
 
     let (message_getter, message_dismisser) = api::message::MessageHandler::new().to_callables();
 
-    let instance = Instance::new(PORT)
+    let instance = Instance::new(args.port.unwrap_or(PORT))
         .register("V_INFO", |_: Vec<Primitive>| {
             #[cfg(debug_assertions)]
             {
