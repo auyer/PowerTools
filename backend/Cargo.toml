@@ -53,13 +53,13 @@ debug = false
 strip = true
 lto = true
 codegen-units = 1
+opt-level = 3
 
 [profile.docker]
 inherits = "release"
 debug = false
 strip = true
 lto = "thin"
-codegen-units = 16
-opt-level = 2
+codegen-units = 8
 debug-assertions = false
 overflow-checks = false

@@ -71,7 +71,13 @@ impl FileJson {
             if setting.name.is_empty() {
                 setting.name = format!("Variant {}", setting.variant);
             }
-            log::debug!("Inserting setting variant `{}` ({}) for app `{}` ({})", setting.name, setting.variant, file.name, app_id);
+            log::debug!(
+                "Inserting setting variant `{}` ({}) for app `{}` ({})",
+                setting.name,
+                setting.variant,
+                file.name,
+                app_id
+            );
             file.variants.insert(setting.variant, setting.clone());
             (file, setting)
         } else {
@@ -83,15 +89,24 @@ impl FileJson {
             if setting.name.is_empty() {
                 setting.name = format!("Variant {}", setting.variant);
             }
-            log::debug!("Creating new setting variant `{}` ({}) for app `{}` ({})", setting.name, setting.variant, app_name, app_id);
+            log::debug!(
+                "Creating new setting variant `{}` ({}) for app `{}` ({})",
+                setting.name,
+                setting.variant,
+                app_name,
+                app_id
+            );
             let mut setting_variants = HashMap::with_capacity(1);
             setting_variants.insert(setting.variant, setting.clone());
-            (Self {
-                version: 0,
-                app_id: app_id,
-                name: app_name,
-                variants: setting_variants,
-            }, setting)
+            (
+                Self {
+                    version: 0,
+                    app_id: app_id,
+                    name: app_name,
+                    variants: setting_variants,
+                },
+                setting,
+            )
         };
 
         file.save(path)?;

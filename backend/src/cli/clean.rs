@@ -12,7 +12,9 @@ pub fn clean_up() -> Result<(), ()> {
     }
 }
 
-fn clean_up_io(directories: impl Iterator<Item=impl AsRef<std::path::Path>>) -> std::io::Result<()> {
+fn clean_up_io(
+    directories: impl Iterator<Item = impl AsRef<std::path::Path>>,
+) -> std::io::Result<()> {
     let results = directories.map(|dir| std::fs::remove_dir_all(dir));
     for res in results {
         res?;

@@ -26,10 +26,7 @@ impl Args {
     }
 
     pub fn is_default(&self) -> bool {
-        self.port.is_none()
-        && self.log.is_none()
-        && !self.verbose
-        && self.op.is_none()
+        self.port.is_none() && self.log.is_none() && !self.verbose && self.op.is_none()
     }
 }
 

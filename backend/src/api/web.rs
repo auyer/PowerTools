@@ -9,11 +9,15 @@ const BASE_URL_FALLBACK: &'static str = "https://powertools.ngni.us";
 static BASE_URL: RwLock<Option<String>> = RwLock::new(None);
 
 pub fn set_base_url(base_url: String) {
-    *BASE_URL.write().expect("Failed to acquire write lock for store base url") = Some(base_url);
+    *BASE_URL
+        .write()
+        .expect("Failed to acquire write lock for store base url") = Some(base_url);
 }
 
 fn get_base_url() -> String {
-    BASE_URL.read().expect("Failed to acquire read lock for store base url")
+    BASE_URL
+        .read()
+        .expect("Failed to acquire read lock for store base url")
         .clone()
         .unwrap_or_else(|| BASE_URL_FALLBACK.to_owned())
 }

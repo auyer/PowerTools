@@ -50,7 +50,11 @@ fn main() -> Result<(), ()> {
         },
         #[cfg(not(debug_assertions))]
         {
-            if args.verbose { LevelFilter::Debug } else { LevelFilter::Info }
+            if args.verbose {
+                LevelFilter::Debug
+            } else {
+                LevelFilter::Info
+            }
         },
         Default::default(),
         std::fs::File::create(&log_filepath).expect("Failed to create log file"),

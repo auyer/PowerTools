@@ -111,14 +111,17 @@ pub fn load_variant(
 ) -> impl Fn(super::ApiParameterType) -> super::ApiParameterType {
     let sender = Mutex::new(sender); // Sender is not Sync; this is required for safety
     let setter = move |variant: u64, variant_name: Option<String>| {
-        log::debug!("load_variant(variant: {}, variant_name: {:?})", variant, variant_name);
+        log::debug!(
+            "load_variant(variant: {}, variant_name: {:?})",
+            variant,
+            variant_name
+        );
         sender
             .lock()
             .unwrap()
             .send(ApiMessage::LoadVariant(
                 variant,
-                variant_name
-                    .unwrap_or_else(|| "".to_owned()),
+                variant_name.unwrap_or_else(|| "".to_owned()),
             ))
             .expect("load_variant send failed")
     };

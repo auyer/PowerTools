@@ -135,7 +135,8 @@ impl TGeneral for General {
             setting: SettingVariant::General,
         })
         .map(|file| {
-            file.0.variants
+            file.0
+                .variants
                 .into_iter()
                 .map(|(id, conf)| crate::api::VariantInfo {
                     id: id.to_string(),
@@ -147,7 +148,11 @@ impl TGeneral for General {
     }
 
     fn get_variant_info(&self) -> crate::api::VariantInfo {
-        log::debug!("Current variant `{}` ({})", self.variant_name, self.variant_id);
+        log::debug!(
+            "Current variant `{}` ({})",
+            self.variant_name,
+            self.variant_id
+        );
         crate::api::VariantInfo {
             id: self.variant_id.to_string(),
             name: self.variant_name.clone(),
@@ -260,7 +265,10 @@ impl Settings {
             let mut valid_ids: Vec<&u64> = settings_file.variants.keys().collect();
             valid_ids.sort();
             if let Some(id) = valid_ids.get(0) {
-                Ok(settings_file.variants.get(id).expect("variant id key magically disappeared"))
+                Ok(settings_file
+                    .variants
+                    .get(id)
+                    .expect("variant id key magically disappeared"))
             } else {
                 Err(SettingError {
                     msg: format!(
@@ -293,7 +301,11 @@ impl Settings {
         let json_path = crate::utility::settings_dir().join(&filename);
         if json_path.exists() {
             if variant == u64::MAX {
-                log::debug!("Creating new variant `{}` in existing settings file {}", variant_name, json_path.display());
+                log::debug!(
+                    "Creating new variant `{}` in existing settings file {}",
+                    variant_name,
+                    json_path.display()
+                );
                 self.create_and_load_variant(&json_path, app_id, variant_name)?;
             } else {
                 let file_json = FileJson::open(&json_path).map_err(|e| SettingError {
@@ -336,7 +348,11 @@ impl Settings {
             }
             *self.general.persistent() = false;
             if variant == u64::MAX {
-                log::debug!("Creating new variant `{}` in new settings file {}", variant_name, json_path.display());
+                log::debug!(
+                    "Creating new variant `{}` in new settings file {}",
+                    variant_name,
+                    json_path.display()
+                );
                 self.create_and_load_variant(&json_path, app_id, variant_name)?;
             }
         }
@@ -345,7 +361,12 @@ impl Settings {
         Ok(*self.general.persistent())
     }
 
-    fn create_and_load_variant(&mut self, json_path: &PathBuf, app_id: u64, variant_name: String) -> Result<(), SettingError> {
+    fn create_and_load_variant(
+        &mut self,
+        json_path: &PathBuf,
+        app_id: u64,
+        variant_name: String,
+    ) -> Result<(), SettingError> {
         *self.general.persistent() = true;
         self.general.variant_id(u64::MAX);
         self.general.variant_name(variant_name.clone());

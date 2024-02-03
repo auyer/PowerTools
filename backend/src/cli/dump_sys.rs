@@ -1,8 +1,8 @@
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::thread::{self, JoinHandle};
 use std::sync::mpsc::{channel, Sender};
-use std::io::Write;
+use std::thread::{self, JoinHandle};
 
 pub fn dump_sys_info() -> Result<(), ()> {
     let (tx, rx) = channel();
@@ -16,9 +16,7 @@ pub fn dump_sys_info() -> Result<(), ()> {
         join_handles.push(read_file(file, tx.clone()));
     }
 
-    let useful_commands = vec![
-        "dmidecode",
-    ];
+    let useful_commands = vec!["dmidecode"];
     for cmd in useful_commands.into_iter() {
         join_handles.push(execute_command(cmd, tx.clone()));
     }
@@ -29,38 +27,48 @@ pub fn dump_sys_info() -> Result<(), ()> {
         }
     }
 
-    let mut dump_file = std::fs::File::create("powertools_sys_dump.txt").expect("Failed to create dump file");
+    let mut dump_file =
+        std::fs::File::create("powertools_sys_dump.txt").expect("Failed to create dump file");
     for response in rx.into_iter() {
-        dump_file.write(
-            &format!("{} v{} ###### {} ######\n{}\n",
-                crate::consts::PACKAGE_NAME,
-                crate::consts::PACKAGE_VERSION,
-                response.0,
-                response.1.unwrap_or("[None]".to_owned())
-            ).into_bytes()
-        ).expect("Failed to write to dump file");
+        dump_file
+            .write(
+                &format!(
+                    "{} v{} ###### {} ######\n{}\n",
+                    crate::consts::PACKAGE_NAME,
+                    crate::consts::PACKAGE_VERSION,
+                    response.0,
+                    response.1.unwrap_or("[None]".to_owned())
+                )
+                .into_bytes(),
+            )
+            .expect("Failed to write to dump file");
     }
     Ok(())
 }
 
-fn read_file(file: impl AsRef<Path> + Send + 'static, tx: Sender<(String, Option<String>)>) -> JoinHandle<()> {
+fn read_file(
+    file: impl AsRef<Path> + Send + 'static,
+    tx: Sender<(String, Option<String>)>,
+) -> JoinHandle<()> {
     thread::spawn(move || {
         let file = file.as_ref();
-        tx.send(
-            (file.display().to_string(),
-             std::fs::read_to_string(file).ok())
-        ).expect("Failed to send file contents");
+        tx.send((
+            file.display().to_string(),
+            std::fs::read_to_string(file).ok(),
+        ))
+        .expect("Failed to send file contents");
     })
 }
 
 fn execute_command(command: &'static str, tx: Sender<(String, Option<String>)>) -> JoinHandle<()> {
     thread::spawn(move || {
-            tx.send(
-            (command.to_owned(), Command::new(command)
+        tx.send((
+            command.to_owned(),
+            Command::new(command)
                 .output()
                 .map(|out| String::from_utf8_lossy(&out.stdout).into_owned())
-                .ok()
-            )).expect("Failed to send command output");
-        }
-    )
+                .ok(),
+        ))
+        .expect("Failed to send command output");
+    })
 }

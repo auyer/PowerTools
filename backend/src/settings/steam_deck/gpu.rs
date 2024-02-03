@@ -196,9 +196,20 @@ impl Gpu {
         let is_lcd = matches!(self.variant, super::Model::LCD);
         let is_lock_feature_enabled = self.limits.extras.quirks.contains("pp_dpm_fclk-static");
 
-        if (is_oled && self.limits.extras.quirks.contains("pp_dpm_fclk-reversed-on-OLED"))
-            || (is_lcd && self.limits.extras.quirks.contains("pp_dpm_fclk-reversed-on-LCD"))
-            || self.limits.extras.quirks.contains("pp_dpm_fclk-reversed") {
+        if (is_oled
+            && self
+                .limits
+                .extras
+                .quirks
+                .contains("pp_dpm_fclk-reversed-on-OLED"))
+            || (is_lcd
+                && self
+                    .limits
+                    .extras
+                    .quirks
+                    .contains("pp_dpm_fclk-reversed-on-LCD"))
+            || self.limits.extras.quirks.contains("pp_dpm_fclk-reversed")
+        {
             let options_count = self
                 .sysfs_card
                 .read_value(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned())
@@ -208,12 +219,13 @@ impl Gpu {
             if is_lock_feature_enabled {
                 format!("{}\n", modifier - max_val)
             } else {
-                if max_val == 0 as u64  {
+                if max_val == 0 as u64 {
                     format!("{}\n", modifier)
                 } else {
                     use std::fmt::Write;
                     let mut payload = format!("{}", modifier - max_val);
-                    for i in (0..max_val).rev(/* rev() isn't necessary but it creates a nicer (ascending) order */) {
+                    for i in (0..max_val).rev(/* rev() isn't necessary but it creates a nicer (ascending) order */)
+                    {
                         write!(payload, " {}", modifier - i)
                             .expect("Failed to write to memory payload (should be infallible!?)");
                     }
