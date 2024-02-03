@@ -38,7 +38,7 @@ fn special_settings() -> Vec<community_settings_core::v1::Metadata> {
                     tdp: None,
                     tdp_boost: None,
                     clock_limits: Some(community_settings_core::v1::MinMax { max: Some(1), min: Some(0) }),
-                    slow_memory: false,
+                    memory_clock: Some(404),
                 },
                 battery: community_settings_core::v1::Battery {
                     charge_rate: Some(42),
