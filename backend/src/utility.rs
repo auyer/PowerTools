@@ -174,6 +174,7 @@ mod generate {
         );
         let savefile = crate::persist::FileJson {
             version: 0,
+            app_id: 0,
             name: crate::consts::DEFAULT_SETTINGS_NAME.to_owned(),
             variants: mini_variants,
         };

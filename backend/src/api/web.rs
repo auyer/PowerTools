@@ -3,10 +3,25 @@ use std::sync::{Arc, Mutex, RwLock};
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
+use chrono::{offset::Utc, DateTime};
+use serde::{Deserialize, Serialize};
+
 use super::handler::{ApiMessage, GeneralMessage};
 
 const BASE_URL_FALLBACK: &'static str = "https://powertools.ngni.us";
 static BASE_URL: RwLock<Option<String>> = RwLock::new(None);
+
+const MAX_CACHE_DURATION: std::time::Duration =
+    std::time::Duration::from_secs(60 * 60 * 24 * 7 /* 7 days */);
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct CachedData<T> {
+    data: T,
+    updated: DateTime<Utc>,
+}
+
+type StoreCache =
+    std::collections::HashMap<u32, CachedData<Vec<community_settings_core::v1::Metadata>>>;
 
 pub fn set_base_url(base_url: String) {
     *BASE_URL
@@ -34,35 +49,124 @@ fn url_upload_config() -> String {
     format!("{}/api/setting", get_base_url())
 }
 
+fn cache_path() -> std::path::PathBuf {
+    crate::utility::settings_dir().join(crate::consts::WEB_SETTINGS_CACHE)
+}
+
+fn load_cache() -> StoreCache {
+    let path = cache_path();
+    let file = match std::fs::File::open(&path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("Failed to open store cache {}: {}", path.display(), e);
+            return StoreCache::default();
+        }
+    };
+    let mut file = std::io::BufReader::new(file);
+    match ron::de::from_reader(&mut file) {
+        Ok(cache) => cache,
+        Err(e) => {
+            log::error!("Failed to parse store cache {}: {}", path.display(), e);
+            return StoreCache::default();
+        }
+    }
+}
+
+fn save_cache(cache: &StoreCache) {
+    let path = cache_path();
+    let file = match std::fs::File::create(&path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("Failed to create store cache {}: {}", path.display(), e);
+            return;
+        }
+    };
+    let mut file = std::io::BufWriter::new(file);
+    if let Err(e) =
+        ron::ser::to_writer_pretty(&mut file, cache, crate::utility::ron_pretty_config())
+    {
+        log::error!("Failed to parse store cache {}: {}", path.display(), e);
+    }
+}
+
+fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metadata> {
+    let mut cache = load_cache();
+    if let Some(cached_result) = cache.get(&steam_app_id) {
+        if cached_result.updated < (Utc::now() - MAX_CACHE_DURATION) {
+            // cache needs update
+            if let Ok(result) = search_by_app_id_online(steam_app_id) {
+                cache.insert(
+                    steam_app_id,
+                    CachedData {
+                        data: result.clone(),
+                        updated: Utc::now(),
+                    },
+                );
+                save_cache(&cache);
+                result
+            } else {
+                // if all else fails, out of date results are better than no results
+                cached_result.data.to_owned()
+            }
+        } else {
+            // cache is ok, use it
+            cached_result.data.to_owned()
+        }
+    } else {
+        if let Ok(result) = search_by_app_id_online(steam_app_id) {
+            cache.insert(
+                steam_app_id,
+                CachedData {
+                    data: result.clone(),
+                    updated: Utc::now(),
+                },
+            );
+            save_cache(&cache);
+            result
+        } else {
+            Vec::with_capacity(0)
+        }
+    }
+}
+
+fn search_by_app_id_online(
+    steam_app_id: u32,
+) -> std::io::Result<Vec<community_settings_core::v1::Metadata>> {
+    let req_url = url_search_by_app_id(steam_app_id);
+    match ureq::get(&req_url).call() {
+        Ok(response) => {
+            let json_res: std::io::Result<Vec<community_settings_core::v1::Metadata>> =
+                response.into_json();
+            match json_res {
+                Ok(search_results) => Ok(search_results),
+                Err(e) => {
+                    log::error!("Cannot parse response from `{}`: {}", req_url, e);
+                    Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+                }
+            }
+        }
+        Err(e) => {
+            log::warn!("Cannot get search results from `{}`: {}", req_url, e);
+            Err(std::io::Error::new(
+                std::io::ErrorKind::ConnectionAborted,
+                e,
+            ))
+        }
+    }
+}
+
 /// Get search results web method
 pub fn search_by_app_id() -> impl AsyncCallable {
     let getter = move || {
         move |steam_app_id: u32| {
-            let req_url = url_search_by_app_id(steam_app_id);
-            match ureq::get(&req_url).call() {
-                Ok(response) => {
-                    let json_res: std::io::Result<Vec<community_settings_core::v1::Metadata>> =
-                        response.into_json();
-                    match json_res {
-                        Ok(search_results) => {
-                            // search results may be quite large, so let's do the JSON string conversion in the background (blocking) thread
-                            match serde_json::to_string(&search_results) {
-                                Err(e) => log::error!(
-                                    "Cannot convert search results from `{}` to JSON: {}",
-                                    req_url,
-                                    e
-                                ),
-                                Ok(s) => return s,
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("Cannot parse response from `{}`: {}", req_url, e)
-                        }
-                    }
+            let search_results = get_maybe_cached(steam_app_id);
+            match serde_json::to_string(&search_results) {
+                Err(e) => {
+                    log::error!("Cannot convert search results to JSON: {}", e);
+                    "[]".to_owned()
                 }
-                Err(e) => log::warn!("Cannot get search results from `{}`: {}", req_url, e),
+                Ok(s) => s,
             }
-            "[]".to_owned()
         }
     };
     super::async_utils::AsyncIsh {

@@ -28,12 +28,20 @@ simplelog = "0.12"
 
 # limits & driver functionality
 limits_core = { version = "3", path = "./limits_core" }
-community_settings_core = { version = "0.1", path = "./community_settings_core" }
 regex = "1"
+
+# steam deck libs
 smokepatio = { version = "0.1", features = [ "std" ], path = "../../smokepatio" }
 libc = "0.2"
+
+# online settings
+community_settings_core = { version = "0.1", path = "./community_settings_core" }
+chrono = { version = "0.4", features = [ "serde" ] }
+
+# hardware enablement
 #libryzenadj = { version = "0.14", path = "../../libryzenadj-rs-14" }
 libryzenadj = { version = "0.13" }
+
 # ureq's tls feature does not like musl targets
 ureq = { version = "2", features = ["json", "gzip", "brotli", "charset"], default-features = false, optional = true }
 

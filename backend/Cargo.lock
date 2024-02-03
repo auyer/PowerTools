@@ -304,6 +304,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-targets 0.48.5",
 ]
@@ -1172,6 +1173,7 @@ name = "powertools"
 version = "1.5.0-ng1"
 dependencies = [
  "async-trait",
+ "chrono",
  "clap",
  "community_settings_core",
  "libc",
