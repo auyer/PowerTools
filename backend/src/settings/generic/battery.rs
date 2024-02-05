@@ -132,6 +132,18 @@ impl OnResume for Battery {
 
 impl crate::settings::OnPowerEvent for Battery {}
 
+impl crate::settings::OnLoad for Battery {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Battery {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
 impl TBattery for Battery {
     fn limits(&self) -> crate::api::BatteryLimits {
         crate::api::BatteryLimits {

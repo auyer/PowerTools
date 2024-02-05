@@ -1,155 +1,336 @@
 {
   "configs": [
     {
-      "name": "Steam Deck Custom",
+      "name": "Devs mode best mode",
       "conditions": {
         "dmi": null,
-        "cpuinfo": "model name\t: AMD Custom APU (0405)|(0932)\n",
+        "cpuinfo": null,
         "os": null,
         "command": null,
-        "file_exists": "./limits_override.json"
+        "file_exists": "/etc/powertools_dev_mode"
       },
       "limits": {
         "cpu": {
-          "provider": "GabeBoyAdvance",
+          "provider": "DevMode",
           "limits": {
             "cpus": [
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               },
               {
                 "clock_min": {
-                  "min": 1400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 5000
                 },
                 "clock_max": {
-                  "min": 400,
-                  "max": 3500
+                  "min": 100,
+                  "max": 4800
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
+              },
+              {
+                "clock_min": {
+                  "min": 100,
+                  "max": 5000
+                },
+                "clock_max": {
+                  "min": 100,
+                  "max": 4800
+                },
+                "clock_step": 100,
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
+              },
+              {
+                "clock_min": {
+                  "min": 100,
+                  "max": 5000
+                },
+                "clock_max": {
+                  "min": 100,
+                  "max": 4800
+                },
+                "clock_step": 100,
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
+              },
+              {
+                "clock_min": {
+                  "min": 100,
+                  "max": 5000
+                },
+                "clock_max": {
+                  "min": 100,
+                  "max": 4800
+                },
+                "clock_step": 100,
+                "tdp": {
+                  "min": 1000000,
+                  "max": 100000000
+                },
+                "tdp_boost": {
+                  "min": 1000000,
+                  "max": 110000000
+                },
+                "tdp_divisor": 1000000,
+                "tdp_step": 1,
+                "skip_resume_reclock": false,
+                "experiments": true
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": true,
+              "quirks": [
+                ""
+              ]
+            }
           }
         },
         "gpu": {
-          "provider": "GabeBoyAdvance",
+          "provider": "DevMode",
           "limits": {
             "fast_ppt": {
-              "min": 1000000,
-              "max": 30000000
+              "min": 3000000,
+              "max": 11000000
             },
-            "fast_ppt_default": 15000000,
+            "fast_ppt_default": 10000000,
             "slow_ppt": {
-              "min": 1000000,
-              "max": 29000000
+              "min": 7000000,
+              "max": 11000000
             },
-            "slow_ppt_default": 15000000,
+            "slow_ppt_default": 10000000,
             "ppt_divisor": 1000000,
             "ppt_step": 1,
-            "tdp": null,
-            "tdp_boost": null,
-            "tdp_step": null,
+            "tdp": {
+              "min": 1000000,
+              "max": 100000000
+            },
+            "tdp_boost": {
+              "min": 1000000,
+              "max": 110000000
+            },
+            "tdp_divisor": 1000000,
+            "tdp_step": 1,
             "clock_min": {
-              "min": 400,
-              "max": 1600
+              "min": 100,
+              "max": 1000
             },
             "clock_max": {
-              "min": 400,
-              "max": 1600
+              "min": 100,
+              "max": 1100
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": {
+              "min": 100,
+              "max": 1100
+            },
+            "memory_clock_step": 100,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": true,
+              "quirks": [
+                "dev"
+              ]
+            }
           }
         },
         "battery": {
-          "provider": "GabeBoyAdvance",
+          "provider": "DevMode",
           "limits": {
             "charge_rate": {
-              "min": 250,
-              "max": 2500
+              "min": 0,
+              "max": 1000
             },
             "charge_modes": [
               "normal",
@@ -157,10 +338,16 @@
               "idle"
             ],
             "charge_limit": {
-              "min": 10.0,
-              "max": 90.0
+              "min": 1.0,
+              "max": 99.0
             },
-            "extra_readouts": false
+            "extra_readouts": true,
+            "extras": {
+              "experiments": true,
+              "quirks": [
+                ""
+              ]
+            }
           }
         }
       }
@@ -169,7 +356,7 @@
       "name": "Steam Deck",
       "conditions": {
         "dmi": null,
-        "cpuinfo": "model name\t: AMD Custom APU (0405)|(0932)\n",
+        "cpuinfo": "model name\t: AMD Custom APU 0405\n",
         "os": null,
         "command": null,
         "file_exists": null
@@ -189,7 +376,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -201,7 +393,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -213,7 +410,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -225,7 +427,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -237,7 +444,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -249,7 +461,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -261,7 +478,12 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -273,10 +495,19 @@
                   "max": 3500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -296,6 +527,7 @@
             "ppt_step": 1,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": {
               "min": 400,
@@ -306,7 +538,19 @@
               "max": 1600
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": {
+              "min": 400,
+              "max": 800
+            },
+            "memory_clock_step": 400,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": [
+                "pp_dpm_fclk-reversed",
+                "pp_dpm_fclk-not-updated-on-LCD"
+              ]
+            }
           }
         },
         "battery": {
@@ -325,7 +569,237 @@
               "min": 10.0,
               "max": 90.0
             },
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Steam Deck OLED",
+      "conditions": {
+        "dmi": null,
+        "cpuinfo": "model name\t: AMD Custom APU 0932\n",
+        "os": null,
+        "command": null,
+        "file_exists": null
+      },
+      "limits": {
+        "cpu": {
+          "provider": "GabeBoy",
+          "limits": {
+            "cpus": [
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              },
+              {
+                "clock_min": {
+                  "min": 1400,
+                  "max": 3500
+                },
+                "clock_max": {
+                  "min": 400,
+                  "max": 3500
+                },
+                "clock_step": 100,
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
+              }
+            ],
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
+          }
+        },
+        "gpu": {
+          "provider": "GabeBoy",
+          "limits": {
+            "fast_ppt": {
+              "min": 1000000,
+              "max": 30000000
+            },
+            "fast_ppt_default": 15000000,
+            "slow_ppt": {
+              "min": 1000000,
+              "max": 29000000
+            },
+            "slow_ppt_default": 15000000,
+            "ppt_divisor": 1000000,
+            "ppt_step": 1,
+            "tdp": null,
+            "tdp_boost": null,
+            "tdp_divisor": null,
+            "tdp_step": null,
+            "clock_min": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_max": {
+              "min": 400,
+              "max": 1600
+            },
+            "clock_step": 100,
+            "memory_clock": {
+              "min": 400,
+              "max": 800
+            },
+            "memory_clock_step": 200,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": [
+                "pp_dpm_fclk-reversed",
+                "pp_dpm_fclk-not-updated-on-LCD"
+              ]
+            }
+          }
+        },
+        "battery": {
+          "provider": "GabeBoy",
+          "limits": {
+            "charge_rate": {
+              "min": 250,
+              "max": 2500
+            },
+            "charge_modes": [
+              "normal",
+              "discharge",
+              "idle"
+            ],
+            "charge_limit": {
+              "min": 10.0,
+              "max": 90.0
+            },
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -354,7 +828,12 @@
                   "max": 3700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -366,7 +845,12 @@
                   "max": 3700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -378,7 +862,12 @@
                   "max": 3700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -390,10 +879,19 @@
                   "max": 3700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -413,6 +911,7 @@
             "ppt_step": 1000,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": {
               "min": 400,
@@ -423,7 +922,13 @@
               "max": 1100
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -432,7 +937,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -461,7 +970,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -473,7 +987,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -485,7 +1004,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -497,7 +1021,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -509,7 +1038,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -521,7 +1055,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -533,7 +1072,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -545,7 +1089,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -557,7 +1106,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -569,7 +1123,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -581,7 +1140,12 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -593,10 +1157,19 @@
                   "max": 4000
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -616,6 +1189,7 @@
             "ppt_step": 1000,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": {
               "min": 400,
@@ -626,7 +1200,13 @@
               "max": 1600
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -635,7 +1215,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -664,7 +1248,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -676,7 +1265,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -688,7 +1282,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -700,7 +1299,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -712,7 +1316,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -724,7 +1333,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -736,7 +1350,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -748,7 +1367,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -760,7 +1384,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -772,7 +1401,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -784,7 +1418,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -796,7 +1435,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -808,7 +1452,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -820,7 +1469,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -832,7 +1486,12 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -844,10 +1503,19 @@
                   "max": 4500
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -867,6 +1535,7 @@
             "ppt_step": 1000,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": {
               "min": 400,
@@ -877,7 +1546,13 @@
               "max": 2200
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -886,7 +1561,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -915,7 +1594,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -927,7 +1611,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -939,7 +1628,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -951,7 +1645,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -963,7 +1662,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -975,7 +1679,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -987,7 +1696,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -999,7 +1713,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1011,7 +1730,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1023,7 +1747,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1035,7 +1764,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1047,7 +1781,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1059,7 +1798,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1071,7 +1815,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1083,7 +1832,12 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1095,10 +1849,19 @@
                   "max": 4700
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -1118,6 +1881,7 @@
             "ppt_step": 1000,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": {
               "min": 400,
@@ -1128,7 +1892,13 @@
               "max": 2200
             },
             "clock_step": 100,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -1137,7 +1907,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -1166,7 +1940,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1178,7 +1957,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1190,7 +1974,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1202,7 +1991,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1214,7 +2008,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1226,7 +2025,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1238,7 +2042,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1250,7 +2059,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1262,7 +2076,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1274,7 +2093,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1286,7 +2110,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1298,7 +2127,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1310,7 +2144,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1322,7 +2161,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1334,7 +2178,12 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": {
@@ -1346,10 +2195,19 @@
                   "max": 5100
                 },
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -1369,11 +2227,18 @@
             "ppt_step": 1000,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": null,
             "clock_max": null,
             "clock_step": null,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -1382,7 +2247,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -1405,52 +2274,96 @@
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               },
               {
                 "clock_min": null,
                 "clock_max": null,
                 "clock_step": 100,
-                "skip_resume_reclock": false
+                "tdp": null,
+                "tdp_boost": null,
+                "tdp_divisor": null,
+                "tdp_step": null,
+                "skip_resume_reclock": false,
+                "experiments": false
               }
             ],
-            "global_governors": true
+            "global_governors": true,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "gpu": {
@@ -1464,11 +2377,18 @@
             "ppt_step": null,
             "tdp": null,
             "tdp_boost": null,
+            "tdp_divisor": null,
             "tdp_step": null,
             "clock_min": null,
             "clock_max": null,
             "clock_step": null,
-            "skip_resume_reclock": false
+            "memory_clock": null,
+            "memory_clock_step": null,
+            "skip_resume_reclock": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         },
         "battery": {
@@ -1477,7 +2397,11 @@
             "charge_rate": null,
             "charge_modes": [],
             "charge_limit": null,
-            "extra_readouts": false
+            "extra_readouts": false,
+            "extras": {
+              "experiments": false,
+              "quirks": []
+            }
           }
         }
       }
@@ -1491,5 +2415,6 @@
       "url": "https://git.ngni.us/NG-SD-Plugins/PowerTools/wiki"
     }
   ],
+  "store": "https://powertools.ngni.us",
   "refresh": "http://limits.ngni.us:45000/powertools/v2"
 }

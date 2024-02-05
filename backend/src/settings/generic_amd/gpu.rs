@@ -312,6 +312,18 @@ impl OnSet for Gpu {
 
 impl crate::settings::OnPowerEvent for Gpu {}
 
+impl crate::settings::OnLoad for Gpu {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Gpu {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
 fn bad_gpu_limits() -> crate::api::GpuLimits {
     crate::api::GpuLimits {
         fast_ppt_limits: None,

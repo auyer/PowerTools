@@ -176,6 +176,22 @@ impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + crate::settings::OnPowerEvent>
     }
 }
 
+impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + OnResume + OnSet + crate::settings::OnPowerEvent>
+    crate::settings::OnLoad for Cpus<C>
+{
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + OnResume + OnSet + crate::settings::OnPowerEvent>
+    crate::settings::OnUnload for Cpus<C>
+{
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
 impl<C: AsMut<Cpu> + AsRef<Cpu> + TCpu + OnResume + OnSet + crate::settings::OnPowerEvent> TCpus
     for Cpus<C>
 {

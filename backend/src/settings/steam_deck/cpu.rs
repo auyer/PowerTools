@@ -181,6 +181,35 @@ impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
 
 impl crate::settings::OnPowerEvent for Cpus {}
 
+impl crate::settings::OnLoad for Cpus {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+        for cpu in &mut self.cpus {
+            cpu.on_load().unwrap_or_else(|mut e| errors.append(&mut e));
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
+impl crate::settings::OnUnload for Cpus {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+        for cpu in &mut self.cpus {
+            cpu.on_unload()
+                .unwrap_or_else(|mut e| errors.append(&mut e));
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
 impl TCpus for Cpus {
     fn limits(&self) -> crate::api::CpusLimits {
         crate::api::CpusLimits {
@@ -404,9 +433,6 @@ impl Cpu {
                 )
                 .unwrap_or_else(|e| errors.push(e));
             }
-            // TODO remove this when it's no longer needed
-            self.clock_unset_workaround()
-                .unwrap_or_else(|mut e| errors.append(&mut e));
             if errors.is_empty() {
                 Ok(())
             } else {
@@ -418,14 +444,9 @@ impl Cpu {
     }
 
     // https://github.com/NGnius/PowerTools/issues/107
-    fn clock_unset_workaround(&self) -> Result<(), Vec<SettingError>> {
-        if !self.state.is_resuming {
-            let mut errors = Vec::new();
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(true, self.index);
-            // always set clock speeds, since it doesn't reset correctly (kernel/hardware bug)
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.enforce_level(&self.sysfs)?;
-            // disable manual clock limits
-            log::debug!("Setting CPU {} to default clockspeed", self.index);
+    fn clock_unset(&self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+        if self.state.clock_limits_set && POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
             // max clock
             self.set_clock_limit(
                 self.index,
@@ -445,15 +466,15 @@ impl Cpu {
 
             self.reset_clock_limits().unwrap_or_else(|e| errors.push(e));
             self.set_confirm().unwrap_or_else(|e| errors.push(e));
-
-            POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
-            if errors.is_empty() {
-                Ok(())
-            } else {
-                Err(errors)
-            }
-        } else {
+        }
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_cpu(false, self.index);
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
+            .enforce_level(&self.sysfs)
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        if errors.is_empty() {
             Ok(())
+        } else {
+            Err(errors)
         }
     }
 
@@ -636,6 +657,18 @@ impl OnResume for Cpu {
         let mut copy = self.clone();
         copy.state.is_resuming = true;
         copy.set_all()
+    }
+}
+
+impl crate::settings::OnLoad for Cpu {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Cpu {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        self.clock_unset()
     }
 }
 

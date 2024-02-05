@@ -39,6 +39,20 @@ impl OnResume for Cpus {
 
 impl crate::settings::OnPowerEvent for Cpus {}
 
+impl crate::settings::OnLoad for Cpus {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        log::debug!("dev_mode_Cpus::on_load(self)");
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Cpus {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        log::debug!("dev_mode_Cpus::on_unload(self)");
+        Ok(())
+    }
+}
+
 impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
     fn from_json_and_limits(
         persistent: Vec<CpuJson>,

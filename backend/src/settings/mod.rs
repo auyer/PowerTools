@@ -22,8 +22,8 @@ pub use min_max::{min_max_from_json, MinMax};
 
 pub use error::SettingError;
 pub use traits::{
-    OnPowerEvent, OnResume, OnSet, PowerMode, ProviderBuilder, TBattery, TCpu, TCpus, TGeneral,
-    TGpu,
+    OnLoad, OnPowerEvent, OnResume, OnSet, OnUnload, PowerMode, ProviderBuilder, TBattery, TCpu,
+    TCpus, TGeneral, TGpu,
 };
 
 #[cfg(test)]

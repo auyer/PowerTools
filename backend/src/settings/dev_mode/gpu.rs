@@ -80,6 +80,20 @@ impl OnResume for Gpu {
 
 impl crate::settings::OnPowerEvent for Gpu {}
 
+impl crate::settings::OnLoad for Gpu {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        log::debug!("dev_mode_Gpu::on_load(self)");
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Gpu {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        log::debug!("dev_mode_Gpu::on_unload(self)");
+        Ok(())
+    }
+}
+
 impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
         log::debug!("dev_mode_Gpu::limits(self) -> {{...}}");

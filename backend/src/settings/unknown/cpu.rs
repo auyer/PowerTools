@@ -71,6 +71,18 @@ impl OnResume for Cpus {
 
 impl crate::settings::OnPowerEvent for Cpus {}
 
+impl crate::settings::OnLoad for Cpus {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Cpus {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
 impl Cpus {
     pub fn cpu_count() -> Option<usize> {
         let mut data: String = usdpl_back::api::files::read_single(CPU_PRESENT_PATH)

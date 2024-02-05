@@ -10,6 +10,14 @@ pub trait OnResume {
     fn on_resume(&self) -> Result<(), Vec<SettingError>>;
 }
 
+pub trait OnLoad {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>>;
+}
+
+pub trait OnUnload {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>>;
+}
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug)]
 pub enum PowerMode {
@@ -46,7 +54,7 @@ pub trait ProviderBuilder<J, L> {
     fn from_limits(limits: L) -> Self;
 }
 
-pub trait TGpu: OnSet + OnResume + OnPowerEvent + Debug + Send {
+pub trait TGpu: OnSet + OnResume + OnPowerEvent + OnLoad + OnUnload + Debug + Send {
     fn limits(&self) -> crate::api::GpuLimits;
 
     fn json(&self) -> crate::persist::GpuJson;
@@ -68,7 +76,7 @@ pub trait TGpu: OnSet + OnResume + OnPowerEvent + Debug + Send {
     }
 }
 
-pub trait TCpus: OnSet + OnResume + OnPowerEvent + Debug + Send {
+pub trait TCpus: OnSet + OnResume + OnPowerEvent + OnLoad + OnUnload + Debug + Send {
     fn limits(&self) -> crate::api::CpusLimits;
 
     fn json(&self) -> Vec<crate::persist::CpuJson>;
@@ -96,7 +104,7 @@ pub trait TCpu: Debug + Send {
     fn get_clock_limits(&self) -> Option<&MinMax<u64>>;
 }
 
-pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
+pub trait TGeneral: OnSet + OnResume + OnPowerEvent + OnLoad + OnUnload + Debug + Send {
     fn limits(&self) -> crate::api::GeneralLimits;
 
     fn get_persistent(&self) -> bool;
@@ -133,7 +141,7 @@ pub trait TGeneral: OnSet + OnResume + OnPowerEvent + Debug + Send {
     fn provider(&self) -> crate::persist::DriverJson;
 }
 
-pub trait TBattery: OnSet + OnResume + OnPowerEvent + Debug + Send {
+pub trait TBattery: OnSet + OnResume + OnPowerEvent + OnLoad + OnUnload + Debug + Send {
     fn limits(&self) -> crate::api::BatteryLimits;
 
     fn json(&self) -> crate::persist::BatteryJson;

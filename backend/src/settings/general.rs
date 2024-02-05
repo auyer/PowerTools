@@ -2,7 +2,7 @@ use std::path::PathBuf;
 //use std::sync::{Arc, Mutex};
 
 //use super::{Battery, Cpus, Gpu};
-use super::{OnResume, OnSet, SettingError};
+use super::{OnLoad, OnPowerEvent, OnResume, OnSet, OnUnload, SettingError};
 use super::{TBattery, TCpus, TGeneral, TGpu};
 use crate::persist::{FileJson, SettingsJson};
 //use crate::utility::unwrap_lock;
@@ -51,7 +51,19 @@ impl OnResume for General {
     }
 }
 
-impl crate::settings::OnPowerEvent for General {}
+impl OnPowerEvent for General {}
+
+impl OnLoad for General {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl OnUnload for General {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
 
 impl TGeneral for General {
     fn limits(&self) -> crate::api::GeneralLimits {
@@ -461,7 +473,7 @@ impl OnResume for Settings {
     }
 }
 
-impl crate::settings::OnPowerEvent for Settings {
+impl OnPowerEvent for Settings {
     fn on_power_event(&mut self, new_mode: super::PowerMode) -> Result<(), Vec<SettingError>> {
         let mut errors = Vec::new();
 
@@ -476,6 +488,56 @@ impl crate::settings::OnPowerEvent for Settings {
             .unwrap_or_else(|mut e| errors.append(&mut e));
         self.gpu
             .on_power_event(new_mode)
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
+impl OnLoad for Settings {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+
+        self.general
+            .on_load()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.battery
+            .on_load()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.cpus
+            .on_load()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.gpu
+            .on_load()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+}
+
+impl OnUnload for Settings {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        let mut errors = Vec::new();
+
+        self.general
+            .on_unload()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.battery
+            .on_unload()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.cpus
+            .on_unload()
+            .unwrap_or_else(|mut e| errors.append(&mut e));
+        self.gpu
+            .on_unload()
             .unwrap_or_else(|mut e| errors.append(&mut e));
 
         if errors.is_empty() {

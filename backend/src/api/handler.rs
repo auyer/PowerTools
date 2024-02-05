@@ -3,7 +3,8 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 use crate::persist::SettingsJson;
 use crate::settings::{
-    MinMax, OnPowerEvent, OnResume, OnSet, PowerMode, Settings, TBattery, TCpus, TGeneral, TGpu,
+    MinMax, OnLoad, OnPowerEvent, OnResume, OnSet, OnUnload, PowerMode, Settings, TBattery, TCpus,
+    TGeneral, TGpu,
 };
 
 type Callback<T> = Box<dyn FnOnce(T) + Send>;
@@ -401,13 +402,22 @@ impl ApiMessageHandler {
             }
             ApiMessage::LoadSettings(id, name, variant_id, variant_name) => {
                 let path = format!("{}.ron", id);
+                if let Err(e) = settings.on_unload() {
+                    print_errors("LoadSettings on_unload()", e);
+                }
                 match settings.load_file(path.into(), id, name, variant_id, variant_name, false) {
                     Ok(success) => log::info!("Loaded settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
+                if let Err(e) = settings.on_load() {
+                    print_errors("LoadSettings on_load()", e);
+                }
                 true
             }
             ApiMessage::LoadVariant(variant_id, variant_name) => {
+                if let Err(e) = settings.on_unload() {
+                    print_errors("LoadVariant on_unload()", e);
+                }
                 let path = settings.general.get_path();
                 let app_id = settings.general.get_app_id();
                 match settings.load_file(
@@ -421,9 +431,15 @@ impl ApiMessageHandler {
                     Ok(success) => log::info!("Loaded variant settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
+                if let Err(e) = settings.on_load() {
+                    print_errors("LoadVariant on_load()", e);
+                }
                 true
             }
             ApiMessage::LoadMainSettings => {
+                if let Err(e) = settings.on_unload() {
+                    print_errors("LoadMainSettings on_unload()", e);
+                }
                 match settings.load_file(
                     crate::consts::DEFAULT_SETTINGS_FILE.into(),
                     0,
@@ -435,14 +451,23 @@ impl ApiMessageHandler {
                     Ok(success) => log::info!("Loaded main settings file? {}", success),
                     Err(e) => log::warn!("Load file err: {}", e),
                 }
+                if let Err(e) = settings.on_load() {
+                    print_errors("LoadMainSettings on_load()", e);
+                }
                 true
             }
             ApiMessage::LoadSystemSettings => {
+                if let Err(e) = settings.on_unload() {
+                    print_errors("LoadSystemSettings on_unload()", e);
+                }
                 settings.load_system_default(
                     settings.general.get_name().to_owned(),
                     settings.general.get_variant_id(),
                     settings.general.get_variant_info().name,
                 );
+                if let Err(e) = settings.on_load() {
+                    print_errors("LoadSystemSettings on_load()", e);
+                }
                 true
             }
             ApiMessage::GetLimits(cb) => {
@@ -464,7 +489,6 @@ impl ApiMessageHandler {
                 false
             }
             ApiMessage::UploadCurrentVariant(steam_id, steam_username) => {
-                //TODO
                 let steam_app_id = settings.general.get_app_id();
                 super::web::upload_settings(
                     steam_app_id,

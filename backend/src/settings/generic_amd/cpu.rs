@@ -43,6 +43,18 @@ impl OnSet for Cpus {
 
 impl crate::settings::OnPowerEvent for Cpus {}
 
+impl crate::settings::OnLoad for Cpus {
+    fn on_load(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
+impl crate::settings::OnUnload for Cpus {
+    fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        Ok(())
+    }
+}
+
 impl TCpus for Cpus {
     fn limits(&self) -> crate::api::CpusLimits {
         self.generic.limits()
