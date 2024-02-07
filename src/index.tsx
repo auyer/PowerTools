@@ -2,25 +2,20 @@ import {
   ButtonItem,
   definePlugin,
   DialogButton,
-  //Menu,
-  //MenuItem,
   PanelSection,
   PanelSectionRow,
   ServerAPI,
-  //showContextMenu,
   staticClasses,
-  //SliderField,
   ToggleField,
-  //Dropdown,
   Field,
   Dropdown,
   SingleDropdownOption,
   Navigation,
   Focusable,
   Spinner,
-  //NotchLabel
-  //gamepadDialogClasses,
-  //joinClassNames,
+  showModal,
+  QuickAccessTab,
+  ShowModalResult,
 } from "decky-frontend-lib";
 import { VFC, useState } from "react";
 import { GiDrill, GiFireExtinguisher, GiFireBomb, GiMineExplosion } from "react-icons/gi";
@@ -82,6 +77,8 @@ import { Gpu } from "./components/gpu";
 import { Battery } from "./components/battery";
 import { Cpus } from "./components/cpus";
 import { DevMessages } from "./components/message";
+
+import { TextFieldModal } from "./components/text_field_modal";
 
 import { StoreResultsPage } from "./store/page";
 
@@ -346,12 +343,29 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
         data: elem,
         label: <span>{elem.name}</span>,
     };});
-  console.log("variant options", variantOptions);
-  console.log("current variant", get_value(CURRENT_VARIANT_GEN));
-  console.log("variant selected", variantOptions.find((val: SingleDropdownOption, _index, _arr) => {
-                backend.log(backend.LogLevel.Debug, "POWERTOOLS: looking for variant data.id " + (get_value(CURRENT_VARIANT_GEN) as backend.VariantInfo).id.toString());
-                return (val.data as backend.VariantInfo).id == (get_value(CURRENT_VARIANT_GEN) as backend.VariantInfo).id;
-              }));
+
+  var modalResult: ShowModalResult | undefined = undefined;
+
+  const onNewVariantModelClosed = (name: string) => {
+    if (modalResult) {
+      modalResult.Close();
+    }
+    console.log("POWERTOOLS: variant name", name);
+    isVariantLoading = true;
+    backend.resolve(
+      backend.loadGeneralSettingsVariant("please give me a new ID k thx bye" /* anything that cannot be parsed as a u64 will be set to u64::MAX, which will cause the back-end to auto-generate an ID */, name),
+      (ok: boolean) => {
+        isVariantLoading = false;
+        backend.log(backend.LogLevel.Debug, "New settings variant ok? " + ok);
+        reload();
+        backend.resolve(backend.waitForComplete(), (_) => {
+          backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to new settings variant");
+          tryNotifyProfileChange();
+        });
+      }
+    );
+    Navigation.OpenQuickAccessMenu(QuickAccessTab.Decky);
+  };
 
   return (
     <PanelSection>
@@ -441,17 +455,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
             //layout="below"
             onClick={(_: MouseEvent) => {
               backend.log(backend.LogLevel.Debug, "Creating new PowerTools settings variant");
-              backend.resolve(
-                backend.loadGeneralSettingsVariant("please give me a new ID k thx bye" /* anything that cannot be parsed as a u64 will be set to u64::MAX, which will cause the back-end to auto-generate an ID */, undefined),
-                (ok: boolean) => {
-                  backend.log(backend.LogLevel.Debug, "New settings variant ok? " + ok);
-                  reload();
-                  backend.resolve(backend.waitForComplete(), (_) => {
-                    backend.log(backend.LogLevel.Debug, "Trying to tell UI to re-render due to new settings variant");
-                    tryNotifyProfileChange();
-                  });
-                }
-              );
+              modalResult = showModal(<TextFieldModal label={tr("Profile Variant") /* TODO translate */} placeholder={tr("Variant name") /* TODO translate */} onClosed={onNewVariantModelClosed} closeModal={() => { modalResult?.Close(); Navigation.OpenQuickAccessMenu(QuickAccessTab.Decky)}}/>, window);
             }}
           >
             <HiPlus/>

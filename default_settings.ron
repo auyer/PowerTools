@@ -1,58 +1,8 @@
 FileJson(
     version: 0,
     name: "Main",
+    app_id: 0,
     variants: {
-        0: SettingsJson(
-            version: 0,
-            name: "Primary",
-            variant: 0,
-            persistent: false,
-            cpus: [CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            ), CpuJson(
-                online: true,
-                clock_limits: None,
-                governor: "schedutil",
-            )],
-            gpu: GpuJson(
-                fast_ppt: None,
-                slow_ppt: None,
-                clock_limits: None,
-                slow_memory: false,
-            ),
-            battery: BatteryJson(
-                charge_rate: None,
-                charge_mode: None,
-                events: [],
-),
-            provider: None,
-        ),
         42: SettingsJson(
             version: 0,
             name: "FortySecondary",
@@ -94,8 +44,63 @@ FileJson(
             gpu: GpuJson(
                 fast_ppt: None,
                 slow_ppt: None,
+                tdp: None,
+                tdp_boost: None,
                 clock_limits: None,
-                slow_memory: false,
+                memory_clock: None,
+            ),
+            battery: BatteryJson(
+                charge_rate: None,
+                charge_mode: None,
+                events: [],
+),
+            provider: None,
+        ),
+        0: SettingsJson(
+            version: 0,
+            name: "Primary",
+            variant: 0,
+            persistent: false,
+            cpus: [CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            ), CpuJson(
+                online: true,
+                clock_limits: None,
+                governor: "schedutil",
+            )],
+            gpu: GpuJson(
+                fast_ppt: None,
+                slow_ppt: None,
+                tdp: None,
+                tdp_boost: None,
+                clock_limits: None,
+                memory_clock: None,
             ),
             battery: BatteryJson(
                 charge_rate: None,
