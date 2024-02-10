@@ -1,6 +1,4 @@
 use std::thread::{self, JoinHandle};
-#[cfg(feature = "online")]
-use std::time::Duration;
 
 use limits_core::json_v2::Base;
 
@@ -8,8 +6,9 @@ use limits_core::json_v2::Base;
 pub fn spawn() -> JoinHandle<()> {
     thread::spawn(move || {
         log::info!("limits_worker starting...");
-        let sleep_dur = Duration::from_secs(60 * 60 * 24); // 1 day
         let limits_path = super::utility::limits_path();
+        thread::sleep(crate::consts::LIMITS_STARTUP_WAIT);
+        log::info!("limits_worker completed startup wait");
         loop {
             if (limits_path.exists() && limits_path.is_file()) || !limits_path.exists() {
                 // try to load limits from file, fallback to built-in default
@@ -56,7 +55,7 @@ pub fn spawn() -> JoinHandle<()> {
             } else if !limits_path.is_file() {
                 log::error!("Path for storing limits is not a file!");
             }
-            thread::sleep(sleep_dur);
+            thread::sleep(crate::consts::LIMITS_REFRESH_PERIOD);
         }
         log::warn!("limits_worker completed!");
     })
