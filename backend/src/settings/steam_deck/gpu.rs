@@ -143,7 +143,9 @@ impl Gpu {
     }
 
     fn read_max_gpu_clock(&self) -> u64 {
-        if !(self.limits.extras.experiments || self.limits.extras.quirks.contains("clock-autodetect")) {
+        if !(self.limits.extras.experiments
+            || self.limits.extras.quirks.contains("clock-autodetect"))
+        {
             return MAX_CLOCK;
         }
         if let super::Model::OLED = self.variant {
@@ -152,12 +154,12 @@ impl Gpu {
                 .read_value(GPU_CLOCK_READOUT_ATTRIBUTE.to_owned())
             {
                 let options = parse_pp_dpm_sclk(&String::from_utf8_lossy(&f));
-                return options.get(options.len() - 1)
+                return options
+                    .get(options.len() - 1)
                     .map(|x| {
                         let x = x.1 as u64;
                         log::debug!("Detected GPU max clock of {}MHz", x);
                         x
-
                     })
                     .unwrap_or(MAX_CLOCK);
             }
@@ -635,7 +637,7 @@ impl crate::settings::OnUnload for Gpu {
 
 impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
-        let max_gpu_clock =  self.read_max_gpu_clock();
+        let max_gpu_clock = self.read_max_gpu_clock();
         crate::api::GpuLimits {
             fast_ppt_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.fast_ppt, MIN_FAST_PPT)

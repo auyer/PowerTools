@@ -17,7 +17,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -33,7 +36,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -49,7 +55,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -65,7 +74,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -81,7 +93,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -97,7 +112,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -113,7 +131,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             ), GenericCpuLimit(
                 clock_min: Some(RangeLimit(
                     min: Some(1400),
@@ -129,7 +150,10 @@ Limits(
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: LimitExtras(
+                    experiments: false,
+                    quirks: [],
+),
             )],
             global_governors: true,
             extras: LimitExtras(
@@ -174,7 +198,7 @@ Limits(
             skip_resume_reclock: false,
             extras: LimitExtras(
                 experiments: false,
-                quirks: ["pp_dpm_fclk-not-updated-on-LCD", "pp_dpm_fclk-reversed"],
+                quirks: ["pp_dpm_fclk-reversed", "pp_dpm_fclk-not-updated-on-LCD"],
             ),
         ),
     ),

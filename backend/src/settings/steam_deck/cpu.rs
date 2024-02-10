@@ -353,13 +353,17 @@ impl Cpu {
     }
 
     fn read_max_cpu_clock(&self) -> u64 {
-        if !(self.limits.extras.experiments || self.limits.extras.quirks.contains("clock-autodetect")) {
+        if !(self.limits.extras.experiments
+            || self.limits.extras.quirks.contains("clock-autodetect"))
+        {
             return MAX_CLOCK;
         }
         if let super::Model::OLED = self.variant {
-            if let Ok(freq_khz) = usdpl_back::api::files::read_single::<_, u64, _>(cpu_max_clock_path(self.index)) {
+            if let Ok(freq_khz) =
+                usdpl_back::api::files::read_single::<_, u64, _>(cpu_max_clock_path(self.index))
+            {
                 log::debug!("Detected CPU max clock of {}KHz", freq_khz);
-                return freq_khz / 1000
+                return freq_khz / 1000;
             }
         }
         MAX_CLOCK
@@ -747,5 +751,8 @@ fn cpu_available_governors_path(index: usize) -> String {
 
 #[inline]
 fn cpu_max_clock_path(index: usize) -> String {
-    format!("/sys/devices/system/cpu/cpufreq/policy{}/cpuinfo_max_freq", index)
+    format!(
+        "/sys/devices/system/cpu/cpufreq/policy{}/cpuinfo_max_freq",
+        index
+    )
 }
