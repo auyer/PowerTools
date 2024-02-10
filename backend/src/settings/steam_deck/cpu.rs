@@ -102,6 +102,9 @@ impl Cpus {
 
     pub fn variant(mut self, model: super::Model) -> Self {
         self.variant = model;
+        for cpu in self.cpus.iter_mut() {
+            cpu.variant(model)
+        }
         self
     }
 }
@@ -125,7 +128,12 @@ impl ProviderBuilder<Vec<CpuJson>, GenericCpusLimit> for Cpus {
                 }
             }
             let new_cpu = if let Some(cpu_limit) = limits.cpus.get(i) {
-                Cpu::from_json_and_limits(cpu, version, i, cpu_limit.to_owned())
+                let mut cpu_limit_clone = cpu_limit.to_owned();
+                for item in &limits.extras.quirks {
+                    cpu_limit_clone.extras.quirks.insert(item.to_owned());
+                }
+                cpu_limit_clone.extras.experiments |= limits.extras.experiments;
+                Cpu::from_json_and_limits(cpu, version, i, cpu_limit_clone)
             } else {
                 Cpu::from_json(cpu, version, i)
             };
@@ -262,6 +270,7 @@ pub struct Cpu {
     index: usize,
     state: crate::state::steam_deck::Cpu,
     sysfs: BasicEntityPath,
+    variant: super::Model,
 }
 
 //const CPU_CLOCK_LIMITS_PATH: &str = "/sys/class/drm/card0/device/pp_od_clk_voltage";
@@ -289,6 +298,7 @@ impl Cpu {
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
                 sysfs: Self::find_card_sysfs(other.root),
+                variant: super::Model::LCD,
             },
             _ => Self {
                 online: other.online,
@@ -298,6 +308,7 @@ impl Cpu {
                 index: i,
                 state: crate::state::steam_deck::Cpu::default(),
                 sysfs: Self::find_card_sysfs(other.root),
+                variant: super::Model::LCD,
             },
         }
     }
@@ -339,6 +350,19 @@ impl Cpu {
                 BasicEntityPath::new(root.as_ref().join("sys/class/drm/card0"))
             }
         }
+    }
+
+    fn read_max_cpu_clock(&self) -> u64 {
+        if !(self.limits.extras.experiments || self.limits.extras.quirks.contains("clock-autodetect")) {
+            return MAX_CLOCK;
+        }
+        if let super::Model::OLED = self.variant {
+            if let Ok(freq_khz) = usdpl_back::api::files::read_single::<_, u64, _>(cpu_max_clock_path(self.index)) {
+                log::debug!("Detected CPU max clock of {}KHz", freq_khz);
+                return freq_khz / 1000
+            }
+        }
+        MAX_CLOCK
     }
 
     fn set_clock_limit(
@@ -591,6 +615,7 @@ impl Cpu {
             index: cpu_index,
             state: crate::state::steam_deck::Cpu::default(),
             sysfs: Self::find_card_sysfs(None::<&'static str>),
+            variant: super::Model::LCD,
         }
     }
 
@@ -602,14 +627,15 @@ impl Cpu {
     }
 
     fn limits(&self) -> crate::api::CpuLimits {
+        let max_cpu_clock = self.read_max_cpu_clock();
         crate::api::CpuLimits {
             clock_min_limits: Some(RangeLimit {
                 min: range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK), // allows min to be set by max (it's weird, blame the kernel)
-                max: range_max_or_fallback(&self.limits.clock_min, MAX_CLOCK),
+                max: range_max_or_fallback(&self.limits.clock_min, max_cpu_clock),
             }),
             clock_max_limits: Some(RangeLimit {
                 min: range_min_or_fallback(&self.limits.clock_max, MIN_MAX_CLOCK),
-                max: range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK),
+                max: range_max_or_fallback(&self.limits.clock_max, max_cpu_clock),
             }),
             clock_step: self.limits.clock_step.unwrap_or(CLOCK_STEP),
             governors: self.governors(),
@@ -627,6 +653,10 @@ impl Cpu {
                 }
             };
         gov_str.split(' ').map(|s| s.to_owned()).collect()
+    }
+
+    pub fn variant(&mut self, model: super::Model) {
+        self.variant = model;
     }
 }
 
@@ -713,4 +743,9 @@ fn cpu_available_governors_path(index: usize) -> String {
         "/sys/devices/system/cpu/cpu{}/cpufreq/scaling_available_governors",
         index
     )
+}
+
+#[inline]
+fn cpu_max_clock_path(index: usize) -> String {
+    format!("/sys/devices/system/cpu/cpufreq/policy{}/cpuinfo_max_freq", index)
 }

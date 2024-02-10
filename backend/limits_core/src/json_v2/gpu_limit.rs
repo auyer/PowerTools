@@ -93,6 +93,7 @@ impl GenericGpuLimit {
     fn default_steam_deck_oled() -> Self {
         let mut sd = Self::default_steam_deck();
         sd.memory_clock_step = Some(200);
+        sd.extras.quirks.insert("clock-autodetect".to_owned());
         sd
     }
 

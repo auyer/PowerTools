@@ -77,16 +77,16 @@ impl Default for Base {
                     },
                     limits: super::Limits {
                         cpu: super::Limit {
-                            provider: super::CpuLimitType::SteamDeck,
-                            limits: super::GenericCpusLimit::default_for(super::CpuLimitType::SteamDeck),
+                            provider: super::CpuLimitType::SteamDeckOLED,
+                            limits: super::GenericCpusLimit::default_for(super::CpuLimitType::SteamDeckOLED),
                         },
                         gpu: super::Limit {
-                            provider: super::GpuLimitType::SteamDeck,
+                            provider: super::GpuLimitType::SteamDeckOLED,
                             limits: super::GenericGpuLimit::default_for(super::GpuLimitType::SteamDeckOLED),
                         },
                         battery: super::Limit {
-                            provider: super::BatteryLimitType::SteamDeck,
-                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::SteamDeck),
+                            provider: super::BatteryLimitType::SteamDeckOLED,
+                            limits: super::GenericBatteryLimit::default_for(super::BatteryLimitType::SteamDeckOLED),
                         },
                     }
                 },

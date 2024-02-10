@@ -35,7 +35,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -58,7 +61,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -81,7 +87,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -104,7 +113,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -127,7 +139,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -150,7 +165,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -173,7 +191,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -196,7 +217,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -219,7 +243,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -242,7 +269,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -265,7 +295,10 @@
                 "tdp_divisor": 1000000,
                 "tdp_step": 1,
                 "skip_resume_reclock": false,
-                "experiments": true
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -381,7 +414,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -398,7 +434,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -415,7 +454,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -432,7 +474,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -449,7 +494,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -466,7 +514,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -483,7 +534,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -500,7 +554,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -547,8 +604,8 @@
             "extras": {
               "experiments": false,
               "quirks": [
-                "pp_dpm_fclk-reversed",
-                "pp_dpm_fclk-not-updated-on-LCD"
+                "pp_dpm_fclk-not-updated-on-LCD",
+                "pp_dpm_fclk-reversed"
               ]
             }
           }
@@ -589,7 +646,7 @@
       },
       "limits": {
         "cpu": {
-          "provider": "GabeBoy",
+          "provider": "GabeBoySP",
           "limits": {
             "cpus": [
               {
@@ -607,7 +664,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -624,7 +686,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -641,7 +708,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -658,7 +730,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -675,7 +752,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -692,7 +774,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -709,7 +796,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               },
               {
                 "clock_min": {
@@ -726,7 +818,12 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": [
+                    "clock-autodetect"
+                  ]
+                }
               }
             ],
             "global_governors": true,
@@ -737,7 +834,7 @@
           }
         },
         "gpu": {
-          "provider": "GabeBoy",
+          "provider": "GabeBoySP",
           "limits": {
             "fast_ppt": {
               "min": 1000000,
@@ -773,14 +870,15 @@
             "extras": {
               "experiments": false,
               "quirks": [
+                "pp_dpm_fclk-not-updated-on-LCD",
                 "pp_dpm_fclk-reversed",
-                "pp_dpm_fclk-not-updated-on-LCD"
+                "clock-autodetect"
               ]
             }
           }
         },
         "battery": {
-          "provider": "GabeBoy",
+          "provider": "GabeBoySP",
           "limits": {
             "charge_rate": {
               "min": 250,
@@ -833,7 +931,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -850,7 +951,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -867,7 +971,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -884,7 +991,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -975,7 +1085,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -992,7 +1105,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1009,7 +1125,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1026,7 +1145,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1043,7 +1165,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1060,7 +1185,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1077,7 +1205,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1094,7 +1225,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1111,7 +1245,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1128,7 +1265,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1145,7 +1285,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1162,7 +1305,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -1253,7 +1399,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1270,7 +1419,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1287,7 +1439,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1304,7 +1459,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1321,7 +1479,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1338,7 +1499,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1355,7 +1519,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1372,7 +1539,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1389,7 +1559,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1406,7 +1579,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1423,7 +1599,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1440,7 +1619,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1457,7 +1639,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1474,7 +1659,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1491,7 +1679,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1508,7 +1699,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -1599,7 +1793,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1616,7 +1813,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1633,7 +1833,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1650,7 +1853,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1667,7 +1873,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1684,7 +1893,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1701,7 +1913,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1718,7 +1933,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1735,7 +1953,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1752,7 +1973,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1769,7 +1993,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1786,7 +2013,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1803,7 +2033,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1820,7 +2053,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1837,7 +2073,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1854,7 +2093,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -1945,7 +2187,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1962,7 +2207,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1979,7 +2227,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -1996,7 +2247,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2013,7 +2267,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2030,7 +2287,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2047,7 +2307,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2064,7 +2327,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2081,7 +2347,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2098,7 +2367,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2115,7 +2387,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2132,7 +2407,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2149,7 +2427,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2166,7 +2447,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2183,7 +2467,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": {
@@ -2200,7 +2487,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,
@@ -2279,7 +2569,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2290,7 +2583,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2301,7 +2597,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2312,7 +2611,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2323,7 +2625,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2334,7 +2639,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2345,7 +2653,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               },
               {
                 "clock_min": null,
@@ -2356,7 +2667,10 @@
                 "tdp_divisor": null,
                 "tdp_step": null,
                 "skip_resume_reclock": false,
-                "experiments": false
+                "extras": {
+                  "experiments": false,
+                  "quirks": []
+                }
               }
             ],
             "global_governors": true,

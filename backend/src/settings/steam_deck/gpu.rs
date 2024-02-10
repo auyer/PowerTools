@@ -37,6 +37,7 @@ pub struct Gpu {
 
 const GPU_CLOCK_LIMITS_ATTRIBUTE: &str = "device/pp_od_clk_voltage";
 const GPU_MEMORY_DOWNCLOCK_ATTRIBUTE: &str = "device/pp_dpm_fclk";
+const GPU_CLOCK_READOUT_ATTRIBUTE: &str = "device/pp_dpm_sclk";
 
 const CARD_EXTENSIONS: &[&'static str] = &[
     GPU_CLOCK_LIMITS_ATTRIBUTE,
@@ -139,6 +140,29 @@ impl Gpu {
                 msg: format!("Failed to write `c` to `{}`: {}", path.display(), e),
                 setting: crate::settings::SettingVariant::Gpu,
             })
+    }
+
+    fn read_max_gpu_clock(&self) -> u64 {
+        if !(self.limits.extras.experiments || self.limits.extras.quirks.contains("clock-autodetect")) {
+            return MAX_CLOCK;
+        }
+        if let super::Model::OLED = self.variant {
+            if let Ok(f) = self
+                .sysfs_card
+                .read_value(GPU_CLOCK_READOUT_ATTRIBUTE.to_owned())
+            {
+                let options = parse_pp_dpm_sclk(&String::from_utf8_lossy(&f));
+                return options.get(options.len() - 1)
+                    .map(|x| {
+                        let x = x.1 as u64;
+                        log::debug!("Detected GPU max clock of {}MHz", x);
+                        x
+
+                    })
+                    .unwrap_or(MAX_CLOCK);
+            }
+        }
+        MAX_CLOCK
     }
 
     fn is_memory_clock_maxed(&self) -> bool {
@@ -611,6 +635,7 @@ impl crate::settings::OnUnload for Gpu {
 
 impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
+        let max_gpu_clock =  self.read_max_gpu_clock();
         crate::api::GpuLimits {
             fast_ppt_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.fast_ppt, MIN_FAST_PPT)
@@ -630,11 +655,11 @@ impl TGpu for Gpu {
             tdp_step: 42,
             clock_min_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.clock_min, MIN_CLOCK),
-                max: super::util::range_max_or_fallback(&self.limits.clock_min, MAX_CLOCK),
+                max: super::util::range_max_or_fallback(&self.limits.clock_min, max_gpu_clock),
             }),
             clock_max_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.clock_max, MIN_CLOCK),
-                max: super::util::range_max_or_fallback(&self.limits.clock_max, MAX_CLOCK),
+                max: super::util::range_max_or_fallback(&self.limits.clock_max, max_gpu_clock),
             }),
             clock_step: self.limits.clock_step.unwrap_or(100),
             memory_control: Some(RangeLimit {
@@ -693,7 +718,7 @@ impl TGpu for Gpu {
     }
 }
 
-fn parse_pp_dpm_fclk(s: &str) -> Vec<(usize, usize)> {
+fn parse_sysfs_clk_selector_str(s: &str) -> Vec<(usize, usize)> {
     // (value, MHz)
     let mut result = Vec::new();
     for line in s.split('\n') {
@@ -714,4 +739,14 @@ fn parse_pp_dpm_fclk(s: &str) -> Vec<(usize, usize)> {
         }
     }
     result
+}
+
+#[inline]
+fn parse_pp_dpm_fclk(s: &str) -> Vec<(usize, usize)> {
+    parse_sysfs_clk_selector_str(s)
+}
+
+#[inline]
+fn parse_pp_dpm_sclk(s: &str) -> Vec<(usize, usize)> {
+    parse_sysfs_clk_selector_str(s)
 }

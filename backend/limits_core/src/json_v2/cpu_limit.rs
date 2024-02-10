@@ -93,13 +93,14 @@ pub struct GenericCpuLimit {
     pub tdp_divisor: Option<u64>,
     pub tdp_step: Option<u64>,
     pub skip_resume_reclock: bool,
-    pub experiments: bool,
+    pub extras: super::LimitExtras,
 }
 
 impl GenericCpuLimit {
     pub fn default_for(t: &CpuLimitType, _index: usize) -> Self {
         match t {
-            CpuLimitType::SteamDeck | CpuLimitType::SteamDeckOLED => Self::default_steam_deck(),
+            CpuLimitType::SteamDeck => Self::default_steam_deck(),
+            CpuLimitType::SteamDeckOLED => Self::default_steam_deck_oled(),
             CpuLimitType::DevMode => Self {
                 clock_min: Some(RangeLimit { min: Some(100), max: Some(5000) }),
                 clock_max: Some(RangeLimit { min: Some(100), max: Some(4800) }),
@@ -109,7 +110,7 @@ impl GenericCpuLimit {
                 tdp_divisor: Some(1_000_000),
                 tdp_step: Some(1),
                 skip_resume_reclock: false,
-                experiments: true,
+                extras: Default::default(),
             },
             _ => Self {
                 clock_min: None,
@@ -120,7 +121,7 @@ impl GenericCpuLimit {
                 tdp_divisor: None,
                 tdp_step: None,
                 skip_resume_reclock: false,
-                experiments: false,
+                extras: Default::default(),
             },
         }
     }
@@ -141,7 +142,32 @@ impl GenericCpuLimit {
             tdp_divisor: None,
             tdp_step: None,
             skip_resume_reclock: false,
-            experiments: false,
+            extras: Default::default(),
+        }
+    }
+
+    fn default_steam_deck_oled() -> Self {
+        Self {
+            clock_min: Some(RangeLimit {
+                min: Some(1400),
+                max: Some(3500),
+            }),
+            clock_max: Some(RangeLimit {
+                min: Some(400),
+                max: Some(3500),
+            }),
+            clock_step: Some(100),
+            tdp: None,
+            tdp_boost: None,
+            tdp_divisor: None,
+            tdp_step: None,
+            skip_resume_reclock: false,
+            extras: super::LimitExtras {
+                experiments: false,
+                quirks: vec![
+                    "clock-autodetect".to_owned(),
+                ].into_iter().collect()
+            },
         }
     }
 
@@ -165,6 +191,6 @@ impl GenericCpuLimit {
         }
         self.clock_step = limit_override.clock_step;
         self.skip_resume_reclock = limit_override.skip_resume_reclock;
-        self.experiments = limit_override.experiments;
+        self.extras = limit_override.extras;
     }
 }
