@@ -340,19 +340,23 @@ impl Gpu {
     }
 
     fn set_memory_speed(&self, clock: u64) -> Result<(), SettingError> {
-        let path = GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.path(&self.sysfs_card);
-        let payload = self.build_memory_clock_payload(clock);
-        log::debug!(
-            "Generated payload for gpu fclk (memory): `{}` (is maxed? {})",
-            payload,
-            self.is_memory_clock_maxed()
-        );
-        self.sysfs_card
-            .set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), payload)
-            .map_err(|e| SettingError {
-                msg: format!("Failed to write to `{}`: {}", path.display(), e),
-                setting: crate::settings::SettingVariant::Gpu,
-            })
+        if POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.needs_manual() {
+            let path = GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.path(&self.sysfs_card);
+            let payload = self.build_memory_clock_payload(clock);
+            log::debug!(
+                "Generated payload for gpu fclk (memory): `{}` (is maxed? {})",
+                payload,
+                self.is_memory_clock_maxed()
+            );
+            self.sysfs_card
+                .set(GPU_MEMORY_DOWNCLOCK_ATTRIBUTE.to_owned(), payload)
+                .map_err(|e| SettingError {
+                    msg: format!("Failed to write to `{}`: {}", path.display(), e),
+                    setting: crate::settings::SettingVariant::Gpu,
+                })
+        } else {
+            Ok(())
+        }
     }
 
     fn set_force_performance_related(&mut self) -> Result<(), Vec<SettingError>> {
@@ -362,7 +366,7 @@ impl Gpu {
         POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT
             .enforce_level(&self.sysfs_card)
             .unwrap_or_else(|mut e| errors.append(&mut e));
-        // enable/disable downclock of GPU memory (to 400Mhz?)
+        // enable/disable downclock of GPU memory
         self.set_memory_speed(
             self.memory_clock
                 .or_else(|| {
@@ -631,6 +635,7 @@ impl crate::settings::OnLoad for Gpu {
 
 impl crate::settings::OnUnload for Gpu {
     fn on_unload(&mut self) -> Result<(), Vec<SettingError>> {
+        POWER_DPM_FORCE_PERFORMANCE_LEVEL_MGMT.set_gpu(false);
         Ok(())
     }
 }
@@ -646,14 +651,24 @@ impl TGpu for Gpu {
                 max: super::util::range_max_or_fallback(&self.limits.fast_ppt, MAX_FAST_PPT)
                     / ppt_divisor,
             }),
-            fast_ppt_default: self.limits.fast_ppt_default.or_else(|| self.limits.fast_ppt.and_then(|x| x.max)).unwrap_or(MAX_FAST_PPT) / ppt_divisor,
+            fast_ppt_default: self
+                .limits
+                .fast_ppt_default
+                .or_else(|| self.limits.fast_ppt.and_then(|x| x.max))
+                .unwrap_or(MAX_FAST_PPT)
+                / ppt_divisor,
             slow_ppt_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT)
                     / ppt_divisor,
                 max: super::util::range_max_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT)
                     / ppt_divisor,
             }),
-            slow_ppt_default: self.limits.slow_ppt_default.or_else(|| self.limits.slow_ppt.and_then(|x| x.max)).unwrap_or(MAX_SLOW_PPT) / ppt_divisor,
+            slow_ppt_default: self
+                .limits
+                .slow_ppt_default
+                .or_else(|| self.limits.slow_ppt.and_then(|x| x.max))
+                .unwrap_or(MAX_SLOW_PPT)
+                / ppt_divisor,
             ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: None,
             tdp_boost_limits: None,
