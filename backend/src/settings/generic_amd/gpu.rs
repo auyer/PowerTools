@@ -327,7 +327,9 @@ impl crate::settings::OnUnload for Gpu {
 fn bad_gpu_limits() -> crate::api::GpuLimits {
     crate::api::GpuLimits {
         fast_ppt_limits: None,
+        fast_ppt_default: 1,
         slow_ppt_limits: None,
+        slow_ppt_default: 1,
         ppt_step: 1,
         tdp_limits: None,
         tdp_boost_limits: None,

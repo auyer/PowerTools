@@ -99,15 +99,17 @@ impl TGpu for Gpu {
         log::debug!("dev_mode_Gpu::limits(self) -> {{...}}");
         let ppt_divisor = self.limits.ppt_divisor.unwrap_or(1_000_000);
         let tdp_divisor = self.limits.tdp_divisor.unwrap_or(1_000_000);
-        crate::api::GpuLimits {
+        let limit_struct = crate::api::GpuLimits {
             fast_ppt_limits: self.limits.fast_ppt.map(|lim| crate::api::RangeLimit {
                 min: lim.min.unwrap_or(11_000_000) / ppt_divisor,
                 max: lim.max.unwrap_or(42_000_000) / ppt_divisor,
             }),
+            fast_ppt_default: self.limits.fast_ppt_default.or_else(|| self.limits.fast_ppt.and_then(|x| x.max)).unwrap_or(2_000_000) / ppt_divisor,
             slow_ppt_limits: self.limits.slow_ppt.map(|lim| crate::api::RangeLimit {
                 min: lim.min.unwrap_or(7_000_000) / ppt_divisor,
                 max: lim.max.unwrap_or(69_000_000) / ppt_divisor,
             }),
+            slow_ppt_default: self.limits.slow_ppt_default.or_else(|| self.limits.slow_ppt.and_then(|x| x.max)).unwrap_or(3_000_000) / ppt_divisor,
             ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: self.limits.tdp.map(|lim| crate::api::RangeLimit {
                 min: lim.min.unwrap_or(11_000_000) / tdp_divisor,
@@ -132,7 +134,9 @@ impl TGpu for Gpu {
                 max: lim.max.unwrap_or(1100),
             }),
             memory_step: self.limits.memory_clock_step.unwrap_or(400),
-        }
+        };
+        log::debug!("dev_mode_Gpu::limits(self) -> {}", serde_json::to_string_pretty(&limit_struct).unwrap());
+        limit_struct
     }
 
     fn json(&self) -> crate::persist::GpuJson {

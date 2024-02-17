@@ -71,7 +71,9 @@ impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
         crate::api::GpuLimits {
             fast_ppt_limits: None,
+            fast_ppt_default: 1_000_000,
             slow_ppt_limits: None,
+            slow_ppt_default: 1_000_000,
             ppt_step: 1_000_000,
             tdp_limits: None,
             tdp_boost_limits: None,

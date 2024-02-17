@@ -167,6 +167,14 @@ impl TGpu for Gpu {
                         x
                     }
                 }),
+            fast_ppt_default: {
+                let def = self.limits.fast_ppt_default.or_else(|| self.limits.fast_ppt.and_then(|x| x.max)).unwrap_or(15);
+                if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    def / ppt_divisor
+                } else {
+                    def
+                }
+            },
             slow_ppt_limits: self
                 .limits
                 .slow_ppt
@@ -181,6 +189,14 @@ impl TGpu for Gpu {
                         x
                     }
                 }),
+            slow_ppt_default: {
+                let def = self.limits.slow_ppt_default.or_else(|| self.limits.slow_ppt.and_then(|x| x.max)).unwrap_or(15);
+                if let Some(ppt_divisor) = self.limits.ppt_divisor {
+                    def / ppt_divisor
+                } else {
+                    def
+                }
+            },
             ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: self
                 .limits

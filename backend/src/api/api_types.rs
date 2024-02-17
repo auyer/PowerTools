@@ -51,7 +51,9 @@ pub struct GeneralLimits {}
 #[derive(Serialize, Deserialize)]
 pub struct GpuLimits {
     pub fast_ppt_limits: Option<RangeLimit<u64>>,
+    pub fast_ppt_default: u64,
     pub slow_ppt_limits: Option<RangeLimit<u64>>,
+    pub slow_ppt_default: u64,
     pub ppt_step: u64,
     pub tdp_limits: Option<RangeLimit<u64>>,
     pub tdp_boost_limits: Option<RangeLimit<u64>>,

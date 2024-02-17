@@ -638,19 +638,22 @@ impl crate::settings::OnUnload for Gpu {
 impl TGpu for Gpu {
     fn limits(&self) -> crate::api::GpuLimits {
         let max_gpu_clock = self.read_max_gpu_clock();
+        let ppt_divisor = self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR);
         crate::api::GpuLimits {
             fast_ppt_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.fast_ppt, MIN_FAST_PPT)
-                    / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                    / ppt_divisor,
                 max: super::util::range_max_or_fallback(&self.limits.fast_ppt, MAX_FAST_PPT)
-                    / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                    / ppt_divisor,
             }),
+            fast_ppt_default: self.limits.fast_ppt_default.or_else(|| self.limits.fast_ppt.and_then(|x| x.max)).unwrap_or(MAX_FAST_PPT) / ppt_divisor,
             slow_ppt_limits: Some(RangeLimit {
                 min: super::util::range_min_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT)
-                    / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                    / ppt_divisor,
                 max: super::util::range_max_or_fallback(&self.limits.slow_ppt, MIN_SLOW_PPT)
-                    / self.limits.ppt_divisor.unwrap_or(PPT_DIVISOR),
+                    / ppt_divisor,
             }),
+            slow_ppt_default: self.limits.slow_ppt_default.or_else(|| self.limits.slow_ppt.and_then(|x| x.max)).unwrap_or(MAX_SLOW_PPT) / ppt_divisor,
             ppt_step: self.limits.ppt_step.unwrap_or(1),
             tdp_limits: None,
             tdp_boost_limits: None,

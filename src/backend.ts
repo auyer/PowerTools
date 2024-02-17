@@ -85,7 +85,9 @@ export type GeneralLimits = {};
 
 export type GpuLimits = {
     fast_ppt_limits: RangeLimit | null;
+    fast_ppt_default: number;
     slow_ppt_limits: RangeLimit | null;
+    slow_ppt_default: number;
     ppt_step: number;
     clock_min_limits: RangeLimit | null;
     clock_max_limits: RangeLimit | null;
