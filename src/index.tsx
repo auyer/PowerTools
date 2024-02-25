@@ -355,7 +355,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({}) => {
     backend.resolve(
       backend.loadGeneralSettingsVariant("please give me a new ID k thx bye" /* anything that cannot be parsed as a u64 will be set to u64::MAX, which will cause the back-end to auto-generate an ID */, name),
       (ok: boolean) => {
-        isVariantLoading = false;
         backend.log(backend.LogLevel.Debug, "New settings variant ok? " + ok);
         reload();
         backend.resolve(backend.waitForComplete(), (_) => {
@@ -539,7 +538,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     ico = <span><GiFireExtinguisher /><GiFireBomb /><GiMineExplosion /></span>;
   }
   //registerCallbacks(false);
-  serverApi.routerHook.addRoute(STORE_RESULTS_URI, StoreResultsPage);
+  serverApi.routerHook.addRoute(STORE_RESULTS_URI, () => <StoreResultsPage onNewVariant={tryNotifyProfileChange}/>);
   return {
     title: <div className={staticClasses.Title}>PowerTools</div>,
     content: <Content serverAPI={serverApi} />,
@@ -548,7 +547,7 @@ export default definePlugin((serverApi: ServerAPI) => {
       tryNotifyProfileChange = function() {};
       backend.log(backend.LogLevel.Debug, "PowerTools shutting down");
       clearHooks();
-      //serverApi.routerHook.removeRoute("/decky-plugin-test");
+      serverApi.routerHook.removeRoute(STORE_RESULTS_URI);
     },
   };
 });

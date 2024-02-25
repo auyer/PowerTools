@@ -1,6 +1,6 @@
 [package]
 name = "powertools"
-version = "2.0.0-alpha3"
+version = "2.0.0-alpha4"
 edition = "2021"
 authors = ["NGnius (Graham) <ngniusness@gmail.com>"]
 description = "Backend (superuser) functionality for PowerTools"
@@ -43,7 +43,7 @@ chrono = { version = "0.4", features = [ "serde" ] }
 libryzenadj = { version = "0.13" }
 
 # ureq's tls feature does not like musl targets
-ureq = { version = "2", features = ["json", "gzip", "brotli", "charset"], default-features = false, optional = true }
+ureq = { version = "2", features = ["json", "gzip", "brotli", "charset", "tls"], default-features = false, optional = true }
 
 clap = { version = "4.4", features = [ "derive" ] }
 

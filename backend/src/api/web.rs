@@ -91,7 +91,7 @@ fn save_cache(cache: &StoreCache) {
 
 fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metadata> {
     let mut cache = load_cache();
-    if let Some(cached_result) = cache.get(&steam_app_id) {
+    let data = if let Some(cached_result) = cache.get(&steam_app_id) {
         if cached_result.updated < (Utc::now() - MAX_CACHE_DURATION) {
             // cache needs update
             if let Ok(result) = search_by_app_id_online(steam_app_id) {
@@ -126,6 +126,14 @@ fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metad
         } else {
             Vec::with_capacity(0)
         }
+    };
+    #[cfg(debug_assertions)]
+    {
+        data
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        data.into_iter().filter(|meta| meta.id != "0").collect()
     }
 }
 
