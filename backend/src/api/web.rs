@@ -1,5 +1,7 @@
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Mutex, RwLock};
+#[cfg(feature = "online")]
+use std::sync::RwLock;
+use std::sync::{Arc, Mutex};
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
@@ -8,7 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use super::handler::{ApiMessage, GeneralMessage};
 
+#[cfg(feature = "online")]
 const BASE_URL_FALLBACK: &'static str = "https://powertools.ngni.us";
+#[cfg(feature = "online")]
 static BASE_URL: RwLock<Option<String>> = RwLock::new(None);
 
 const MAX_CACHE_DURATION: std::time::Duration =
@@ -23,12 +27,14 @@ struct CachedData<T> {
 type StoreCache =
     std::collections::HashMap<u32, CachedData<Vec<community_settings_core::v1::Metadata>>>;
 
+#[cfg(feature = "online")]
 pub fn set_base_url(base_url: String) {
     *BASE_URL
         .write()
         .expect("Failed to acquire write lock for store base url") = Some(base_url);
 }
 
+#[cfg(feature = "online")]
 fn get_base_url() -> String {
     BASE_URL
         .read()
@@ -37,22 +43,27 @@ fn get_base_url() -> String {
         .unwrap_or_else(|| BASE_URL_FALLBACK.to_owned())
 }
 
+#[cfg(feature = "online")]
 fn url_search_by_app_id(steam_app_id: u32) -> String {
     format!("{}/api/setting/by_app_id/{}", get_base_url(), steam_app_id)
 }
 
+#[cfg(feature = "online")]
 fn url_download_config_by_id(id: u128) -> String {
     format!("{}/api/setting/by_id/{}", get_base_url(), id)
 }
 
+#[cfg(feature = "online")]
 fn url_upload_config() -> String {
     format!("{}/api/setting", get_base_url())
 }
 
+#[cfg(feature = "online")]
 fn cache_path() -> std::path::PathBuf {
     crate::utility::settings_dir().join(crate::consts::WEB_SETTINGS_CACHE)
 }
 
+#[cfg(feature = "online")]
 fn load_cache() -> StoreCache {
     let path = cache_path();
     let file = match std::fs::File::open(&path) {
@@ -72,6 +83,12 @@ fn load_cache() -> StoreCache {
     }
 }
 
+#[cfg(not(feature = "online"))]
+fn load_cache() -> StoreCache {
+    StoreCache::default()
+}
+
+#[cfg(feature = "online")]
 fn save_cache(cache: &StoreCache) {
     let path = cache_path();
     let file = match std::fs::File::create(&path) {
@@ -88,6 +105,9 @@ fn save_cache(cache: &StoreCache) {
         log::error!("Failed to parse store cache {}: {}", path.display(), e);
     }
 }
+
+#[cfg(not(feature = "online"))]
+fn save_cache(_cache: &StoreCache) {}
 
 fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metadata> {
     let mut cache = load_cache();
@@ -137,6 +157,7 @@ fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metad
     }
 }
 
+#[cfg(feature = "online")]
 fn search_by_app_id_online(
     steam_app_id: u32,
 ) -> std::io::Result<Vec<community_settings_core::v1::Metadata>> {
@@ -161,6 +182,13 @@ fn search_by_app_id_online(
             ))
         }
     }
+}
+
+#[cfg(not(feature = "online"))]
+fn search_by_app_id_online(
+    _steam_app_id: u32,
+) -> std::io::Result<Vec<community_settings_core::v1::Metadata>> {
+    Ok(Vec::with_capacity(0))
 }
 
 /// Get search results web method
@@ -248,6 +276,7 @@ fn web_config_to_settings_json(
     }
 }
 
+#[cfg(feature = "online")]
 fn download_config(id: u128) -> std::io::Result<community_settings_core::v1::Metadata> {
     let req_url = url_download_config_by_id(id);
     let response = ureq::get(&req_url).call().map_err(|e| {
@@ -255,6 +284,14 @@ fn download_config(id: u128) -> std::io::Result<community_settings_core::v1::Met
         std::io::Error::new(std::io::ErrorKind::ConnectionAborted, e)
     })?;
     response.into_json()
+}
+
+#[cfg(not(feature = "online"))]
+fn download_config(_id: u128) -> std::io::Result<community_settings_core::v1::Metadata> {
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "Online functionality not included in this build",
+    ))
 }
 
 pub fn upload_settings(
@@ -345,6 +382,7 @@ fn settings_to_web_config(
     }
 }
 
+#[cfg(feature = "online")]
 fn upload_config(config: community_settings_core::v1::Metadata) -> std::io::Result<()> {
     let req_url = url_upload_config();
     ureq::post(&req_url)
@@ -354,6 +392,11 @@ fn upload_config(config: community_settings_core::v1::Metadata) -> std::io::Resu
             std::io::Error::new(std::io::ErrorKind::ConnectionAborted, e)
         })
         .map(|_| ())
+}
+
+#[cfg(not(feature = "online"))]
+fn upload_config(_config: community_settings_core::v1::Metadata) -> std::io::Result<()> {
+    Ok(())
 }
 
 /// Download config web method
