@@ -12,6 +12,8 @@ pub const LIMITS_FILE: &str = "limits_cache.ron";
 pub const LIMITS_REFRESH_PERIOD: std::time::Duration = std::time::Duration::from_secs(60 * 60 * 24); // 1 day
 #[cfg(feature = "online")]
 pub const LIMITS_STARTUP_WAIT: std::time::Duration = std::time::Duration::from_secs(60); // 1 minute
+#[cfg(feature = "online")]
+pub const LIMITS_CHECK_PERIOD: std::time::Duration = std::time::Duration::from_secs(5 * 60); // 5 minutes
 pub const LIMITS_OVERRIDE_FILE: &str = "limits_override.ron";
 
 #[cfg(feature = "online")]

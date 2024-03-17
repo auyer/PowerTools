@@ -8,28 +8,7 @@ use crate::persist::{DriverJson, SettingsJson};
 use crate::settings::{Driver, General, ProviderBuilder, TBattery, TCpus, TGeneral, TGpu};
 
 fn get_limits() -> limits_core::json_v2::Base {
-    let limits_path = super::utility::limits_path();
-    match File::open(&limits_path) {
-        Ok(f) => match ron::de::from_reader(f) {
-            Ok(lim) => lim,
-            Err(e) => {
-                log::warn!(
-                    "Failed to parse limits file `{}`, cannot use for auto_detect: {}",
-                    limits_path.display(),
-                    e
-                );
-                limits_core::json_v2::Base::default()
-            }
-        },
-        Err(e) => {
-            log::warn!(
-                "Failed to open limits file `{}`: {}",
-                limits_path.display(),
-                e
-            );
-            super::limits_worker::get_limits_cached()
-        }
-    }
+    super::limits_worker::get_limits_cached()
 }
 
 fn get_limits_overrides() -> Option<Limits> {

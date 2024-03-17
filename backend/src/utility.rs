@@ -3,6 +3,9 @@
 use std::io::{Read, Write};
 use std::os::unix::fs::PermissionsExt;
 
+use serde::{Deserialize, Serialize};
+use chrono::{offset::Utc, DateTime};
+
 /*pub fn unwrap_lock<'a, T: Sized>(
     result: LockResult<MutexGuard<'a, T>>,
     lock_name: &str,
@@ -15,6 +18,18 @@ use std::os::unix::fs::PermissionsExt;
         }
     }
 }*/
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CachedData<T> {
+    pub data: T,
+    pub updated: DateTime<Utc>,
+}
+
+impl <T> CachedData<T> {
+    pub fn needs_update(&self, max_age: std::time::Duration) -> bool {
+        self.updated < (Utc::now() - max_age)
+    }
+}
 
 pub fn ron_pretty_config() -> ron::ser::PrettyConfig {
     ron::ser::PrettyConfig::default()
