@@ -170,7 +170,7 @@ const reload = function() {
     set_value(CLOCK_MIN_GPU, limits[0]);
     set_value(CLOCK_MAX_GPU, limits[1]);
   });
-  backend.resolve(backend.getGpuSlowMemory(), (status: number) => { set_value(SLOW_MEMORY_GPU, status) });
+  backend.resolve_nullable(backend.getGpuSlowMemory(), (status: number | null) => { set_value(SLOW_MEMORY_GPU, status) });
 
   backend.resolve(backend.getGeneralPersistent(), (value: boolean) => { set_value(PERSISTENT_GEN, value) });
   backend.resolve(backend.getGeneralSettingsName(), (name: string) => { set_value(NAME_GEN, name) });

@@ -236,7 +236,7 @@ export async function setGpuSlowMemory(clock: number): Promise<number> {
     return (await call_backend("GPU_set_slow_memory", [clock]))[0];
 }
 
-export async function getGpuSlowMemory(): Promise<number> {
+export async function getGpuSlowMemory(): Promise<number | null> {
     return (await call_backend("GPU_get_slow_memory", []))[0];
 }
 
