@@ -11,7 +11,7 @@ pub async fn save_setting_handler(
     content_type: web::Header<header::ContentType>,
     cli: web::Data<&'static Cli>,
 ) -> std::io::Result<impl Responder> {
-    println!("Content-Type: {}", content_type.to_string());
+    //println!("Content-Type: {}", content_type.to_string());
     let bytes = match data.to_bytes_limited(PAYLOAD_LIMIT).await {
         Ok(Ok(x)) => x,
         Ok(Err(e)) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("wut: {}", e))),

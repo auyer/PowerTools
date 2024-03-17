@@ -5,10 +5,8 @@ use std::sync::{Arc, Mutex};
 use usdpl_back::core::serdes::Primitive;
 use usdpl_back::AsyncCallable;
 
-use chrono::{offset::Utc, DateTime};
-use serde::{Deserialize, Serialize};
-
 use super::handler::{ApiMessage, GeneralMessage};
+use crate::utility::CachedData;
 
 #[cfg(feature = "online")]
 const BASE_URL_FALLBACK: &'static str = "https://powertools.ngni.us";
@@ -17,12 +15,6 @@ static BASE_URL: RwLock<Option<String>> = RwLock::new(None);
 
 const MAX_CACHE_DURATION: std::time::Duration =
     std::time::Duration::from_secs(60 * 60 * 24 * 7 /* 7 days */);
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct CachedData<T> {
-    data: T,
-    updated: DateTime<Utc>,
-}
 
 type StoreCache =
     std::collections::HashMap<u32, CachedData<Vec<community_settings_core::v1::Metadata>>>;
@@ -112,14 +104,14 @@ fn save_cache(_cache: &StoreCache) {}
 fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metadata> {
     let mut cache = load_cache();
     let data = if let Some(cached_result) = cache.get(&steam_app_id) {
-        if cached_result.updated < (Utc::now() - MAX_CACHE_DURATION) {
+        if cached_result.needs_update(MAX_CACHE_DURATION) {
             // cache needs update
             if let Ok(result) = search_by_app_id_online(steam_app_id) {
                 cache.insert(
                     steam_app_id,
                     CachedData {
                         data: result.clone(),
-                        updated: Utc::now(),
+                        updated: chrono::offset::Utc::now(),
                     },
                 );
                 save_cache(&cache);
@@ -138,7 +130,7 @@ fn get_maybe_cached(steam_app_id: u32) -> Vec<community_settings_core::v1::Metad
                 steam_app_id,
                 CachedData {
                     data: result.clone(),
-                    updated: Utc::now(),
+                    updated: chrono::offset::Utc::now(),
                 },
             );
             save_cache(&cache);
@@ -207,8 +199,8 @@ pub fn search_by_app_id() -> impl AsyncCallable {
     };
     super::async_utils::AsyncIsh {
         trans_setter: |params| {
-            if let Some(Primitive::F64(app_id)) = params.get(0) {
-                Ok(*app_id as u32)
+            if let Some(Primitive::String(s)) = params.get(0) {
+                s.parse::<u32>().map_err(|e| format!("search_by_app_id invalid parameter 0: {}", e))
             } else {
                 Err("search_by_app_id missing/invalid parameter 0".to_owned())
             }
@@ -329,6 +321,8 @@ fn settings_to_web_config(
     username: String,
     settings: crate::persist::SettingsJson,
 ) -> community_settings_core::v1::Metadata {
+    #[cfg(any(not(debug_assertions), not(feature = "dev_stuff")))]
+    let app_id = if app_id == 0 { 1 } else { app_id };
     community_settings_core::v1::Metadata {
         name: settings.name,
         steam_app_id: app_id,

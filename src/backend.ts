@@ -376,8 +376,8 @@ export type StoreMetadata = {
     //config: any,
 }
 
-export async function searchStoreByAppId(id: number): Promise<StoreMetadata[]> {
-    console.log("WEB_search_by_app");
+export async function searchStoreByAppId(id: string): Promise<StoreMetadata[]> {
+    //console.log("WEB_search_by_app");
     return (await call_backend("WEB_search_by_app", [id]))[0];
 }
 
@@ -395,11 +395,11 @@ export async function storeUpload(steam_id: string, steam_username: string): Pro
 }
 
 export async function getAllSettingVariants(): Promise<VariantInfo[]> {
-    console.log("GENERAL_get_all_variants");
+    //console.log("GENERAL_get_all_variants");
     return (await call_backend("GENERAL_get_all_variants", []));
 }
 
 export async function getCurrentSettingVariant(): Promise<VariantInfo> {
-    console.log("GENERAL_get_current_variant");
+    //console.log("GENERAL_get_current_variant");
     return (await call_backend("GENERAL_get_current_variant", []))[0];
 }

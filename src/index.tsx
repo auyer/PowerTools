@@ -67,6 +67,7 @@ import {
 
   STORE_RESULTS,
   STORE_RESULTS_URI,
+  STORE_MAIN_APP_ID,
 
   PERIODICAL_BACKEND_PERIOD,
   AUTOMATIC_REAPPLY_WAIT,
@@ -130,7 +131,7 @@ const reload = function() {
   });
 
   if (!get_value(STORE_RESULTS)) {
-    backend.resolve(backend.searchStoreByAppId(0), (results) => set_value(STORE_RESULTS, results));
+    backend.resolve(backend.searchStoreByAppId(STORE_MAIN_APP_ID), (results) => set_value(STORE_RESULTS, results));
   }
 
   backend.resolve(backend.getBatteryCurrent(), (rate: number) => { set_value(CURRENT_BATT, rate) });
@@ -216,13 +217,19 @@ const registerCallbacks = function(autoclear: boolean) {
               });
             }
           );
+          backend.resolve(
+            backend.searchStoreByAppId(STORE_MAIN_APP_ID),
+            (results: backend.StoreMetadata[]) => {
+              set_value(STORE_RESULTS, results);
+            }
+          );
       }
   });
   //@ts-ignore
   startHook = SteamClient.Apps.RegisterForGameActionStart((actionType, id) => {
       //@ts-ignore
       let gameInfo: any = appStore.GetAppOverviewByGameID(id);
-      let appId = gameInfo.appid.toString();
+      let appId: string = gameInfo.appid.toString();
 
       backend.log(backend.LogLevel.Info, "RegisterForGameActionStart callback(" + actionType + ", " + id + ")");
       backend.resolve(

@@ -44,4 +44,6 @@ export const PERIODICAL_BACKEND_PERIOD = 5000; // milliseconds
 export const AUTOMATIC_REAPPLY_WAIT = 2000; // milliseconds
 
 export const STORE_RESULTS_URI = "/plugins/PowerTools/settings_store";
+export const STORE_MAIN_APP_ID = "1";
+export const STORE_MAIN_APP_ID_DEV = "0";
 
